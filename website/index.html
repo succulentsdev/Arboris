@@ -1669,6 +1669,11 @@ function liveMetaLine(m){
   }
   return p.join(' · ');
 }
+function modeTag(mode,cacheHit,title){
+  var cls='tx';
+  if(mode==='Sprout')cls='ts';else if(mode==='Canopy')cls='tc';else if(mode==='Forest')cls='tf';
+  return infoTag((cacheHit?'cached \u00b7 ':'')+(mode||'unknown'),title,cls);
+}
 function infoTag(text,title,cls){
   var t=document.createElement('span');t.className='tag '+(cls||'tg-info');t.textContent=text;
   if(title)t.title=title;return t;
