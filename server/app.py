@@ -11,7 +11,7 @@ Pipeline per chat request, in order:
      mode-aware. A hit makes no model call: 0 new output tokens.
   3. Auto routing (arboris.router), unless the client sent a mode.
   4. One call to the primary model (ARBORIS_MODEL, default
-     google/gemma-4-31b-it:free, a named general chat model) with the
+     openrouter/free) with the
      brevity system prompt and token cap, logprobs
      requested. By default that is the only model call: escalated=false,
      reason "single model: no separate escalation model configured".
@@ -42,6 +42,8 @@ streaming is off ("provider_streaming": false).
 """
 
 import argparse
+import base64
+import binascii
 import collections
 import json
 import os
@@ -69,7 +71,7 @@ from arboris.providers import (  # noqa: E402
     ProviderError,
 )
 from arboris.router import route_mode  # noqa: E402
-from arboris.task_router import QUALITY_THRESHOLDS, TASK_TEMPERATURES, difficulty_score, route_task  # noqa: E402
+from arboris.task_router import QUALITY_THRESHOLDS, TASK_TEMPERATURES, classify_task, difficulty_score, route_task  # noqa: E402
 from arboris.long_input import prune_long_prompt  # noqa: E402
 from arboris.local_calc import try_local_calc  # noqa: E402
 from arboris.scorer import score_answer  # noqa: E402
@@ -85,6 +87,7 @@ MSG_NOT_CONFIGURED = "Live backend is not configured yet (no API key on the serv
 MSG_MISCONFIGURED = "Live backend is misconfigured on the server, check its settings"
 MSG_UNREACHABLE = "The model provider could not be reached, try again"
 MSG_RATE_LIMITED = "Too many requests, try again later"
+MSG_PROVIDER_RATE_LIMITED = "The AI provider is busy right now. Please try again shortly."
 MSG_KEY_REJECTED = "The model provider rejected the API key, check the key on the server"
 MSG_NO_CREDITS = (
     "The model provider reports no credits for this paid model: add credits "
@@ -104,18 +107,18 @@ MSG_INTERNAL = "Something went wrong on the server, try again"
 MSG_NOT_FOUND = "Not found"
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
-# A named general chat model. openrouter/free (OpenRouter's router over its
-# free models) is NOT the primary: it can route to non-chat models, e.g. a
-# content-safety classifier answered a hamburger question with "User
-# Safety: safe", and fallback only triggers on errors, not wrong-type
-# answers. Free models are rate-limited and rotate, hence the chain below,
-# with the router kept only as the last resort.
-DEFAULT_MODEL = "google/gemma-4-31b-it:free"
+# Use OpenRouter's free router for text and multimodal inputs. Keep a
+# vision-capable free fallback so attachments remain supported on retry.
+DEFAULT_MODEL = "openrouter/free"
+CREATIVE_MAX_TOKENS = 1536
+CREATIVE_SYSTEM = (
+    "Write the complete requested creative work directly, without an introduction or commentary. "
+    "Keep it concise unless a longer work is requested. Preserve requested line counts, stanzas and format. "
+    "For a haiku, write exactly three lines with a 5-7-5 syllable pattern. "
+    "For a song, include actual lyrics with a verse and chorus unless another structure is requested."
+)
 DEFAULT_FALLBACKS = (
-    "liquid/lfm-2.5-2.6b:free",
-    "thinkingmachines/inkling-small:free",
-    "poolside/laguna-xs-2.1:free",
-    "openrouter/free",
+    "google/gemma-4-31b-it:free",
 )
 # Provider HTTP codes that move on to the next model. 402 is handled
 # separately (only towards a free model); 401 never falls back.
@@ -124,7 +127,10 @@ SINGLE_MODEL_REASON = "single model: no separate escalation model configured"
 DEFAULT_ORIGINS = ("http://localhost:8000", "http://127.0.0.1:8000")
 DEFAULT_PORT = 8000
 
-MAX_BODY_BYTES = 16 * 1024
+MAX_BODY_BYTES = 16 * 1024 * 1024
+MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+MAX_ATTACHMENTS_BYTES = 10 * 1024 * 1024
+MAX_ATTACHMENTS = 6
 MAX_PROMPT_CHARS = 4000
 MAX_SESSIONS = 1000
 MAX_CACHE_ENTRIES_PER_SESSION = 200
@@ -652,6 +658,55 @@ class ChatRequest:
     # user could already send one), plus measurement. The prompt
     # itself is what the model sees; expand_of is what meta reports.
     expand_of: Optional[str] = None
+    attachments: tuple = ()
+    history: tuple = ()
+
+
+def parse_attachments(items):
+    if not isinstance(items, list) or len(items) > MAX_ATTACHMENTS:
+        raise ClientError(400, "Attach up to 6 images, PDFs or text files")
+    result, total = [], 0
+    supported = {"image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf"}
+    for item in items:
+        if not isinstance(item, dict):
+            raise ClientError(400, "Invalid attachment")
+        name, kind = item.get("name"), item.get("type")
+        if not isinstance(name, str) or not name.strip() or len(name) > 180:
+            raise ClientError(400, "Invalid attachment name")
+        name = re.split(r"[/\\]", name)[-1]
+        if kind == "text/plain":
+            text = item.get("text")
+            if not isinstance(text, str) or "\x00" in text or len(text) > 200000:
+                raise ClientError(400, "Text files must contain up to 200,000 characters")
+            size = len(text.encode("utf-8"))
+            normalized = {"name": name, "type": kind, "text": text}
+        elif kind in supported:
+            data = item.get("data")
+            prefix = "data:" + kind + ";base64,"
+            if not isinstance(data, str) or not data.startswith(prefix):
+                raise ClientError(400, "Invalid attachment data")
+            if len(data) > MAX_ATTACHMENT_BYTES * 4 // 3 + 100:
+                raise ClientError(413, "Each file must be 5 MB or smaller")
+            try:
+                raw = base64.b64decode(data[len(prefix):], validate=True)
+            except (binascii.Error, ValueError):
+                raise ClientError(400, "Invalid attachment encoding")
+            valid = ((kind == "image/png" and raw.startswith(b"\x89PNG\r\n\x1a\n"))
+                     or (kind == "image/jpeg" and raw.startswith(b"\xff\xd8\xff"))
+                     or (kind == "image/gif" and raw[:6] in (b"GIF87a", b"GIF89a"))
+                     or (kind == "image/webp" and raw[:4] == b"RIFF" and raw[8:12] == b"WEBP")
+                     or (kind == "application/pdf" and raw.startswith(b"%PDF-")))
+            if not valid:
+                raise ClientError(400, "The file does not match its image or PDF format")
+            size = len(raw)
+            normalized = {"name": name, "type": kind, "data": data}
+        else:
+            raise ClientError(400, "Supported files are PNG, JPG, GIF, WebP, PDF and text files")
+        total += size
+        if size > MAX_ATTACHMENT_BYTES or total > MAX_ATTACHMENTS_BYTES:
+            raise ClientError(413, "Use files up to 5 MB each and 10 MB in total")
+        result.append(normalized)
+    return tuple(result)
 
 
 def parse_chat_request(body):
@@ -667,7 +722,22 @@ def parse_chat_request(body):
             400,
             "Do not send an API key, model or provider URL; those are set on the server only",
         )
-    prompt = data.get("prompt")
+    attachments = parse_attachments(data.get("attachments", []))
+    history = data.get("history", [])
+    if not isinstance(history, list) or len(history) > 20:
+        raise ClientError(400, "Conversation context must contain up to 20 messages")
+    context, context_chars = [], 0
+    for item in history:
+        if (not isinstance(item, dict) or item.get("role") not in ("user", "assistant")
+                or not isinstance(item.get("content"), str) or not item["content"].strip()):
+            raise ClientError(400, "Invalid conversation context")
+        context_chars += len(item["content"])
+        if context_chars > 24000:
+            raise ClientError(400, "Conversation context is too long")
+        context.append({"role": item["role"], "content": item["content"]})
+    prompt = data.get("prompt", "")
+    if isinstance(prompt, str) and not prompt.strip() and attachments:
+        prompt = "What can you tell me about the attached files?"
     if not isinstance(prompt, str) or not prompt.strip():
         raise ClientError(400, "Prompt is empty: type a question first")
     if len(prompt) > MAX_PROMPT_CHARS:
@@ -696,7 +766,7 @@ def parse_chat_request(body):
             raise ClientError(400, f"expand_of is too long (max {MAX_PROMPT_CHARS} characters)")
     return ChatRequest(
         prompt=prompt, mode=mode, session_id=session_id,
-        stream=stream, measure_baseline=measure, expand_of=expand_of,
+        stream=stream, measure_baseline=measure, expand_of=expand_of, attachments=attachments, history=tuple(context),
     )
 
 
@@ -794,7 +864,7 @@ _STATUS_MESSAGES = {
     401: MSG_KEY_REJECTED,
     402: MSG_NO_CREDITS,
     404: MSG_MODEL_NOT_FOUND,
-    429: MSG_RATE_LIMITED,
+    429: MSG_PROVIDER_RATE_LIMITED,
 }
 
 
@@ -809,6 +879,8 @@ def _http_status(exc):
 
 def _provider_error(exc):
     """Map a ProviderError to a plain ClientError. The detail is dropped."""
+    if getattr(exc, "reasoning_limited", False):
+        return ClientError(502, "The model didn’t finish an answer. Please try again.")
     if getattr(exc, "empty_content", False):
         return ClientError(502, MSG_EMPTY)
     status = _http_status(exc)
@@ -820,6 +892,12 @@ def _provider_error(exc):
 def _most_specific(errors):
     """First error, unless a later one has a specific code (401/402/404/429)
     and the first does not (e.g. a generic 502/503 or no status)."""
+    # A throttled fallback must not hide a primary that exhausted its
+    # reasoning budget. Authorization failures still retain the old stop rule.
+    if not any(_http_status(exc) in (401, 403) for exc in errors):
+        limited = next((exc for exc in errors if getattr(exc, "reasoning_limited", False)), None)
+        if limited is not None:
+            return limited
     chosen = errors[0]
     if _http_status(chosen) not in _STATUS_MESSAGES:
         for exc in errors[1:]:
@@ -846,8 +924,10 @@ class _ModelChain:
     or provider detail text.
     """
 
-    def __init__(self, backend, models):
+    def __init__(self, backend, models, attachments=(), history=()):
         self.backend = backend
+        self.attachments = attachments
+        self.history = history
         self.models = list(models)
         self.model = self.models[0]
         self.attempted = False
@@ -866,7 +946,9 @@ class _ModelChain:
                                   reasoning_effort)
             except ProviderError as exc:
                 errors.append(exc)
-                self.backend.log(f"{role} call failed: {_status_text(exc)} model={model}")
+                kind = ("reasoning_budget" if getattr(exc, "reasoning_limited", False)
+                        else "empty_content" if getattr(exc, "empty_content", False) else "provider_error")
+                self.backend.log(f"{role} call failed: {_status_text(exc)} model={model} kind={kind}")
                 status = _http_status(exc)
                 nxt = self.models[i + 1] if i + 1 < len(self.models) else None
                 if nxt is None or not (
@@ -884,6 +966,10 @@ class _ModelChain:
     def _call(self, provider, model, role, prompt, system, max_tokens, logprobs,
               stop=None, temperature=None, reasoning_effort=None):
         extra = {}
+        if self.attachments:
+            extra["attachments"] = self.attachments
+        if self.history:
+            extra["history"] = self.history
         if stop is not None:
             extra["stop"] = stop
         if temperature is not None:
@@ -994,6 +1080,40 @@ class Backend:
             "provider_streaming": False,
         }
 
+    def _attachment_chat(self, req):
+        """File context always reaches a compatible provider; text caches do not apply."""
+        cfg = self.config
+        mode = "canopy" if req.mode == "auto" else req.mode
+        # The free router selects a compatible model. Gemma is a vision-capable fallback.
+        models = tuple(m for m in (cfg.model,) + cfg.fallback_models
+                       if m in ("openrouter/free", "google/gemma-4-31b-it:free"))
+        if not models:
+            raise ClientError(400, "The configured model does not support file attachments")
+        primary = _ModelChain(self, models, req.attachments, req.history)
+        try:
+            comp = primary.complete_ex(req.prompt, system=BREVITY_SYSTEM[mode],
+                                       max_tokens=MAX_TOKENS[mode], logprobs=False)
+        except ProviderError as exc:
+            raise _provider_error(exc)
+        answer = comp.text.strip()
+        if not answer:
+            raise ClientError(502, MSG_EMPTY)
+        meta = {
+            "model": primary.model, "requested_model": cfg.model,
+            "provider_model": comp.response_model, "mode": mode,
+            "model_tier": "primary", "attachment_count": len(req.attachments),
+            "fallback_used": primary.model != cfg.model, "cache_hit": False,
+            "escalated": False, "input_tokens": comp.prompt_tokens,
+            "output_tokens": comp.completion_tokens,
+            "max_tokens_used": getattr(comp, "max_tokens_requested", None) or MAX_TOKENS[mode],
+            "truncated": comp.finish_reason == "length",
+            "energy": energy_receipt(comp.prompt_tokens, comp.completion_tokens,
+                                     model=primary.model, model_tier="primary",
+                                     grid_g_per_kwh=cfg.grid_g_per_kwh),
+        }
+        self.log(f"chat attachments={len(req.attachments)} model={primary.model}")
+        return {"answer": answer, "meta": meta}
+
     def chat(self, req):
         """Run the pipeline. Returns {"answer": str, "meta": dict}.
 
@@ -1003,10 +1123,13 @@ class Backend:
         cfg = self.config
         if not cfg.configured:
             raise ClientError(503, MSG_NOT_CONFIGURED)
+        if req.attachments:
+            return self._attachment_chat(req)
 
         # 1. PromptShrink: v1 by default, v2 only when ARBORIS_SHRINK_VERSION=v2.
         sr = shrink_v2(req.prompt) if cfg.shrink_version == "v2" else shrink(req.prompt)
         prompt = sr.text
+        creative_request = classify_task(req.prompt) == "creative"
         if not prompt.strip():
             raise ClientError(400, "Prompt is empty after removing filler words: add a question")
 
@@ -1034,6 +1157,10 @@ class Backend:
             mode = "full"
             routed_by = "expansion"
             system_prompt = BREVITY_SYSTEM["full"] + " Explain in detail."
+        elif creative_request:
+            mode = "full" if req.mode == "auto" else req.mode
+            routed_by = "requested_format"
+            system_prompt = CREATIVE_SYSTEM
         elif req.mode == "auto" and task_route is not None:
             mode = task_route.mode
             routed_by = "task"
@@ -1066,6 +1193,8 @@ class Backend:
             "semantic_similarity": None,
             "cache_fallback": False,
             "cache_bypass_reason": None,
+            "context_messages": len(req.history),
+            "preserve_format": creative_request,
             "answer_score": None,
             "expansion": is_expansion,
             "expanded_from": req.expand_of if is_expansion else None,
@@ -1160,7 +1289,9 @@ class Backend:
         # have before.
         bad_cache_entry = None
         cache_bypass_reason = None
-        key = cache_key(prompt, mode) if req.session_id else ""
+        # Follow-ups depend on the preceding messages, not only the latest words.
+        # Creative replies also bypass older sentence-trimmed cache entries.
+        key = cache_key(prompt, mode) if req.session_id and not req.history and not creative_request else ""
         if key and use_small:
             key = "small:" + key
         if key:
@@ -1275,7 +1406,7 @@ class Backend:
                 m for m in (cfg.model,) + cfg.fallback_models if m != cfg.small_model)
         else:
             chain_models = (cfg.model,) + cfg.fallback_models
-        primary = _ModelChain(self, chain_models)
+        primary = _ModelChain(self, chain_models, history=req.history)
         escalation = _Recorder(self._make(cfg.escalation_model)) if cfg.cascade_enabled else None
         # Length control, brief #4: max_tokens is a cap by default
         # (multiplier 1.0, unchanged behaviour). Above 1.0 it becomes
@@ -1285,6 +1416,8 @@ class Backend:
         # is on, stop only for fact/definition, never for expansions
         # (a detail answer legitimately has paragraphs).
         effective_max_tokens = int(MAX_TOKENS[mode] * cfg.max_tokens_multiplier)
+        if creative_request:
+            effective_max_tokens = max(CREATIVE_MAX_TOKENS, effective_max_tokens)
         temperature = (TASK_TEMPERATURES.get(task_route.task_type)
                        if cfg.task_temperature and task_route is not None else None)
         stop = (["\n\n"] if cfg.task_stop_sequences and not is_expansion
@@ -1378,7 +1511,11 @@ class Backend:
 
         # 5. Safety-net trim.
         raw_text = comp.text.strip()
-        answer, fragment_fixed = apply_brevity_with_flag(raw_text, mode)
+        if creative_request:
+            # Verse lines and stanza headings are not expendable sentences.
+            answer, fragment_fixed = raw_text, False
+        else:
+            answer, fragment_fixed = apply_brevity_with_flag(raw_text, mode)
         answer = answer.strip()
         if not answer:
             answer = raw_text  # nothing trimmable survived; show the model's text as-is
@@ -1425,6 +1562,7 @@ class Backend:
             # What the provider's response said answered (e.g. the model
             # openrouter/free routed to), or None if it did not say.
             "provider_model": getattr(comp, "response_model", None),
+            "max_tokens_used": getattr(comp, "max_tokens_requested", None) or effective_max_tokens,
             "escalated": result.escalated,
             "escalation_reason": result.reason,
             "avg_logprob": result.avg_logprob,
@@ -1533,8 +1671,20 @@ def chunk_text(text, words_per_chunk=CHUNK_WORDS):
 # ---------------------------------------------------------------------------
 
 def make_handler(backend):
-    site_index = ROOT / "website" / "index.html"
-    site_hero_jpg = ROOT / "website" / "hero.jpg"
+    site_dir = ROOT / "website"
+    # Static files served from website/ (allowlist, no directory traversal).
+    STATIC_TYPES = {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+    }
+    STATIC_PAGES = {"index.html", "features.html"}
+    STATIC_ASSETS = {"styles.css", "app.js", "bg.jpg", "bg.webp", "hero.jpg"}
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Arboris"
@@ -1617,23 +1767,22 @@ def make_handler(backend):
                 if not self._origin_ok():
                     return self._send_error(403, MSG_ORIGIN)
                 return self._send_json(200, backend.health())
-            if path in ("/", "/index.html") and site_index.is_file():
-                body = site_index.read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-                return
-            if path == "/hero.jpg" and site_hero_jpg.is_file():
-                body = site_hero_jpg.read_bytes()
-                self.send_response(200)
-                self.send_header("Content-Type", "image/jpeg")
-                self.send_header("Content-Length", str(len(body)))
-                self.send_header("Cache-Control", "public, max-age=86400")
-                self.end_headers()
-                self.wfile.write(body)
-                return
+            if path == "/" or path == "/index.html":
+                path = "/index.html"
+            name = path.lstrip("/")
+            if "/" not in name and name in STATIC_PAGES | STATIC_ASSETS:
+                f = site_dir / name
+                if f.is_file():
+                    body = f.read_bytes()
+                    ctype = STATIC_TYPES.get(f.suffix.lower(), "application/octet-stream")
+                    self.send_response(200)
+                    self.send_header("Content-Type", ctype)
+                    self.send_header("Content-Length", str(len(body)))
+                    if f.suffix.lower() in (".jpg", ".jpeg", ".webp", ".png"):
+                        self.send_header("Cache-Control", "public, max-age=86400")
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
             self._send_error(404, MSG_NOT_FOUND)
 
         def do_POST(self):

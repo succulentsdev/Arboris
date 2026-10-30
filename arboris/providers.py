@@ -42,7 +42,7 @@ class ProviderError(Exception):
     callers can branch on it without parsing the message.
     """
 
-    def __init__(self, message="", status=None, empty_content=False):
+    def __init__(self, message="", status=None, empty_content=False, reasoning_limited=False):
         super().__init__(message)
         self.status = status
         # True when the provider answered HTTP 200 with null/empty text.
@@ -50,6 +50,7 @@ class ProviderError(Exception):
         # retry in the baseline study), unlike a 401/402/404, which would
         # not help. Observed with Gemma returning empty content once.
         self.empty_content = empty_content
+        self.reasoning_limited = reasoning_limited
 
 
 @dataclass
@@ -74,6 +75,8 @@ class Completion:
     # completion_tokens (they are not additive), so the energy formula
     # does not change; this is a transparency breakdown.
     reasoning_tokens: Optional[int] = None
+    # Actual provider cap, including any reasoning headroom for the free router.
+    max_tokens_requested: Optional[int] = None
 
 
 # Generation-side brevity: asking the model for a short answer (and capping
@@ -272,16 +275,38 @@ class OpenAICompatibleProvider:
         return self.complete_ex(prompt).text
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None, reasoning_effort=None):
+                    stop=None, temperature=None, reasoning_effort=None,
+                    attachments=None, history=None):
         if prompt is None or not prompt.strip():
             raise ValueError("Empty prompt: type a prompt first.")
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
+        if history:
+            messages.extend({"role": item["role"], "content": item["content"]} for item in history)
+        content = prompt
+        if attachments:
+            content = [{"type": "text", "text": prompt}]
+            for item in attachments:
+                if item["type"].startswith("image/"):
+                    content.append({"type": "image_url", "image_url": {"url": item["data"]}})
+                elif item["type"] == "application/pdf":
+                    content.append({"type": "file", "file": {"filename": item["name"], "file_data": item["data"]}})
+                else:
+                    content.append({"type": "text", "text": "Attached file: " + item["name"] + "\n" + item["text"]})
+        messages.append({"role": "user", "content": content})
         payload = {"model": self.model, "messages": messages}
+        if attachments and any(item["type"] == "application/pdf" for item in attachments):
+            payload["plugins"] = [{"id": "file-parser", "pdf": {"engine": "cloudflare-ai"}}]
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if self.model == "openrouter/free":
+            # The router may select a thinking model. Its hidden reasoning
+            # shares max_tokens with the visible reply; 120 can yield no answer.
+            # Minimal effort also works with models where reasoning is mandatory.
+            payload["reasoning"] = {"effort": "minimal"}
+            if max_tokens:
+                payload["max_tokens"] = max(1024, max_tokens)
         if logprobs:
             payload["logprobs"] = True
             payload["top_logprobs"] = 1
@@ -336,13 +361,18 @@ class OpenAICompatibleProvider:
             raise ProviderError(
                 f"Live provider returned an unexpected response shape: {exc}"
             ) from exc
+        usage = data.get("usage") if isinstance(data, dict) else None
+        usage = usage if isinstance(usage, dict) else {}
+        details = usage.get("completion_tokens_details")
+        details = details if isinstance(details, dict) else {}
+        reasoning_tokens = _int_or_none(details.get("reasoning_tokens"))
         if not isinstance(text, str) or not text.strip():
             raise ProviderError(
                 "Live provider returned no text content (null or empty message).",
                 empty_content=True,
+                reasoning_limited=(_first_choice(data).get("finish_reason") == "length"
+                                   and reasoning_tokens is not None and reasoning_tokens > 0),
             )
-        usage = data.get("usage") if isinstance(data, dict) else None
-        usage = usage if isinstance(usage, dict) else {}
         return Completion(
             text=text,
             completion_tokens=_int_or_none(usage.get("completion_tokens")),
@@ -351,6 +381,7 @@ class OpenAICompatibleProvider:
             finish_reason=_str_or_none(_first_choice(data).get("finish_reason")),
             response_model=_str_or_none(data.get("model")),
             reasoning_tokens=_reasoning_tokens(usage),
+            max_tokens_requested=payload.get("max_tokens"),
         )
 
 

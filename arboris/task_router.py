@@ -120,7 +120,9 @@ def classify_task(prompt):
     if _has(
         lowered, "write a story", "write a poem", "write a song",
         "brainstorm", "give me ideas", "invent a",
-    ) or re.search(r"\b(story|poem)\b", lowered):
+    ) or re.search(r"\b(story|poem)\b", lowered) or re.search(
+        r"\b(?:write|compose|create|draft|make|sing)\b.{0,80}\b(?:haiku|song|lyrics|sonnet|limerick)\b", lowered
+    ):
         return "creative"
     # Comparison and evaluation markers come before steps, so "how to
     # compare X and Y" is reasoning, not a how-to. "Step by step" and

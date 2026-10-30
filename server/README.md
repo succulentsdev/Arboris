@@ -7,21 +7,28 @@ and hosted on Google Cloud Run in us-central1:
 https://arboris-1037861813679.us-central1.run.app
 The tests use fake providers and no key or network.
 
-**Default model: `google/gemma-4-31b-it:free`**, a named general chat
-model. `openrouter/free` (OpenRouter's router over its free models, not a
-named model) was the default until Unreleased, and is now only the
-**last** fallback. Why: as primary, the router sent a hamburger question
-to a content-safety model, which answered "User Safety: safe...". The
-router can pick non-chat free models, and the fallback chain only
-triggers on errors, never on a wrong-type answer, so a named chat model
-must answer first. Free models are rate-limited and rotate in and out of
-service. An older default, `qwen/qwen3-8b`, was deprecated on OpenRouter
-on 2026-10-09 and now returns 404. Set `ARBORIS_MODEL` to pin a
-different model. The logprob cascade remains available only as an
+**Default model: `openrouter/free`**, OpenRouter's router over compatible
+free models, including models that can understand images. The free
+vision model `google/gemma-4-31b-it:free` is the fallback. Free models
+are rate-limited and availability varies. Set `ARBORIS_MODEL` to pin a
+different model. Paid models require the explicit server-side
+`ARBORIS_ALLOW_PAID_MODELS` opt-in; free-quota exhaustion does not enable
+paid routing. The logprob cascade remains available only as an
 opt-in: set `ARBORIS_ESCALATION_MODEL` to a *different* model to turn
 it on.
 
 ## Model and fallbacks
+
+The chat default excludes `thinkingmachines/inkling-small:free`: OpenRouter restricts it to approved agentic harnesses, so an ordinary chat request returns 403 and stops the chain. Authorization and policy errors still stop routing; they are not bypassed. Provider 429s now say the AI provider is busy, while Arboris’s own per-IP limits retain their separate request-limit response.
+
+The free router can select thinking models whose reasoning shares the output
+token budget. A 120-token cap can therefore produce no visible answer. Router
+requests use minimal reasoning effort and at least 1024 total output tokens;
+the existing system prompt and final brevity pass still keep visible replies
+short. Named models retain their configured caps. Receipts count all reported
+completion tokens, including reasoning, and `meta.max_tokens_used` reports the
+actual provider cap. An exhausted reasoning budget has a separate error and
+is not hidden by a later fallback 429. See [OpenRouter’s reasoning budget documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
 
 Each request first calls `ARBORIS_MODEL`. If that call fails, the
 models in `ARBORIS_MODEL_FALLBACKS` are tried in order, and the first
@@ -102,12 +109,29 @@ model=qwen/qwen3-8b`, `fallback call failed: HTTP 429 model=...`,
 `answered by fallback model=liquid/lfm-2.5-2.6b:free`.
 
 `meta.model` is the model id the server sent in the request that
-answered. If the last-resort `openrouter/free` answered, that is
+answered. If `openrouter/free` answered, that is
 `openrouter/free`, which hides the underlying model. `meta.provider_model`
 passes through the `model`
 field of the provider's response, when the response has one. For a router
 id it may name the routed model, but that has not been verified against a
 live OpenRouter response here, so treat it as the provider's claim.
+
+## File attachments
+
+Use the plus button to select files, or drop them anywhere on the page.
+A green outline indicates a file drag; dropping queues files in the
+composer, and Send submits them. PNG, JPEG, GIF, WebP, PDF and text/code
+files are supported: up to six files, 5 MiB per file and 10 MiB total.
+Text files have a 200,000-character cap. Unsupported binary formats are
+rejected rather than silently omitted.
+
+Drafts and sent-file metadata stay with their chat. File contents are
+stored separately in browser IndexedDB so images do not overflow
+localStorage. Files are transmitted to the model provider only on Send.
+Attachment requests bypass text-only caching, shrinking and local
+arithmetic routing, and use the compatible free model chain. PDFs use
+OpenRouter's explicitly free `cloudflare-ai` parser. No file contents
+are written to the server log. See the [OpenRouter PDF documentation](https://openrouter.ai/docs/guides/overview/multimodal/pdfs).
 
 ## Run it locally
 
@@ -165,8 +189,8 @@ requests, files in the repo, or the command line.
 |---|---|---|
 | `ARBORIS_API_KEY` | unset | Provider key. Server-side only. Unset means `/api/chat` returns 503 and no provider is called. |
 | `ARBORIS_BASE_URL` | `https://openrouter.ai/api/v1` | OpenAI-compatible base URL. https required (http only for localhost). |
-| `ARBORIS_MODEL` | `google/gemma-4-31b-it:free` | Primary model, called first on every request. A named chat model; do not set the `openrouter/free` router here (it can route to non-chat models, see above). |
-| `ARBORIS_MODEL_FALLBACKS` | `liquid/lfm-2.5-2.6b:free,thinkingmachines/inkling-small:free,poolside/laguna-xs-2.1:free,openrouter/free` | Comma-separated models tried in order when the primary call fails (see "Model and fallbacks"). Whitespace, empty entries, repeats and the primary model are dropped. Unset or empty uses the default list; `none` disables fallbacks. |
+| `ARBORIS_MODEL` | `openrouter/free` | Primary free router, called first. Selects a model compatible with the input. |
+| `ARBORIS_MODEL_FALLBACKS` | `google/gemma-4-31b-it:free` | Comma-separated models tried in order when the primary call fails (see "Model and fallbacks"). Whitespace, empty entries, repeats and the primary model are dropped. Unset or empty uses the default list; `none` disables fallbacks. Attachment requests use only the router or the supported vision fallback. |
 | `ARBORIS_ESCALATION_MODEL` | value of `ARBORIS_MODEL` | Optional. While it equals `ARBORIS_MODEL` (the default) there is **no** escalation call. Set it to a different model to turn on the logprob cascade. |
 | `ARBORIS_CASCADE_THRESHOLD` | `-1.0` | Cascade only: escalate when the primary model's mean token logprob is below this. Must be ≤ 0. A starting point to tune, not a sourced constant. |
 | `ARBORIS_BACKEND_ORIGIN` | `http://localhost:8000,http://127.0.0.1:8000` | CORS allowlist of exact origins, separated by commas and/or whitespace (so a space-separated list works too). Trailing slashes are stripped, so `https://example.com/` matches `https://example.com`. Matching is otherwise exact; `*` is refused at startup. For Cloud Run, see `CLOUDRUN.md` (env-vars file, commas, no spaces). |
@@ -306,7 +330,8 @@ fallback chain has run (see "Model and fallbacks").
 | 401 | Provider rejected the API key (HTTP 401) | `The model provider rejected the API key, check the key on the server` |
 | 402 | Provider reports no credits for a paid model (HTTP 402) | `The model provider reports no credits for this paid model: add credits or switch ARBORIS_MODEL to a free model` |
 | 404 | Model not found or deprecated (HTTP 404) | `The model was not found or is deprecated at the provider: check the ARBORIS_MODEL id` |
-| 429 | Over the per-IP limit, or the provider rate-limited us | `Too many requests, try again later` |
+| 429 | Over the Arboris request limit | `Too many requests, try again later` |
+| 429 | The model provider rate-limited a request | `The AI provider is busy right now. Please try again shortly.` |
 | 502 | Provider unreachable, or any other provider error (incl. HTTP 502/503/500) | `The model provider could not be reached, try again` |
 | 502 | Escalation call failed (optional cascade only) | `The escalation model could not be reached, so no answer was returned (...)` |
 | 503 | No API key on the server | `Live backend is not configured yet (no API key on the server)` |
@@ -315,7 +340,7 @@ fallback chain has run (see "Model and fallbacks").
 
 ### `GET /api/health`
 
-`{"status":"ok","configured":false,"model":"google/gemma-4-31b-it:free","fallbacks":["liquid/lfm-2.5-2.6b:free","thinkingmachines/inkling-small:free","poolside/laguna-xs-2.1:free","openrouter/free"],"escalation_model":"google/gemma-4-31b-it:free","cascade_enabled":false,"cascade_threshold":-1.0,"rate_limit_per_hour":30,"rate_limit_per_day":100,"global_limit_per_day":800,"allow_paid_models":false,"provider_streaming":false}`.
+`{"status":"ok","configured":false,"model":"google/gemma-4-31b-it:free","fallbacks":["liquid/lfm-2.5-2.6b:free","poolside/laguna-xs-2.1:free","openrouter/free"],"escalation_model":"google/gemma-4-31b-it:free","cascade_enabled":false,"cascade_threshold":-1.0,"rate_limit_per_hour":30,"rate_limit_per_day":100,"global_limit_per_day":800,"allow_paid_models":false,"provider_streaming":false}`.
 Never includes the key.
 
 ## Security and limits

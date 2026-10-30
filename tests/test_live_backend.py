@@ -34,6 +34,7 @@ from server.app import (  # noqa: E402
     MSG_NOT_CONFIGURED,
     MSG_ORIGIN,
     MSG_RATE_LIMITED,
+    MSG_PROVIDER_RATE_LIMITED,
     MSG_UNREACHABLE,
     SINGLE_MODEL_REASON,
     Backend,
@@ -98,7 +99,7 @@ class FakeProvider:
         )
 
 
-PRIMARY = "google/gemma-4-31b-it:free"
+PRIMARY = DEFAULT_MODEL
 # Only used by the opt-in cascade tests; not a model choice for Phase 2.
 ESCALATION = "example/escalation-model"
 
@@ -389,7 +390,7 @@ class ErrorMappingTests(unittest.TestCase):
             (ProviderError("Live provider returned HTTP 503: overloaded"), 502, MSG_UNREACHABLE),
             (ProviderError("Live provider returned HTTP 500: boom"), 502, MSG_UNREACHABLE),
             (ProviderError("Live provider timed out after 60s."), 502, MSG_UNREACHABLE),
-            (ProviderError("Live provider returned HTTP 429: slow down"), 429, MSG_RATE_LIMITED),
+            (ProviderError("Live provider returned HTTP 429: slow down"), 429, MSG_PROVIDER_RATE_LIMITED),
         ]
         for error, status, message in cases:
             with self.subTest(error=str(error)):
@@ -465,13 +466,12 @@ class ErrorMappingTests(unittest.TestCase):
         cfg = Config.from_env({})
         self.assertFalse(cfg.configured)
         self.assertEqual(cfg.base_url, "https://openrouter.ai/api/v1")
-        self.assertEqual(cfg.model, "google/gemma-4-31b-it:free")
-        self.assertEqual(cfg.escalation_model, "google/gemma-4-31b-it:free")
+        self.assertEqual(cfg.model, "openrouter/free")
+        self.assertEqual(cfg.escalation_model, "openrouter/free")
         self.assertEqual(cfg.fallback_models, DEFAULT_FALLBACKS)
         # The free router is only the last resort, and the primary is not repeated.
         self.assertEqual(DEFAULT_FALLBACKS, (
-            "liquid/lfm-2.5-2.6b:free", "thinkingmachines/inkling-small:free",
-            "poolside/laguna-xs-2.1:free", "openrouter/free"))
+            "google/gemma-4-31b-it:free",))
         self.assertNotIn(DEFAULT_MODEL, DEFAULT_FALLBACKS)
         self.assertFalse(cfg.cascade_enabled)
         self.assertFalse(hasattr(cfg, "model_4b"))
@@ -805,7 +805,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertIsNotNone(match)
         self.assertNotRegex(match.group(1), r"sk-[A-Za-z0-9]{10,}")
         self.assertIn(match.group(1).strip(), ("", "replace-me"))
-        self.assertRegex(text, r"(?m)^ARBORIS_MODEL=google/gemma-4-31b-it:free$")
+        self.assertRegex(text, r"(?m)^ARBORIS_MODEL=" + re.escape(DEFAULT_MODEL) + "$")
         self.assertRegex(text, r"(?m)^ARBORIS_MODEL_FALLBACKS=" + re.escape(
             ",".join(DEFAULT_FALLBACKS)) + "$")
         self.assertNotIn("MODEL_4B", text)
@@ -845,6 +845,31 @@ PAID = "example/paid-model"
 
 
 class FallbackTests(unittest.TestCase):
+    def test_default_chat_chain_reaches_router_without_agent_only_rejection(self):
+        built = []
+        def factory(model):
+            built.append(model)
+            if model == "thinkingmachines/inkling-small:free":
+                return FakeProvider(model, error=http_error(403, "only available on agentic harnesses"))
+            if model == "openrouter/free":
+                return FakeProvider(model, text="A seed takes root. A new leaf opens.")
+            return FakeProvider(model, error=http_error(429))
+        backend = Backend(Config(api_key=SENTINEL_KEY), provider_factory=factory,
+                          log_stream=io.StringIO(), quiet=True)
+        result = backend.chat(ChatRequest(prompt="Write a poem about a seed"))
+        self.assertEqual(result["meta"]["model"], "openrouter/free")
+        self.assertTrue(result["answer"])
+        self.assertNotIn("thinkingmachines/inkling-small:free", built)
+
+    def test_provider_throttling_does_not_blame_the_users_app_request_limit(self):
+        dead = FakeProvider(PRIMARY, error=http_error(429))
+        backend, _, _ = chain_backend({PRIMARY: dead})
+        with self.assertRaises(ClientError) as ctx:
+            backend.chat(ChatRequest(prompt="Write a poem about a seed"))
+        self.assertEqual(ctx.exception.status, 429)
+        self.assertIn("provider", ctx.exception.message.lower())
+        self.assertNotEqual(ctx.exception.message, MSG_RATE_LIMITED)
+
     def test_fallback_answers_after_primary_404(self):
         dead = FakeProvider("qwen/qwen3-8b", error=http_error(404, "deprecated"))
         good = FakeProvider(FREE_A, text="Fallback answer. Second sentence.", avg_logprob=-0.3)
@@ -933,10 +958,10 @@ class FallbackTests(unittest.TestCase):
 
     def test_all_fail_returns_first_error_unless_later_is_more_specific(self):
         cases = [
-            ((429, 404), 429, MSG_RATE_LIMITED),       # first is specific: kept
+            ((429, 404), 429, MSG_PROVIDER_RATE_LIMITED),       # first is specific: kept
             ((503, 404), 404, MSG_MODEL_NOT_FOUND),    # later specific beats generic
             ((502, 503), 502, MSG_UNREACHABLE),        # all generic: first
-            ((503, 429), 429, MSG_RATE_LIMITED),
+            ((503, 429), 429, MSG_PROVIDER_RATE_LIMITED),
         ]
         for codes, status, message in cases:
             with self.subTest(codes=codes):
@@ -957,8 +982,8 @@ class FallbackTests(unittest.TestCase):
         self.assertEqual(cfg.fallback_models, ())
         cfg = Config.from_env({"ARBORIS_MODEL_FALLBACKS": "   "})
         self.assertEqual(cfg.fallback_models, DEFAULT_FALLBACKS)
-        cfg = Config.from_env({"ARBORIS_MODEL": DEFAULT_FALLBACKS[1]})
-        self.assertNotIn(DEFAULT_FALLBACKS[1], cfg.fallback_models)
+        cfg = Config.from_env({"ARBORIS_MODEL": DEFAULT_FALLBACKS[0]})
+        self.assertNotIn(DEFAULT_FALLBACKS[0], cfg.fallback_models)
         self.assertEqual(len(cfg.fallback_models), len(DEFAULT_FALLBACKS) - 1)
 
     def test_cascade_primary_side_falls_back_escalation_does_not(self):
