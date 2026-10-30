@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -74,63 +74,8 @@
   --glass-input-ink: #eef4f1;
   --glass-muted: #7b9388;
 }
-[data-theme="light"] {
-  --bg: #f5f8f6;
-  --surface: #ffffff;
-  --surface2: #ebf2ee;
-  --surface3: #dfeae4;
-  --border: rgba(15,35,24,.1);
-  --border2: rgba(15,35,24,.18);
-  --ink: #0c1c14;
-  --ink2: #385244;
-  --ink3: #5b7567;
-  --teal: #b83b1a;
-  --teal-dim: #fce8e0;
-  --teal-glow: rgba(184,59,26,.14);
-  --teal-soft: rgba(184,59,26,.08);
-  --mint: #0b7a6e;
-  --mint-soft: rgba(11,122,110,.1);
-  --mint-border: rgba(11,122,110,.26);
-  --on-accent: #ffffff;
-  --amber: #8a6000;
-  --amber-dim: #faf2d8;
-  --red: #c02020;
-  --blue: #1668b0;
-  --purple: #6a3ab0;
-  --sp-bg: #d8f4f0;
-  --sp-fg: #0b7a6e;
-  --ca-bg: #faf2d8;
-  --ca-fg: #8a6000;
-  --fo-bg: #fce0e0;
-  --fo-fg: #b82020;
-  --ch-bg: #dce8f8;
-  --ch-fg: #1668b0;
-  --shadow: 0 8px 28px rgba(10,30,20,.07);
-  --header-bg: rgba(245,248,246,.82);
-  --header-ink: #0c1c14;
-  --totals-bg: #eaf1ed;
-  --totals-num: #0b7a6e;
-  --send-bg: #cf4a28;
-  --send-ink: #ffffff;
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(11,122,110,.12), transparent 65%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(207,74,40,.09), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(11,122,110,.06), transparent 65%);
-  --grid-dot: rgba(12,28,20,.07);
-  --glass-bot: #ffffff;
-  --glass-bot-border: rgba(15,35,24,.12);
-  --glass-bot-ink: #0c1c14;
-  --glass-user: linear-gradient(135deg, rgba(207,74,40,.14), rgba(207,74,40,.08));
-  --glass-user-border: rgba(207,74,40,.32);
-  --glass-user-ink: #0c1c14;
-  --glass-input: #ffffff;
-  --glass-input-border: rgba(15,35,24,.16);
-  --glass-input-ink: #0c1c14;
-  --glass-muted: #5b7567;
-}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
 html { color-scheme: dark; scroll-behavior: smooth }
-html[data-theme="light"] { color-scheme: light }
 [hidden] { display: none !important }
 
 body {
@@ -767,11 +712,6 @@ body {
   border-radius: 12px;
   padding: 14px 16px;
 }
-[data-theme="light"] .eco-meter-card,
-[data-theme="light"] .eco-equiv-card,
-[data-theme="light"] .sim-card {
-  background: var(--surface2);
-}
 .sim-card {
   margin-top: 14px;
 }
@@ -805,10 +745,6 @@ body {
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.06);
 }
-[data-theme="light"] .sim-kpi {
-  background: var(--surface);
-  border-color: var(--border);
-}
 .sim-kpi-v {
   font-family: var(--font-mono);
   font-size: 14px;
@@ -832,7 +768,6 @@ body {
   margin-bottom: 10px;
 }
 .eco-card-hd b { color: #3dd4c0; font-weight: 600 }
-[data-theme="light"] .eco-card-hd b { color: #0b7a6e }
 
 .eco-comp-row {
   display: flex;
@@ -858,7 +793,6 @@ body {
   overflow: hidden;
   position: relative;
 }
-[data-theme="light"] .eco-bar-track { background: rgba(0,0,0,.08) }
 .eco-bar-fill {
   height: 100%;
   border-radius: 99px;
@@ -886,10 +820,6 @@ body {
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.05);
 }
-[data-theme="light"] .eco-eq-item {
-  background: var(--surface);
-  border-color: var(--border);
-}
 .eco-eq-ico {
   width: 28px; height: 28px;
   border-radius: 7px;
@@ -899,7 +829,6 @@ body {
   font-size: 14px;
   flex-shrink: 0;
 }
-[data-theme="light"] .eco-eq-ico { color: #0b7a6e; background: rgba(11,122,110,.1) }
 .eco-eq-val {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -1080,7 +1009,6 @@ body {
   background: rgba(61,212,192,.12); color: #3dd4c0;
   border: 1px solid rgba(61,212,192,.25);
 }
-[data-theme="light"] .feat-badge { color: #0b7a6e; background: rgba(11,122,110,.1) }
 .feat-row-desc { font-size: 14px; color: var(--ink2); line-height: 1.58 }
 
 /* ── Methodology & Carbon Section ── */
@@ -1266,7 +1194,6 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
     <button class="icon-btn" id="how-btn" type="button" aria-label="How Arboris works" aria-haspopup="dialog" title="How Arboris works"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><span class="lbl">How it works</span></button>
     <button class="icon-btn" id="export-btn" type="button" aria-label="Export chat as a Markdown file" title="Export chat (.md)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><span class="lbl">Export</span></button>
     <button class="icon-btn" id="copy-btn" type="button" aria-label="Copy session stats" title="Copy session stats"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2h-2"/></svg></span></button>
-    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme" title="Toggle light/dark"><span class="theme-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span></button>
   </div>
 </header>
 
@@ -1607,22 +1534,8 @@ if(typeof module!=='undefined'&&module.exports){
 if(typeof document!=='undefined'){
 document.addEventListener('DOMContentLoaded',function(){
 
-/* Theme */
-var themeBtn=document.getElementById('theme-btn');
-function setThemeBtn(dark){
-  themeBtn.querySelector('.theme-icon').innerHTML=dark?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
-  themeBtn.setAttribute('aria-label',dark?'Switch to light theme':'Switch to dark theme');
-}
-(function(){
-  var dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-  setThemeBtn(dark);
-})();
-themeBtn.addEventListener('click',function(){
-  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  document.documentElement.setAttribute('data-theme',isDark?'light':'dark');
-  setThemeBtn(!isDark);
-});
+/* Theme: dark mode only */
+document.documentElement.setAttribute('data-theme','dark');
 
 /* State: live turns only. Old demo keys are deleted on load; live keys
    migrate from the old greensearch-* names once, never overwriting new keys. */
