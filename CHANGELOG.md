@@ -1,5 +1,9 @@
 # Changelog
-
+- **Unreleased -- Reasoning effort caps and reasoning_tokens transparency (2026-10-30):**
+  - L2 lever: opt-in `reasoning_effort` caps per mode (sprout→low, canopy→low, full→medium). When `ARBORIS_REASONING_EFFORT=1`, the server sends `reasoning_effort` in the provider payload, reducing hidden reasoning tokens on compatible models (o1, o3 via OpenRouter). Off by default; does not affect non-reasoning models.
+  - `reasoning_tokens` transparency: providers now parse `completion_tokens_details.reasoning_tokens` from responses. These are INCLUDED in `completion_tokens` (not additive), so no energy formula change. Reported in meta, energy receipt, and the receipt note when present.
+  - Providers, cascade, footprint, and server all forward the new fields end to end. All cache/local-calc paths report `reasoning_tokens: None`.
+  - 15 new tests cover effort sent/omitted per config, per-mode mapping, reasoning_tokens in meta/receipt/note, local-calc and cache paths, provider payload forwarding, and provider response parsing.
 - **Unreleased -- Repo hygiene and docs (2026-10-29):**
   - Main README rewritten in plain language and corrected: it said 0.8.0, Phase 2 local only, and a demo website, all of which are out of date. It now describes 0.9.0, the live-only website, and the hosted Cloud Run backend, and states the branch rule (main stable, work via dev).
   - Server README corrected the same way: hosted, not local only; no demo mode; deployment section now describes the real Cloud Run service, with Finland as a future move.

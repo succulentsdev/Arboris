@@ -115,6 +115,7 @@ def model_size_tier(model_name):
 
 def energy_receipt(input_tokens, output_tokens, *, model=None,
                    model_tier=None, escalated=False, cache_hit=False,
+                   reasoning_tokens=None,
                    wh_per_token=WH_PER_TOKEN, grid_g_per_kwh=GRID_G_PER_KWH,
                    wue_low=WUE_L_PER_KWH_LOW, wue_high=WUE_L_PER_KWH_HIGH,
                    input_output_ratio=INPUT_OUTPUT_ENERGY_RATIO):
@@ -168,6 +169,7 @@ def energy_receipt(input_tokens, output_tokens, *, model=None,
                        "estimate was made."),
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "reasoning_tokens": reasoning_tokens,
             "total_tokens": None,
             "energy_wh": None,
             "co2e_g": None,
@@ -188,6 +190,10 @@ def energy_receipt(input_tokens, output_tokens, *, model=None,
             "unknown (provider does not disclose it), so the grid "
             "factor is illustrative. Water is cooling water only; "
             "electricity-generation water is excluded.")
+    if reasoning_tokens is not None and reasoning_tokens > 0:
+        note = (f"Of {int(output_tokens)} output tokens, "
+                f"{reasoning_tokens} were reasoning tokens "
+                f"(included in output, not additive). " + note)
     if cache_hit:
         note = ("Cache hit: no new model call, so this answer cost no new "
                 "tokens or energy. " + note)
@@ -199,6 +205,7 @@ def energy_receipt(input_tokens, output_tokens, *, model=None,
         "reason": None,
         "input_tokens": int(input_tokens),
         "output_tokens": int(output_tokens),
+        "reasoning_tokens": reasoning_tokens,
         "total_tokens": total,
         "energy_wh": round(wh, 6),
         "co2e_g": round(wh / 1000 * grid_g_per_kwh, 6),

@@ -65,7 +65,8 @@ class FakeProvider:
 
     def __init__(self, model, text=LONG_ANSWER, avg_logprob=None,
                  completion_tokens=50, prompt_tokens=10, error=None,
-                 logprobs_error=None, finish_reason=None):
+                 logprobs_error=None, finish_reason=None,
+                 reasoning_tokens=None):
         self.model = model
         self.text = text
         self.logprobs_error = logprobs_error  # raised only when logprobs=True
@@ -74,13 +75,15 @@ class FakeProvider:
         self.completion_tokens = completion_tokens
         self.prompt_tokens = prompt_tokens
         self.error = error
+        self.reasoning_tokens = reasoning_tokens
         self.calls = []
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
+                    stop=None, temperature=None, reasoning_effort=None):
         self.calls.append({"prompt": prompt, "system": system,
                            "max_tokens": max_tokens, "logprobs": logprobs,
-                           "stop": stop, "temperature": temperature})
+                           "stop": stop, "temperature": temperature,
+                           "reasoning_effort": reasoning_effort})
         if self.error is not None:
             raise self.error
         if logprobs and self.logprobs_error is not None:
@@ -91,6 +94,7 @@ class FakeProvider:
             prompt_tokens=self.prompt_tokens,
             avg_logprob=self.avg_logprob if logprobs else None,
             finish_reason=self.finish_reason,
+            reasoning_tokens=self.reasoning_tokens,
         )
 
 
@@ -1339,6 +1343,59 @@ class ProviderParsingTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status, 404)
         self.assertIn("HTTP 404", str(ctx.exception))
 
+    def test_reasoning_tokens_parsed(self):
+        comp = self.call({"choices": [{"message": {"content": "Hi."}}],
+                          "usage": {"completion_tokens": 50, "prompt_tokens": 10,
+                                    "completion_tokens_details": {"reasoning_tokens": 30}}})
+        self.assertEqual(comp.reasoning_tokens, 30)
+
+    def test_reasoning_tokens_none_when_absent(self):
+        comp = self.call({"choices": [{"message": {"content": "Hi."}}],
+                          "usage": {"completion_tokens": 50, "prompt_tokens": 10}})
+        self.assertIsNone(comp.reasoning_tokens)
+
+    def test_reasoning_effort_forwarded_in_payload(self):
+        """reasoning_effort is sent in the request payload when provided."""
+        import urllib.error
+        from unittest import mock
+        from arboris.providers import OpenAICompatibleProvider
+
+        provider = OpenAICompatibleProvider("https://example.invalid/v1",
+                                            api_key=SENTINEL_KEY, model="m")
+        resp = io.BytesIO(json.dumps({"choices": [{"message": {"content": "Hi."}}]}).encode())
+        resp.__enter__ = lambda *a: resp
+        resp.__exit__ = lambda *a: False
+        captured = {}
+
+        def fake_urlopen(req, **kw):
+            captured["payload"] = json.loads(req.data.decode())
+            return resp
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            provider.complete_ex("hi", reasoning_effort="low")
+        self.assertEqual(captured["payload"]["reasoning_effort"], "low")
+
+    def test_reasoning_effort_omitted_when_none(self):
+        """reasoning_effort is not in payload when not provided."""
+        import urllib.error
+        from unittest import mock
+        from arboris.providers import OpenAICompatibleProvider
+
+        provider = OpenAICompatibleProvider("https://example.invalid/v1",
+                                            api_key=SENTINEL_KEY, model="m")
+        resp = io.BytesIO(json.dumps({"choices": [{"message": {"content": "Hi."}}]}).encode())
+        resp.__enter__ = lambda *a: resp
+        resp.__exit__ = lambda *a: False
+        captured = {}
+
+        def fake_urlopen(req, **kw):
+            captured["payload"] = json.loads(req.data.decode())
+            return resp
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            provider.complete_ex("hi")
+        self.assertNotIn("reasoning_effort", captured["payload"])
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -1574,3 +1631,73 @@ class ProvenRoutingServerTests(unittest.TestCase):
                                          session_id=SESSION))
         self.assertIsNone(steps["meta"]["stop_sequences"])
         self.assertIsNone(primary.calls[-1]["stop"])
+
+
+class ReasoningEffortTests(unittest.TestCase):
+    """L2 lever: reasoning effort caps and reasoning_tokens transparency."""
+
+    def test_reasoning_effort_sent_when_enabled(self):
+        """When reasoning_effort=True, the provider receives the per-mode effort."""
+        backend, primary, _ = make_backend(reasoning_effort=True)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        # DNS routes to sprout → reasoning_effort should be "low"
+        self.assertEqual(primary.calls[-1]["reasoning_effort"], "low")
+        self.assertEqual(result["meta"]["reasoning_effort"], "low")
+
+    def test_reasoning_effort_not_sent_when_disabled(self):
+        """When reasoning_effort=False (default), no effort is sent."""
+        backend, primary, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(primary.calls[-1]["reasoning_effort"])
+        self.assertIsNone(result["meta"]["reasoning_effort"])
+
+    def test_reasoning_effort_per_mode(self):
+        """Each mode maps to the correct effort level."""
+        from server.app import REASONING_EFFORT
+        self.assertEqual(REASONING_EFFORT["sprout"], "low")
+        self.assertEqual(REASONING_EFFORT["canopy"], "low")
+        self.assertEqual(REASONING_EFFORT["full"], "medium")
+
+    def test_reasoning_tokens_reported_in_meta(self):
+        """When provider reports reasoning_tokens, they appear in meta."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2, reasoning_tokens=15)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertEqual(result["meta"]["reasoning_tokens"], 15)
+
+    def test_reasoning_tokens_none_when_not_reported(self):
+        """When provider does not report reasoning_tokens, meta has None."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+    def test_reasoning_tokens_in_energy_receipt(self):
+        """reasoning_tokens appear in the energy receipt."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2, reasoning_tokens=10)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        energy = result["meta"]["energy"]
+        self.assertEqual(energy["reasoning_tokens"], 10)
+
+    def test_reasoning_tokens_in_energy_note(self):
+        """reasoning_tokens get a breakdown line in the energy note."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2,
+                               completion_tokens=50, reasoning_tokens=20)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        note = result["meta"]["energy"]["note"]
+        self.assertIn("20 were reasoning tokens", note)
+        self.assertIn("included in output, not additive", note)
+
+    def test_local_calc_has_reasoning_tokens_none(self):
+        """Local-calc answers (no model call) have reasoning_tokens=None."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is 2+2?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+    def test_cache_hit_has_reasoning_tokens_none(self):
+        """Exact cache hits have reasoning_tokens=None in meta."""
+        backend, _, _ = make_backend()
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])

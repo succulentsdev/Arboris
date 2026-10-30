@@ -59,7 +59,7 @@ def _extract_score(scored):
 def run_cascade(primary, escalation, prompt, system=None, max_tokens=None,
                 threshold=-1.0, score_fn=None, score_threshold=0.5,
                 score_escalates=False, max_total_tokens=None,
-                stop=None, temperature=None):
+                stop=None, temperature=None, reasoning_effort=None):
     """Run primary, escalate on low confidence, return a CascadeResult.
 
     Escalation triggers, in order:
@@ -87,6 +87,8 @@ def run_cascade(primary, escalation, prompt, system=None, max_tokens=None,
         extra["stop"] = stop
     if temperature is not None:
         extra["temperature"] = temperature
+    if reasoning_effort is not None:
+        extra["reasoning_effort"] = reasoning_effort
     primary_comp = primary.complete_ex(
         prompt, system=system, max_tokens=max_tokens, logprobs=True, **extra
     )
