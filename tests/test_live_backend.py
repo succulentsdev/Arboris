@@ -788,12 +788,15 @@ class EntryPointAndSiteTests(unittest.TestCase):
         # The page must never handle a provider key.
         self.assertNotIn("Authorization", html)
         self.assertNotRegex(html, r"api_key|apiKey|ARBORIS_API_KEY")
-        # Hero image is extracted to website/hero.jpg (no 900KB base64 JPEG in index.html).
+        # Hero image is not used in the redesigned sleek UI (no base64 JPEG or hero.jpg background in index.html).
         self.assertNotIn("data:image/jpeg;base64,", html)
-        self.assertIn("url('hero.jpg')", html)
+        self.assertNotIn("url('hero.jpg')", html)
         self.assertTrue((ROOT / "website" / "hero.jpg").is_file())
-        # Brevity selector bar, methodology section, and valid head structure.
+        # Brevity selector bar, compress button, simulator, health status, and valid head structure.
         self.assertIn('id="brevity-bar"', html)
+        self.assertIn('id="compress-btn"', html)
+        self.assertIn('id="sim-qpd"', html)
+        self.assertIn('id="backend-status"', html)
         self.assertIn('id="methodology"', html)
         self.assertEqual(html.lower().count("<head>"), 1)
         self.assertEqual(html.lower().count("<body>"), 1)

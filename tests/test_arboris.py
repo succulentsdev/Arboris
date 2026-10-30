@@ -108,6 +108,10 @@ class TestBrevityAndModes(unittest.TestCase):
     def test_filler_clauses_strip_cleanly(self):
         text = "I hope you are doing well. Here is the answer."
         self.assertEqual(apply_brevity(text, "full"), "Here is the answer.")
+        chatty = "Certainly! Great question! DNS translates domain names to IP addresses. Hope this helps!"
+        self.assertEqual(apply_brevity(chatty, "sprout"), "DNS translates domain names to IP addresses.")
+        lead_chatty = "Sure, here is a brief explanation: photosynthesis converts light into chemical energy."
+        self.assertEqual(apply_brevity(lead_chatty, "sprout"), "Photosynthesis converts light into chemical energy.")
 
 
 class TestTokensAndFootprint(unittest.TestCase):

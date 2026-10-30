@@ -1,135 +1,2514 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arboris: Low-Carbon AI Chat</title>
-<meta name="description" content="Arboris: lower-carbon AI chat. Shorter prompts, right-sized answers, estimated energy per answer.">
+<meta name="description" content="Arboris: lower-carbon AI chat. Shorter, right-sized answers with an honest, estimated energy footprint.">
 <meta property="og:title" content="Arboris">
 <meta property="og:description" content="Lower-carbon AI chat with right-sized answers and an honest energy estimate.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2028%2028'%3E%3Cpath%20d='M14%203C14%203%206%208%206%2016c0%204.4%203.6%208%208%208s8-3.6%208-8C22%208%2014%203%2014%203z'%20fill='%233f8a4e'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2028%2028'%3E%3Cpath%20d='M14%203C14%203%206%208%206%2016c0%204.4%203.6%208%208%208s8-3.6%208-8C22%208%2014%203%2014%203z'%20fill='#cf4a28'/%3E%3C/svg%3E">
+<style>
+/* ══════════════════════════════════════════════════
+   ARBORIS — SLEEK BOTANICAL PRECISION UI
+   Hero-image-free architectural surface with radial
+   aurora mesh, dot-matrix grid, and live telemetry.
+══════════════════════════════════════════════════ */
+:root {
+  --bg: #070b09;
+  --surface: #0c1310;
+  --surface2: #121c17;
+  --surface3: #17241e;
+  --border: rgba(255,255,255,.08);
+  --border2: rgba(255,255,255,.14);
+  --ink: #eef4f1;
+  --ink2: #9ab0a5;
+  --ink3: #647c71;
+  --teal: #cf4a28;
+  --teal-dim: #1c0e08;
+  --teal-glow: rgba(207,74,40,.22);
+  --teal-soft: rgba(207,74,40,.1);
+  --mint: #3dd4c0;
+  --mint-soft: rgba(61,212,192,.12);
+  --mint-border: rgba(61,212,192,.28);
+  --on-accent: #050a10;
+  --amber: #e0b84a;
+  --amber-dim: #181408;
+  --red: #f07068;
+  --blue: #60a0e0;
+  --purple: #b48ade;
+  --sp-bg: #0a1a1e;
+  --sp-fg: #3dd4c0;
+  --ca-bg: #181408;
+  --ca-fg: #e0b84a;
+  --fo-bg: #1e100e;
+  --fo-fg: #f07068;
+  --ch-bg: #0c1428;
+  --ch-fg: #60a0e0;
+  --shadow: 0 12px 36px rgba(0,0,0,.45);
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', monospace;
+  --r: 14px;
+  --rs: 9px;
+  --header-bg: rgba(7,11,9,.78);
+  --header-ink: #eef4f1;
+  --totals-bg: #09100d;
+  --totals-num: #3dd4c0;
+  --send-bg: #cf4a28;
+  --send-ink: #ffffff;
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(61,212,192,.15), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(207,74,40,.12), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,168,150,.08), transparent 65%);
+  --grid-dot: rgba(255,255,255,.06);
+  --glass-bot: rgba(15,24,19,.88);
+  --glass-bot-border: rgba(255,255,255,.1);
+  --glass-bot-ink: #eef4f1;
+  --glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));
+  --glass-user-border: rgba(207,74,40,.42);
+  --glass-user-ink: #ffffff;
+  --glass-input: rgba(12,19,16,.88);
+  --glass-input-border: rgba(255,255,255,.13);
+  --glass-input-ink: #eef4f1;
+  --glass-muted: #7b9388;
+}
+[data-theme="light"] {
+  --bg: #f5f8f6;
+  --surface: #ffffff;
+  --surface2: #ebf2ee;
+  --surface3: #dfeae4;
+  --border: rgba(15,35,24,.1);
+  --border2: rgba(15,35,24,.18);
+  --ink: #0c1c14;
+  --ink2: #385244;
+  --ink3: #5b7567;
+  --teal: #b83b1a;
+  --teal-dim: #fce8e0;
+  --teal-glow: rgba(184,59,26,.14);
+  --teal-soft: rgba(184,59,26,.08);
+  --mint: #0b7a6e;
+  --mint-soft: rgba(11,122,110,.1);
+  --mint-border: rgba(11,122,110,.26);
+  --on-accent: #ffffff;
+  --amber: #8a6000;
+  --amber-dim: #faf2d8;
+  --red: #c02020;
+  --blue: #1668b0;
+  --purple: #6a3ab0;
+  --sp-bg: #d8f4f0;
+  --sp-fg: #0b7a6e;
+  --ca-bg: #faf2d8;
+  --ca-fg: #8a6000;
+  --fo-bg: #fce0e0;
+  --fo-fg: #b82020;
+  --ch-bg: #dce8f8;
+  --ch-fg: #1668b0;
+  --shadow: 0 8px 28px rgba(10,30,20,.07);
+  --header-bg: rgba(245,248,246,.82);
+  --header-ink: #0c1c14;
+  --totals-bg: #eaf1ed;
+  --totals-num: #0b7a6e;
+  --send-bg: #cf4a28;
+  --send-ink: #ffffff;
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(11,122,110,.12), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(207,74,40,.09), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(11,122,110,.06), transparent 65%);
+  --grid-dot: rgba(12,28,20,.07);
+  --glass-bot: #ffffff;
+  --glass-bot-border: rgba(15,35,24,.12);
+  --glass-bot-ink: #0c1c14;
+  --glass-user: linear-gradient(135deg, rgba(207,74,40,.14), rgba(207,74,40,.08));
+  --glass-user-border: rgba(207,74,40,.32);
+  --glass-user-ink: #0c1c14;
+  --glass-input: #ffffff;
+  --glass-input-border: rgba(15,35,24,.16);
+  --glass-input-ink: #0c1c14;
+  --glass-muted: #5b7567;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+html { color-scheme: dark; scroll-behavior: smooth }
+html[data-theme="light"] { color-scheme: light }
+[hidden] { display: none !important }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16.5px;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Focus + Accessibility ── */
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── Header ── */
+.hd {
+  padding: 13px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--header-ink);
+  z-index: 30;
+  border-bottom: 1px solid var(--border);
+}
+.hd-l { display: flex; align-items: center; gap: 12px }
+.logo {
+  font-family: var(--font-body);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--header-ink);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--teal);
+  background: var(--teal-soft);
+  border: 1px solid rgba(207,74,40,.25);
+  border-radius: 8px;
+}
+.backend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 11px var(--font-mono);
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--ink2);
+  letter-spacing: .02em;
+}
+.backend-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ink3);
+  transition: background .25s, box-shadow .25s;
+}
+.backend-dot.online {
+  background: var(--mint);
+  box-shadow: 0 0 8px var(--mint);
+}
+.backend-dot.offline {
+  background: var(--amber);
+}
+.hd-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-left: auto;
+  margin-right: 16px;
+}
+.nav-link {
+  color: var(--ink2);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .2px;
+  transition: color .2s;
+}
+.nav-link:hover { color: var(--ink) }
+.hd-r { display: flex; gap: 4px; align-items: center }
+.icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink2);
+  border-radius: var(--rs);
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color .18s, background .18s, border-color .18s;
+  min-height: 38px;
+  min-width: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-body);
+}
+.icon-btn:hover {
+  color: var(--ink);
+  background: var(--surface2);
+  border-color: var(--border);
+}
+.icon-btn .lbl { font-size: 12.5px; font-weight: 500; letter-spacing: .01em }
+
+/* ── Settings Popover ── */
+.settings-pop {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 16px 18px; min-width: 320px;
+  box-shadow: var(--shadow); z-index: 100;
+  opacity: 0; pointer-events: none; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s, transform .15s, visibility .15s;
+  color: var(--ink);
+}
+.settings-pop.open { opacity: 1; pointer-events: auto; visibility: visible; transform: translateY(0) }
+.settings-pop .sp-title {
+  font-size: 11px; font-weight: 600; font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: .06em; color: var(--ink3);
+  margin-bottom: 10px;
+}
+.settings-pop .sp-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px }
+.settings-pop .sp-row:last-child { margin-bottom: 0 }
+.settings-pop .sp-label { font-size: 12px; font-weight: 500; color: var(--ink2) }
+.settings-pop .sp-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2);
+  color: var(--ink); border-radius: var(--rs); padding: 8px 10px;
+  font: 12px var(--font-mono); outline: none; transition: border-color .2s;
+}
+.settings-pop .sp-input:focus { border-color: var(--teal); outline: 2px solid var(--teal); outline-offset: 2px }
+.settings-pop .sp-check {
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+  color: var(--ink2); cursor: pointer;
+}
+.settings-pop .sp-check input { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer }
+.settings-pop .sp-note { font-size: 11px; color: var(--ink3); line-height: 1.45 }
+
+/* ── Sleek Architectural Hero & Live Chat Viewport (No Hero Photo) ── */
+.hero {
+  position: relative;
+  min-height: 92vh;
+  min-height: 92svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  background: var(--hero-mesh), var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 35%, #000 30%, transparent 100%);
+  pointer-events: none;
+}
+.hero > * { position: relative; z-index: 1 }
+
+.hero-landing {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex: 1; width: 100%; padding: 96px 24px 12px;
+  transition: opacity .28s, transform .28s;
+}
+.hero.chatting .hero-landing {
+  opacity: 0; pointer-events: none; position: absolute;
+  transform: translateY(-14px);
+}
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: 99px;
+  background: var(--mint-soft);
+  border: 1px solid var(--mint-border);
+  color: var(--mint);
+  font: 600 11.5px var(--font-mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 5.2vw, 3.85rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.12;
+  color: var(--ink);
+  margin-bottom: 14px;
+  letter-spacing: -0.6px;
+}
+.hero-title em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--mint) 0%, #cf4a28 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  font-size: 1.04rem;
+  color: var(--ink2);
+  max-width: 36em;
+  margin: 0 auto 22px;
+  line-height: 1.62;
+}
+.pipeline-strip {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font: 500 11.5px var(--font-mono);
+  color: var(--ink2);
+}
+.pipe-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--ink);
+}
+.pipe-step b { color: var(--mint); font-weight: 600 }
+.pipe-arr { color: var(--ink3); font-size: 11px }
+
+/* ── Chat Area inside Hero ── */
+.hero-chat-area {
+  flex: 1; width: 100%; max-width: 820px; margin: 0 auto;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+  padding: 78px 24px 12px; scroll-behavior: smooth;
+  justify-content: flex-end; text-align: left;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.hero.chatting .hero-chat-area { opacity: 1; pointer-events: auto }
+.hero-chat-area::-webkit-scrollbar { width: 5px }
+.hero-chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px }
+
+/* ── Messages & Markdown Formatting ── */
+.turn { display: flex; flex-direction: column; gap: 10px }
+.mr { display: flex; flex-direction: column; gap: 5px }
+.mr.user { align-items: flex-end }
+.mr.bot { align-items: flex-start }
+.bubble {
+  max-width: 78%; padding: 14px 20px; border-radius: var(--r);
+  line-height: 1.65; word-break: break-word; font-size: 15.5px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+}
+.mr.user .bubble {
+  background: var(--glass-user); border: 1px solid var(--glass-user-border);
+  border-radius: var(--r) var(--r) 4px var(--r); color: var(--glass-user-ink);
+  white-space: pre-wrap;
+}
+.mr.bot .bubble {
+  background: var(--glass-bot); border: 1px solid var(--glass-bot-border);
+  border-radius: var(--r) var(--r) var(--r) 4px; color: var(--glass-bot-ink);
+}
+.mr.bot .bubble.typing { white-space: pre-wrap }
+.mr.bot .bubble.typing::after {
+  content: '▋'; animation: blink .7s steps(1) infinite; color: var(--teal); margin-left: 2px;
+}
+.mr.bot .bubble.err { border-color: rgba(240,112,104,.45); color: var(--red) }
+@keyframes blink { 50% { opacity: 0 } }
+
+/* Rich formatted output inside bot bubble */
+.mr.bot .bubble p { margin: 0 0 8px }
+.mr.bot .bubble p:last-child { margin-bottom: 0 }
+.mr.bot .bubble ul, .mr.bot .bubble ol { margin: 4px 0 8px 20px }
+.mr.bot .bubble li { margin-bottom: 3px }
+.mr.bot .bubble code {
+  font-family: var(--font-mono); font-size: 13.5px;
+  background: var(--surface2); padding: 1px 5px; border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.code-block-wrap {
+  margin: 8px 0; border-radius: var(--rs); overflow: hidden;
+  border: 1px solid var(--border2); background: var(--bg);
+}
+.code-block-hd {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 12px; background: var(--surface2); border-bottom: 1px solid var(--border);
+  font: 600 11px var(--font-mono); color: var(--ink3);
+}
+.code-copy-btn {
+  background: transparent; border: 1px solid var(--border2); color: var(--ink2);
+  font: 600 10.5px var(--font-mono); padding: 2px 8px; border-radius: 4px;
+  cursor: pointer; transition: color .15s, border-color .15s;
+}
+.code-copy-btn:hover { color: var(--ink); border-color: var(--mint) }
+.mr.bot .bubble pre {
+  margin: 0; padding: 11px 14px;
+  background: transparent; border: none;
+  overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.5;
+}
+.mr.bot .bubble pre code { background: none; padding: 0; border: none }
+.mr.bot .bubble table {
+  border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13.5px;
+}
+.mr.bot .bubble th, .mr.bot .bubble td {
+  border: 1px solid var(--border2); padding: 6px 10px; text-align: left;
+}
+.mr.bot .bubble th { background: var(--surface2); font-weight: 600 }
+
+/* Typing dots */
+.dots-bubble {
+  background: var(--glass-bot); border: 1px solid var(--glass-bot-border);
+  border-radius: var(--r) var(--r) var(--r) 4px; padding: 14px 18px;
+  display: inline-flex; gap: 5px; align-items: center;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); animation: dotpulse 1.2s infinite ease-in-out }
+.dot:nth-child(2) { animation-delay: .2s }
+.dot:nth-child(3) { animation-delay: .4s }
+@keyframes dotpulse { 0%,80%,100% { transform: scale(.7); opacity: .4 } 40% { transform: scale(1); opacity: 1 } }
+
+/* PromptShrink diff under user message */
+.shrink-pill {
+  font-size: 11px; font-family: var(--font-mono); color: var(--mint);
+  background: var(--mint-soft); border: 1px solid var(--mint-border);
+  border-radius: 6px; padding: 2px 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.shrink-pill:hover { filter: brightness(1.12) }
+.diff-row {
+  font-size: 12px; font-family: var(--font-mono); color: var(--ink2);
+  margin: 2px 0 4px; max-width: 78%; line-height: 1.6; padding: 7px 11px;
+  border-radius: var(--rs); background: var(--surface);
+  border: 1px solid var(--border2); text-align: left;
+}
+.dr { color: var(--red); text-decoration: line-through; opacity: .88 }
+.dk { color: var(--ink) }
+.da { color: var(--amber); font-style: italic }
+.diff-arrow { color: var(--ink3); margin: 0 4px }
+
+/* Meta tags & receipt under bot answer */
+.mm { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 86% }
+.tag {
+  font-size: 11px; font-weight: 600; font-family: var(--font-mono);
+  padding: 2.5px 8px; border-radius: 6px; white-space: nowrap; letter-spacing: .02em;
+  background: var(--surface2);
+  color: var(--ink2); border: 1px solid var(--border);
+}
+.tag.ts { background: var(--sp-bg); color: var(--sp-fg); border-color: var(--mint-border) }
+.tag.tc { background: var(--ca-bg); color: var(--ca-fg); border-color: rgba(224,184,74,.28) }
+.tag.tf { background: var(--fo-bg); color: var(--fo-fg); border-color: rgba(240,112,104,.28) }
+.tag.tx { background: var(--ch-bg); color: var(--ch-fg); border-color: rgba(96,160,224,.28) }
+.tag.tg-live { background: var(--teal-soft); color: var(--teal); border-color: rgba(207,74,40,.35) }
+.tag.tg-receipt { background: var(--mint-soft); color: var(--mint); border-color: var(--mint-border) }
+.tag.tg-warn { background: var(--amber-dim); color: var(--amber); border-color: rgba(224,184,74,.3) }
+.tag[title] { cursor: help }
+
+.act {
+  min-height: 28px; padding: 2px 10px;
+  background: var(--surface); color: var(--ink2);
+  border: 1px solid var(--border2); border-radius: 6px;
+  font-size: 12px; font-family: var(--font-body);
+  cursor: pointer; transition: background .18s, color .18s, border-color .18s;
+}
+.act:hover { background: var(--surface2); color: var(--ink); border-color: var(--mint-border) }
+
+/* ── Sleek Floating Composer Card & Brevity Controls ── */
+.hero-bottom {
+  width: 100%; max-width: 820px; margin: 0 auto;
+  padding: 8px 24px 28px; flex-shrink: 0;
+}
+.composer-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 12px 14px 10px;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(61,212,192,.04);
+  transition: border-color .2s, box-shadow .2s;
+}
+.composer-card:focus-within {
+  border-color: rgba(61,212,192,.45);
+  box-shadow: var(--shadow), 0 0 24px rgba(61,212,192,.1);
+}
+.ip-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; min-height: 24px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.brevity-bar {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 99px; padding: 2px;
+}
+.brevity-btn {
+  background: transparent; border: none; color: var(--ink2);
+  font: 600 11px var(--font-mono); padding: 4px 11px; border-radius: 99px;
+  cursor: pointer; transition: background .18s, color .18s;
+}
+.brevity-btn:hover { color: var(--ink) }
+.brevity-btn.active { background: var(--teal); color: #fff }
+
+.ip-preview {
+  font-size: 12px; font-family: var(--font-mono); color: var(--glass-muted);
+  transition: color .2s; flex: 1; text-align: left; min-width: 160px;
+}
+.ip-preview.active { color: var(--ink) }
+.ip-preview .px { color: var(--red); text-decoration: line-through; opacity: .85 }
+.ip-count {
+  font-size: 11px; font-family: var(--font-mono); color: var(--glass-muted);
+  white-space: nowrap;
+}
+
+.ir { display: flex; gap: 8px; align-items: center }
+.ir input {
+  flex: 1; min-width: 0; min-height: 48px; padding: 12px 16px; border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--glass-input-ink); font-size: 15.5px; font-family: var(--font-body);
+  outline: none; transition: border-color .2s;
+}
+.ir input::placeholder { color: var(--ink3) }
+.ir input:focus { border-color: var(--mint) }
+.btn-compress {
+  min-height: 48px; padding: 0 13px; border-radius: 12px;
+  border: 1px solid var(--mint-border);
+  background: var(--mint-soft); color: var(--mint);
+  font: 600 12px var(--font-mono); cursor: pointer;
+  white-space: nowrap; transition: filter .18s, transform .1s;
+}
+.btn-compress:hover { filter: brightness(1.15) }
+.btn-compress:active { transform: scale(.98) }
+.btn-s {
+  min-height: 48px; padding: 12px 24px; border-radius: 12px; border: none;
+  background: var(--send-bg); color: var(--send-ink);
+  font-weight: 600; font-size: 14.5px; cursor: pointer;
+  font-family: var(--font-body); transition: filter .2s, transform .1s;
+  white-space: nowrap;
+}
+.btn-s:hover { filter: brightness(1.12) }
+.btn-s:active { transform: scale(.98) }
+.btn-cl {
+  min-height: 48px; min-width: 46px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--ink2); border-radius: 12px; padding: 0 13px;
+  cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center;
+}
+.btn-cl:hover { color: var(--ink); border-color: var(--border2) }
+
+.shrink-bar {
+  height: 2px; border-radius: 1px; background: var(--border);
+  margin-top: 8px; overflow: hidden; opacity: 0; transition: opacity .3s;
+}
+.shrink-bar.active { opacity: 1 }
+.shrink-bar-fill {
+  height: 100%; border-radius: 1px; background: linear-gradient(90deg, var(--mint), var(--teal));
+  width: 0%; transition: width .35s cubic-bezier(.4,0,.2,1);
+}
+.hint {
+  font-size: 11.5px; color: var(--ink3); margin-top: 8px;
+  font-family: var(--font-mono);
+}
+.hero.chatting .hero-bottom .hint { display: none }
+
+/* ── Stats Strip ── */
+.stats-bar {
+  position: relative;
+  background: radial-gradient(ellipse at 50% 0%, var(--mint-soft) 0%, transparent 70%), var(--surface);
+  padding: 36px 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  max-width: 1080px;
+  margin: 28px auto 24px;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  gap: 20px;
+  box-shadow: var(--shadow);
+}
+.stat-item {
+  text-align: center;
+  padding: 8px 12px;
+  position: relative;
+}
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 40px;
+  background: linear-gradient(135deg, #3dd4c0 0%, #e0b84a 60%, #cf4a28 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 400;
+  line-height: 1.05;
+}
+.stat-label { font-size: 13px; color: var(--ink2); margin-top: 8px; font-weight: 500 }
+.stat-sub { font-size: 11px; color: var(--ink3); font-family: var(--font-mono); margin-top: 3px }
+
+/* ── Live Session Totals & Carbon/Energy Telemetry Dashboard ── */
+.eco-telemetry-wrap {
+  max-width: 1080px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+  width: 100%;
+}
+.eco-panel {
+  background: linear-gradient(165deg, var(--surface) 0%, var(--totals-bg) 100%);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+  position: relative;
+  overflow: hidden;
+}
+.eco-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #3dd4c0 0%, #cf4a28 55%, #e0b84a 100%);
+}
+.eco-panel-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.eco-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+.pulse-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #3dd4c0;
+  box-shadow: 0 0 0 0 rgba(61,212,192,.7);
+  animation: ecoPulse 2.2s infinite;
+}
+@keyframes ecoPulse {
+  0% { box-shadow: 0 0 0 0 rgba(61,212,192,.65) }
+  70% { box-shadow: 0 0 0 8px rgba(61,212,192,0) }
+  100% { box-shadow: 0 0 0 0 rgba(61,212,192,0) }
+}
+.eco-panel-sub {
+  font-size: 12px;
+  color: var(--ink3);
+  font-family: var(--font-mono);
+}
+.health-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.health-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--ink2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.health-pill b { color: var(--teal); font-weight: 600 }
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.totals-live { background: transparent }
+.ti-lbl { display: none }
+.ti {
+  padding: 14px 12px;
+  text-align: left;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+  transition: transform .18s, border-color .18s;
+}
+.ti:hover {
+  transform: translateY(-2px);
+  border-color: rgba(61,212,192,.35);
+}
+.tn {
+  font-size: 22px; font-weight: 700; font-family: var(--font-mono);
+  color: var(--totals-num); display: block; line-height: 1.2;
+}
+.tl { font-size: 11.5px; color: var(--ink2); margin-top: 5px; display: block; font-weight: 500 }
+.te { font-size: 10.5px; color: var(--ink3); display: block; font-family: var(--font-mono); margin-top: 2px; min-height: 14px }
+
+/* Visual Energy & Carbon Equivalents Strip inside Telemetry Dashboard */
+.eco-flair-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.eco-meter-card, .eco-equiv-card, .sim-card {
+  background: rgba(6,13,8,.42);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+[data-theme="light"] .eco-meter-card,
+[data-theme="light"] .eco-equiv-card,
+[data-theme="light"] .sim-card {
+  background: var(--surface2);
+}
+.sim-card {
+  margin-top: 14px;
+}
+.sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 12px;
+}
+.sim-slider-wrap {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sim-slider-wrap input[type="range"] {
+  flex: 1;
+  accent-color: #3dd4c0;
+  cursor: pointer;
+}
+.sim-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.sim-kpi {
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+}
+[data-theme="light"] .sim-kpi {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.sim-kpi-v {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--totals-num);
+  display: block;
+}
+.sim-kpi-l {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 2px;
+  display: block;
+}
+.eco-card-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--ink2);
+  margin-bottom: 10px;
+}
+.eco-card-hd b { color: #3dd4c0; font-weight: 600 }
+[data-theme="light"] .eco-card-hd b { color: #0b7a6e }
+
+.eco-comp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.eco-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.eco-bar-lbl {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--ink2);
+}
+.eco-bar-track {
+  height: 8px;
+  background: rgba(255,255,255,.07);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+[data-theme="light"] .eco-bar-track { background: rgba(0,0,0,.08) }
+.eco-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .45s cubic-bezier(.22,1,.36,1);
+}
+.eco-bar-fill.arboris {
+  background: linear-gradient(90deg, #3dd4c0, #22a896);
+  box-shadow: 0 0 12px rgba(61,212,192,.35);
+}
+.eco-bar-fill.standard {
+  background: linear-gradient(90deg, #cf4a28, #f07068);
+  opacity: .78;
+}
+.eco-equiv-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.eco-eq-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.05);
+}
+[data-theme="light"] .eco-eq-item {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.eco-eq-ico {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(61,212,192,.12);
+  color: #3dd4c0;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+[data-theme="light"] .eco-eq-ico { color: #0b7a6e; background: rgba(11,122,110,.1) }
+.eco-eq-val {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+  line-height: 1.2;
+}
+.eco-eq-lbl {
+  font-size: 10.5px;
+  color: var(--ink3);
+  display: block;
+}
+
+/* ── Per-Message Interactive Energy & Carbon Receipt Drawer ── */
+.tag.tg-receipt-btn {
+  background: linear-gradient(135deg, rgba(14,142,128,.32), rgba(10,26,30,.88));
+  color: #5ce6d4;
+  border: 1px solid rgba(61,212,192,.4);
+  cursor: pointer;
+  transition: transform .15s, border-color .2s, box-shadow .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.tag.tg-receipt-btn:hover {
+  border-color: #3dd4c0;
+  box-shadow: 0 0 14px rgba(61,212,192,.25);
+  transform: translateY(-1px);
+}
+.eco-drawer {
+  margin-top: 6px;
+  max-width: 82%;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(61,212,192,.32);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--ink);
+  font-size: 12.5px;
+  box-shadow: var(--shadow);
+  animation: drawerIn .2s ease-out;
+}
+@keyframes drawerIn {
+  from { opacity: 0; transform: translateY(-4px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+.eco-drawer-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.eco-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.eco-cell {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.eco-cell-v {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+}
+.eco-cell-k {
+  font-size: 10.5px;
+  color: var(--ink3);
+  margin-top: 2px;
+  display: block;
+}
+.eco-levers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.eco-lever-pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--teal-dim);
+  color: var(--teal);
+  border: 1px solid rgba(61,212,192,.28);
+}
+.eco-drawer-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.45;
+}
+
+/* Zero-model gate typing badge */
+.ip-preview.zero-gate {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+/* ── Features Section (6 Power-Saving Levers) ── */
+.feat-section {
+  padding: 56px 24px 40px;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+.feat-section-title {
+  border-bottom: 2px solid var(--teal);
+  display: inline-block;
+  padding-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+.feat-section-sub {
+  font-size: 15px;
+  color: var(--ink2);
+  margin-bottom: 32px;
+  max-width: 68ch;
+}
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.feat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--teal);
+  border-radius: var(--r);
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.feat-row:hover {
+  transform: translateY(-3px);
+  border-color: rgba(61,212,192,.4);
+  box-shadow: var(--shadow);
+}
+.feat-row-icon {
+  flex-shrink: 0; width: 42px; height: 42px;
+  border-radius: 10px;
+  background: var(--teal-dim);
+  border: 1px solid rgba(61,212,192,.25);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--teal);
+}
+.feat-row-body { flex: 1 }
+.feat-row-title {
+  font-size: 15.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.feat-badge {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+  padding: 2px 7px; border-radius: 99px;
+  background: rgba(61,212,192,.12); color: #3dd4c0;
+  border: 1px solid rgba(61,212,192,.25);
+}
+[data-theme="light"] .feat-badge { color: #0b7a6e; background: rgba(11,122,110,.1) }
+.feat-row-desc { font-size: 14px; color: var(--ink2); line-height: 1.58 }
+
+/* ── Methodology & Carbon Section ── */
+.meth-section {
+  padding: 24px 24px 72px;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+.meth-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 18px;
+}
+.meth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: border-color .2s;
+}
+.meth-card:hover { border-color: var(--border2) }
+.meth-card h3 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.meth-card p, .meth-card li {
+  font-size: 14px;
+  color: var(--ink2);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.meth-card ul { padding-left: 18px }
+.meth-card code {
+  font-family: var(--font-mono); font-size: 12px;
+  background: var(--surface2); padding: 1px 5px; border-radius: 4px; color: var(--ink);
+}
+.callout {
+  background: var(--amber-dim); border-radius: var(--rs); padding: 10px 12px;
+  font-size: 13px; color: var(--ink2); line-height: 1.55; margin: 10px 0;
+  border-left: 3px solid var(--amber);
+}
+.callout b { color: var(--amber) }
+
+/* ── Dialog (How Arboris Works) ── */
+dialog.how {
+  margin: auto; max-width: 640px; width: calc(100% - 32px);
+  max-height: 88vh; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,.55);
+}
+dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
+.how-in { padding: 24px 28px; overflow-y: auto; max-height: 88vh }
+.how-hd { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px }
+.how-hd .icon-btn { color: var(--ink2) }
+.how h2 { font-family: var(--font-display); font-size: 24px; font-weight: 400; font-style: italic }
+.how h3 { font-size: 14px; font-weight: 700; color: var(--teal); margin: 20px 0 6px; letter-spacing: .02em }
+.how p, .how li { font-size: 14.5px; color: var(--ink2); line-height: 1.65 }
+.how ul { padding-left: 18px }
+.how b, .how code { color: var(--ink) }
+.how code { font-family: var(--font-mono); font-size: 12.5px; background: var(--surface2); padding: 1px 5px; border-radius: 4px }
+
+/* ── Footer ── */
+.site-footer {
+  padding: 40px 32px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.footer-line {
+  font-size: 14px; color: var(--ink3);
+  display: flex; justify-content: center; align-items: center;
+  gap: 16px; flex-wrap: wrap;
+}
+.footer-link {
+  color: var(--ink2); text-decoration: none; transition: color .2s;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.footer-link:hover { color: var(--teal) }
+.footer-link svg { width: 15px; height: 15px }
+.footer-sep { color: var(--ink3); opacity: .4 }
+
+/* ── Flash + Toast ── */
+.cf {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.88);
+  background: var(--ch-bg); color: var(--ch-fg); border-radius: var(--r);
+  padding: 10px 20px; font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+  pointer-events: none; opacity: 0; transition: opacity .18s, transform .22s;
+  z-index: 200; white-space: nowrap; box-shadow: var(--shadow);
+}
+.cf.show { opacity: 1; transform: translate(-50%,-50%) scale(1) }
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--ink); color: var(--bg); border-radius: var(--rs);
+  padding: 8px 18px; font-size: 14px; opacity: 0; transition: opacity .2s, transform .2s;
+  z-index: 200; pointer-events: none; box-shadow: var(--shadow);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0) }
+
+/* ── Responsive Breakpoints ── */
+@media (max-width: 780px) {
+  .eco-flair-grid { grid-template-columns: 1fr }
+  .pipeline-strip { display: none }
+}
+@media (max-width: 680px) {
+  .hd-nav { display: none }
+}
+@media (max-width: 600px) {
+  .stats-bar { gap: 18px; padding: 28px 16px; margin: 16px 12px }
+  .stat-num { font-size: 32px }
+  .eco-equiv-list { grid-template-columns: 1fr }
+  .backend-pill { display: none }
+}
+@media (max-width: 540px) {
+  body { font-size: 16px }
+  .hd { padding: 12px 16px; flex-wrap: nowrap }
+  .hd-r { gap: 2px }
+  .hd .lbl { display: none }
+  .icon-btn { min-width: 36px; min-height: 36px; padding: 6px 8px }
+  .logo { font-size: 18px }
+  .settings-pop { min-width: 280px; right: -8px }
+  .hero { min-height: 82svh; min-height: 82vh }
+  .hero-landing { padding: 84px 16px 0 }
+  .hero-title { font-size: 1.75rem }
+  .hero-chat-area { padding: 70px 12px 6px }
+  .bubble { max-width: 88%; font-size: 15px; padding: 10px 14px }
+  .diff-row, .eco-drawer { max-width: 94% }
+  .mm { max-width: 96%; gap: 4px }
+  .tag { font-size: 10px; padding: 2px 6px }
+  .hero-bottom { padding: 8px 12px 20px }
+  .composer-card { padding: 10px 10px 8px }
+  .ir input { padding: 12px 12px; font-size: 15px }
+  .btn-s { padding: 12px 16px; font-size: 14px }
+  .ti { min-width: 82px; padding: 10px 8px }
+  .tn { font-size: 18px }
+  .eco-telemetry-wrap { padding: 0 12px }
+}
+@media (max-width: 400px) {
+  .btn-s { padding: 12px 14px; font-size: 14px }
+  .ir input { padding: 12px 10px; font-size: 15px }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important }
+}
+</style>
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar" aria-label="Chats">
-  <div class="side-head">
-    <a class="side-brand" href="index.html" aria-label="Arboris home">
-      <svg width="22" height="22" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3C14 3 6 8 6 16c0 4.4 3.6 8 8 8s8-3.6 8-8C22 8 14 3 14 3z"/><path d="M14 10v12M14 14c-2.5-1.5-4-3-4-3M14 17c2-1 3.5-2.5 3.5-2.5" stroke-linecap="round" stroke-width="1.5"/></svg>
-      Arboris
-    </a>
-    <button class="side-toggle" id="side-toggle" type="button" aria-label="Toggle chat list" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<header class="hd">
+  <div class="hd-l">
+    <div class="logo"><div class="logo-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3C14 3 6 8 6 16c0 4.4 3.6 8 8 8s8-3.6 8-8C22 8 14 3 14 3z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M14 10v12M14 14c-2.5-1.5-4-3-4-3M14 17c2-1 3.5-2.5 3.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>Arboris</div>
+    <div class="backend-pill" id="backend-status" title="Live backend status"><span class="backend-dot" id="backend-dot"></span><span id="backend-lbl">Live router</span></div>
   </div>
-  <button class="new-chat" id="new-chat-btn" type="button">＋ New chat</button>
-  <div class="chats-label" aria-hidden="true">Chats</div>
-  <p class="sr-only" id="chat-list-help">Drag a chat to reorder it, or use Alt and the up or down arrow keys. Right click or press Shift F10 for chat options.</p>
-  <div class="chat-rail" id="chat-rail">
-    <div class="chat-highlight" id="chat-highlight" aria-hidden="true" hidden></div>
-    <nav class="chat-list" id="chat-list" aria-label="Past chats" aria-describedby="chat-list-help"></nav>
-  </div>
-  <div class="sr-only" id="chat-order-status" role="status" aria-live="polite"></div>
-  <div class="side-acct">
-    <button class="acct" id="acct-btn" type="button" aria-label="Account" aria-haspopup="true" aria-expanded="false">
-      <span class="acct-ring">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><circle class="ring-bg" cx="20" cy="20" r="17"/><circle class="ring-fg" id="ring-fg" cx="20" cy="20" r="17"/></svg>
-        <span class="acct-face">A</span>
-      </span>
-    </button>
-    <div class="acct-pop" id="acct-pop" hidden>
-      <a href="features.html">Features</a>
-      <a href="https://github.com/succulentsdev/Arboris" target="_blank" rel="noopener">GitHub</a>
-    </div>
-  </div>
-</aside>
-<div class="scrim" id="scrim" aria-hidden="true"></div>
-
-<div class="main">
-  <button class="side-open" id="side-open" type="button" aria-label="Open chat list"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
-
-  <div class="empty" id="empty">
-    <h1>What should we plant today?</h1>
-    <div class="chips">
-      <button class="chip" type="button" data-q="Explain DNS simply">Explain DNS simply</button>
-      <button class="chip" type="button" data-q="How does photosynthesis work?">How does photosynthesis work?</button>
-      <button class="chip" type="button" data-q="Write a haiku about a forest">Write a haiku about a forest</button>
-    </div>
-    <div id="composer-home"></div>
-  </div>
-
-  <main class="thread" id="thread" aria-label="Conversation">
-    <div class="thread-inner" id="chat" role="region" aria-label="Messages"></div>
-  </main>
-  <div class="sr-only" id="sr-live" aria-live="polite" aria-atomic="true"></div>
-  <div id="composer-dock"></div>
-
-  <footer class="composer" id="composer">
-    <div class="composer-inner">
-      <div id="attachment-list" class="attachment-list" aria-label="Files ready to send" hidden></div>
-      <div class="composer-row">
-        <button class="btn-attach" id="attach-btn" type="button" aria-label="Attach files" title="Images, PDFs and text files · up to 5 MB each"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-        <input id="file-input" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,text/*,.md,.csv,.json,.jsonl,.yaml,.yml,.log,.py,.js,.ts,.css,.html,.xml,.sql,.toml" hidden>
-        <textarea id="ci" rows="1" placeholder="Ask anything" autocomplete="off" aria-label="Your question"></textarea>
-        <button class="btn-send" id="sb" type="button" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16z"/><path d="M4 20C8 14 12 10 20 4"/></svg></button>
+  <nav class="hd-nav" aria-label="Page sections">
+    <a class="nav-link" href="#totals-live">Eco Telemetry</a>
+    <a class="nav-link" href="#sim-section">Annual Simulator</a>
+    <a class="nav-link" href="#features">Power Levers</a>
+    <a class="nav-link" href="#methodology">Methodology</a>
+    <a class="nav-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+  <div class="hd-r">
+    <div style="position:relative">
+      <button class="icon-btn" id="settings-btn" type="button" aria-label="Backend settings" aria-haspopup="true" aria-expanded="false" title="Backend settings"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span></button>
+      <div class="settings-pop" id="settings-pop">
+        <div class="sp-title">Backend</div>
+        <div class="sp-row">
+          <label class="sp-label" for="live-url">Backend URL</label>
+          <input class="sp-input" id="live-url" type="url" placeholder="http://localhost:8000/api/chat">
+        </div>
+        <div class="sp-row">
+          <label class="sp-check"><input id="live-baseline" type="checkbox"> Measure baseline (doubles API calls)</label>
+        </div>
+        <div class="sp-row">
+          <p class="sp-note">All prompts go to this backend. The backend holds the API key; this page never sees it.</p>
+        </div>
       </div>
     </div>
-  </footer>
+    <button class="icon-btn" id="how-btn" type="button" aria-label="How Arboris works" aria-haspopup="dialog" title="How Arboris works"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><span class="lbl">How it works</span></button>
+    <button class="icon-btn" id="export-btn" type="button" aria-label="Export chat as a Markdown file" title="Export chat (.md)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><span class="lbl">Export</span></button>
+    <button class="icon-btn" id="copy-btn" type="button" aria-label="Copy session stats" title="Copy session stats"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2h-2"/></svg></span></button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme" title="Toggle light/dark"><span class="theme-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span></button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-landing">
+    <div class="hero-kicker"><span class="hero-kicker-dot" aria-hidden="true"></span>OUTPUT-AWARE GREEN INFERENCE ROUTER</div>
+    <h1 class="hero-title">Lower-carbon <em>AI chat</em></h1>
+    <p class="hero-sub">Shorter prompts, right-sized answers, and zero-model local resolution for less energy per conversation.</p>
+    <div class="pipeline-strip" aria-label="Arboris 5-stage inference pipeline">
+      <span class="pipe-step"><b>01</b> Zero-Model Gate</span>
+      <span class="pipe-arrow" aria-hidden="true">→</span>
+      <span class="pipe-step"><b>02</b> PromptShrink</span>
+      <span class="pipe-arrow" aria-hidden="true">→</span>
+      <span class="pipe-step"><b>03</b> Semantic Cache</span>
+      <span class="pipe-arrow" aria-hidden="true">→</span>
+      <span class="pipe-step"><b>04</b> Brevity Cascade</span>
+      <span class="pipe-arrow" aria-hidden="true">→</span>
+      <span class="pipe-step"><b>05</b> CO₂e Receipt</span>
+    </div>
+  </div>
+  <div class="hero-chat-area" id="chat" role="region" aria-label="Conversation"></div>
+  <div class="sr-only" id="sr-live" aria-live="polite" aria-atomic="true"></div>
+  <div class="hero-bottom">
+    <div class="composer-card">
+      <div class="ip-bar">
+        <div class="brevity-bar" id="brevity-bar" role="group" aria-label="Answer verbosity">
+          <button class="brevity-btn active" type="button" data-mode="auto" aria-pressed="true" title="Auto-route verbosity from prompt complexity">Auto</button>
+          <button class="brevity-btn" type="button" data-mode="sprout" aria-pressed="false" title="Sprout: ~2 sentences">Sprout</button>
+          <button class="brevity-btn" type="button" data-mode="canopy" aria-pressed="false" title="Canopy: ~4 sentences">Canopy</button>
+          <button class="brevity-btn" type="button" data-mode="forest" aria-pressed="false" title="Forest: ~6 sentences">Forest</button>
+        </div>
+        <div class="ip-preview" id="ip-prev"></div>
+        <div class="ip-count" id="ip-cnt"></div>
+      </div>
+      <div class="ir">
+        <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
+        <button class="btn-compress" id="compress-btn" type="button" title="Apply PromptShrink compression directly to your input text">✂ Compress</button>
+        <button class="btn-s" id="sb" type="button">Send</button>
+        <button class="btn-cl" id="cb" type="button" title="Clear chat" aria-label="Clear chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="shrink-bar" id="shrink-bar"><div class="shrink-bar-fill" id="shrink-bar-fill"></div></div>
+    </div>
+    <p class="hint">Enter to send · try math, units, hex/RGB, or any question</p>
+  </div>
+</section>
+
+<div class="stats-bar" id="stats">
+  <div class="stat-item"><div class="stat-num">800×</div><div class="stat-label">output vs. input token energy</div><div class="stat-sub">Ruf &amp; Detyniecki (HotCarbon ’26)</div></div>
+  <div class="stat-item"><div class="stat-num">32%</div><div class="stat-label">fewer input tokens</div><div class="stat-sub">PromptShrink v1 corpus benchmark</div></div>
+  <div class="stat-item"><div class="stat-num">0 Wh</div><div class="stat-label">on local &amp; cached queries</div><div class="stat-sub">Zero-model gate + session cache</div></div>
+  <div class="stat-item"><div class="stat-num">3</div><div class="stat-label">right-sized brevity tiers</div><div class="stat-sub">Sprout · Canopy · Forest</div></div>
 </div>
 
-<div id="toast" role="status"></div>
-<div id="cache-flash" aria-hidden="true"></div>
-<div id="file-drop-overlay" class="file-drop-overlay" aria-hidden="true"><span>Drop files to attach</span></div>
-<div id="chat-menu" class="chat-menu" role="menu" aria-label="Chat options" hidden>
-  <button type="button" role="menuitem" data-chat-command="rename">Rename</button>
-  <button type="button" role="menuitem" data-chat-command="delete">Delete</button>
+<section class="eco-telemetry-wrap" aria-label="Carbon and energy savings telemetry">
+  <div class="eco-panel">
+    <div class="eco-panel-hd">
+      <div class="eco-panel-title"><span class="pulse-dot" aria-hidden="true"></span>Carbon &amp; Energy Telemetry</div>
+      <div class="eco-panel-sub" id="eco-status-sub">Provider-reported token accounting · 0.6 mWh/out-tok · 400 gCO₂e/kWh</div>
+    </div>
+    <div class="health-strip" id="health-strip" aria-label="Backend router configuration">
+      <span class="health-pill">Model <b id="hp-model">gpt-4o-mini</b></span>
+      <span class="health-pill">Cascade <b id="hp-cascade">ready</b></span>
+      <span class="health-pill">Zero-Model Gate <b>active (math · units · base · color)</b></span>
+      <span class="health-pill">Semantic Cache <b>enabled</b></span>
+    </div>
+    <div class="totals totals-live" id="totals-live" aria-label="Live totals (provider-reported)">
+      <div class="ti-lbl">LIVE<br>provider-reported</div>
+      <div class="ti"><span class="tn" id="lt-calls">0</span><span class="tl">live answers</span><span class="te" id="lt-local">0 local · 0 cached</span></div>
+      <div class="ti"><span class="tn" id="lt-in">0</span><span class="tl">input tokens</span><span class="te" id="lt-shrunk">0 trimmed by PromptShrink</span></div>
+      <div class="ti"><span class="tn" id="lt-out">0</span><span class="tl">output tokens</span><span class="te" id="lt-unrep"></span></div>
+      <div class="ti"><span class="tn" id="lt-wh">0 Wh</span><span class="tl">energy (est.)</span><span class="te" id="lt-water">0 mL cooling water</span></div>
+      <div class="ti"><span class="tn" id="lt-co2">0 g</span><span class="tl">CO₂e (est.)</span><span class="te" id="lt-finland">0 g at 30 g/kWh (FI)</span></div>
+      <div class="ti"><span class="tn" id="lt-hits">0</span><span class="tl">cache hits</span><span class="te">0 Wh reuse</span></div>
+      <div class="ti"><span class="tn" id="lt-esc">0</span><span class="tl">escalations</span><span class="te">cascade checks</span></div>
+      <div class="ti"><span class="tn" id="lt-saved">—</span><span class="tl" id="lt-saved-lbl">saved vs baseline (measured)</span><span class="te" id="lt-est-saved">enable Measure baseline to test</span></div>
+    </div>
+    <div class="eco-flair-grid">
+      <div class="eco-meter-card">
+        <div class="eco-card-hd">
+          <span>Output Token Footprint vs. Standard Verbose Prompt</span>
+          <b id="eco-comp-badge">Awaiting first turn</b>
+        </div>
+        <div class="eco-comp-row">
+          <div class="eco-bar-wrap">
+            <div class="eco-bar-lbl"><span>Arboris right-sized output</span><span id="eco-bar-arb-txt">0 tok · 0 Wh</span></div>
+            <div class="eco-bar-track"><div class="eco-bar-fill arboris" id="eco-bar-arb" style="width:0%"></div></div>
+          </div>
+          <div class="eco-bar-wrap">
+            <div class="eco-bar-lbl"><span id="eco-bar-std-lbl">Standard verbose reference (modeled)</span><span id="eco-bar-std-txt">0 tok · 0 Wh</span></div>
+            <div class="eco-bar-track"><div class="eco-bar-fill standard" id="eco-bar-std" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="eco-equiv-card">
+        <div class="eco-card-hd">
+          <span>Tangible Session Equivalents</span>
+          <b id="eco-equiv-tag">Estimated</b>
+        </div>
+        <div class="eco-equiv-list">
+          <div class="eco-eq-item">
+            <div class="eco-eq-ico" aria-hidden="true">💡</div>
+            <div><span class="eco-eq-val" id="eq-led">0.0 s</span><span class="eco-eq-lbl">of a 9W LED bulb</span></div>
+          </div>
+          <div class="eco-eq-item">
+            <div class="eco-eq-ico" aria-hidden="true">💧</div>
+            <div><span class="eco-eq-val" id="eq-water">0 mL</span><span class="eco-eq-lbl">cooling water (0.1–0.3 L/kWh)</span></div>
+          </div>
+          <div class="eco-eq-item">
+            <div class="eco-eq-ico" aria-hidden="true">⚡</div>
+            <div><span class="eco-eq-val" id="eq-avoided">0 Wh</span><span class="eco-eq-lbl" id="eq-avoided-lbl">modeled energy avoided</span></div>
+          </div>
+          <div class="eco-eq-item">
+            <div class="eco-eq-ico" aria-hidden="true">🌲</div>
+            <div><span class="eco-eq-val" id="eq-finland">−92.5%</span><span class="eco-eq-lbl" id="eq-finland-lbl">if run on 30 g/kWh FI grid</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sim-card" id="sim-section">
+      <div class="eco-card-hd">
+        <span>Annual Power &amp; Carbon Savings Simulator (Arboris vs. Unconstrained 220-tok Replies)</span>
+        <b id="sim-qpd-lbl">50 queries / day</b>
+      </div>
+      <div class="sim-controls">
+        <div class="sim-slider-wrap">
+          <label for="sim-qpd" style="font-size:11.5px;color:var(--ink2);font-family:var(--font-mono)">Daily prompts:</label>
+          <input id="sim-qpd" type="range" min="10" max="1000" step="10" value="50" aria-label="Simulated daily prompts">
+        </div>
+        <span style="font-size:11px;color:var(--ink3);font-family:var(--font-mono)">Assumes ~58% average output reduction + 15% zero-model/cache hit rate</span>
+      </div>
+      <div class="sim-kpis">
+        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-wh">1.63 kWh/yr</span><span class="sim-kpi-l">electricity avoided</span></div>
+        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-co2">653 g CO₂e/yr</span><span class="sim-kpi-l">at 400 g/kWh grid factor</span></div>
+        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-water">326 mL/yr</span><span class="sim-kpi-l">data-centre cooling water</span></div>
+        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-led">181 hrs/yr</span><span class="sim-kpi-l">of a 9W LED bulb</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="feat-section" id="features">
+  <h2 class="feat-section-title">Six levers that cut power vs. standard ChatGPT prompts</h2>
+  <p class="feat-section-sub">Because generating an output token uses ~800× more energy than reading an input token, Arboris attacks both prompt bloat and unnecessary output decoding before, during, and after inference.</p>
+  <div class="feat-grid">
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>1. Zero-Model Local Gate</span><span class="feat-badge">−100% Wh</span></div><div class="feat-row-desc">Intercepts pure arithmetic (<code>12 + 7</code>), percentages (<code>15% of 240</code>), unit conversions (<code>100 km to miles</code>, <code>60 mph to km/h</code>, <code>3600 s to hours</code>), base conversions (<code>255 in hex</code>), and colors (<code>#3dd4c0 to rgb</code>) in under 1 ms — 0 GPU calls, 0 tokens, and 0 Wh.</div></div></div>
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H14a4 4 0 010 8h-4a4 4 0 000 8h5.5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>2. Right-Sized Brevity &amp; Fluff Strip</span><span class="feat-badge">−45–70% out-tok</span></div><div class="feat-row-desc">Standard ChatGPT replies add polite preambles (<i>"Certainly! Great question!"</i>) and recaps. Arboris strips AI pleasantries, routes lookups to <b>Sprout</b> (~2 sentences), explanations to <b>Canopy</b> (~4), and deep queries to <b>Forest</b> (~6), with expand-on-demand.</div></div></div>
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/><path d="M9 12h6" stroke-width="2.5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>3. PromptShrink &amp; In-Place Compress</span><span class="feat-badge">−32% in-tok</span></div><div class="feat-row-desc">Strips conversational filler, email sign-offs, and wordy clauses before sending — or click <b>✂ Compress</b> in the composer to shrink your prompt in place — while preserving code fences and instructions.</div></div></div>
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>4. Exact &amp; Semantic Session Caching</span><span class="feat-badge">0 new tokens</span></div><div class="feat-row-desc">Reuses verified high-quality answers across identical or lexically equivalent fact/definition queries in your session — eliminating redundant GPU prefill and decode passes completely.</div></div></div>
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>5. Reasoning Effort &amp; Small-Tier Cascade</span><span class="feat-badge">Capped CoT</span></div><div class="feat-row-desc">Caps hidden chain-of-thought <code>reasoning_effort</code> on trivial queries and routes easy lookups to a smaller model tier first, escalating to the primary model only when confidence or quality score is low.</div></div></div>
+    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12a4 4 0 004 4M12 8v8M9 9l6 6"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>6. Output-Weighted Carbon Receipts</span><span class="feat-badge">Transparent</span></div><div class="feat-row-desc">Every answer includes an interactive energy, CO₂e, and cooling-water receipt computed from provider-reported tokens (including hidden <code>reasoning_tokens</code>) with published academic anchors.</div></div></div>
+  </div>
 </div>
-<dialog id="chat-rename-dialog" class="chat-dialog" aria-labelledby="chat-rename-title">
-  <form method="dialog">
-    <h2 id="chat-rename-title">Rename chat</h2>
-    <label for="chat-name">Chat name</label>
-    <input id="chat-name" name="title" required maxlength="120" autocomplete="off">
-    <div class="chat-dialog-actions">
-      <button type="submit" value="cancel" formnovalidate>Cancel</button>
-      <button type="submit" value="confirm" class="primary">Save</button>
+
+<section class="meth-section" id="methodology" aria-label="Methodology and carbon transparency">
+  <div class="meth-grid">
+    <div class="meth-card">
+      <h3>Routing &amp; brevity modes</h3>
+      <p>In <b>Auto</b> mode, Arboris selects a sentence budget and token cap before calling the model:</p>
+      <ul>
+        <li><b>Sprout</b> (≤12 words): ~2 sentences, 120 max tokens</li>
+        <li><b>Canopy</b> (13–34 words): ~4 sentences, 240 max tokens</li>
+        <li><b>Forest</b> (35+ words, complexity marker, or 2+ questions): ~6 sentences, 400 max tokens</li>
+      </ul>
+      <p style="margin-top:8px">Need a fuller explanation? Click <b>More detail</b> under any live answer to request an expanded Forest response.</p>
     </div>
-  </form>
-</dialog>
-<dialog id="chat-delete-dialog" class="chat-dialog" aria-labelledby="chat-delete-title">
-  <form method="dialog">
-    <h2 id="chat-delete-title">Delete chat?</h2>
-    <p id="chat-delete-description"></p>
-    <div class="chat-dialog-actions">
-      <button type="submit" value="cancel">Cancel</button>
-      <button type="submit" value="confirm" class="primary">Delete</button>
+    <div class="meth-card">
+      <h3>How the numbers work</h3>
+      <p>Generating tokens uses far more compute than reading prompt tokens:</p>
+      <ul>
+        <li><b>Energy:</b> <code>output × 0.0006 Wh + input × 0.0006 / 800 Wh</code> (Epoch AI 2025; Ruf &amp; Detyniecki HotCarbon ’26)</li>
+        <li><b>Carbon:</b> <code>Wh / 1000 × 400 gCO₂e/kWh</code> (0.00024 g per output token)</li>
+        <li><b>Cooling water:</b> <code>Wh × 0.1–0.3 mL</code> (closed-loop data-centre WUE; generation water excluded)</li>
+      </ul>
+      <p style="margin-top:8px">All figures are arithmetic estimates from provider-reported tokens, never physical data-centre measurements.</p>
     </div>
-  </form>
+    <div class="meth-card">
+      <h3>Finland reference &amp; limits</h3>
+      <p>Clean-energy reference: <b>Google Cloud Finland (<code>europe-north1</code>): ~98% carbon-free energy, 30 gCO₂eq/kWh.</b></p>
+      <div class="callout"><b>Honest note:</b> the hosted backend runs in <code>us-central1</code>, and OpenRouter does not disclose where upstream model inference runs. Live receipts therefore use the 400 g/kWh illustrative grid factor.</div>
+      <p style="font-size:12px"><a href="https://cloud.google.com/sustainability/region-carbon" target="_blank" rel="noopener" style="color:var(--teal)">Google Cloud region carbon data →</a></p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-line">
+    <span id="ft-note">Arboris. Live answers from a real model.</span>
+    <span class="footer-sep">·</span>
+    <span>Grant O'Brien</span>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Source</a>
+    <span class="footer-sep">·</span>
+    <a class="footer-link" href="https://github.com/succulentsdev" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
+  </div>
+</footer>
+
+<div class="cf" id="cache-flash" aria-hidden="true">Cache hit: 0 new tokens</div>
+<div class="toast" id="toast" role="status"></div>
+
+<dialog class="how" id="how-dlg" aria-labelledby="how-title">
+  <div class="how-in">
+    <div class="how-hd">
+      <h2 id="how-title">How Arboris works</h2>
+      <button class="icon-btn" id="how-close" type="button" aria-label="Close how Arboris works"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <h3>Live only</h3>
+    <p>Live answers on this page come from a real model through the backend: on the hosted site that backend is already running, and on your own machine it is <code>python server/app.py</code>. Every question goes to a real model through the backend. There is no offline fallback: if the backend is unavailable, check the backend URL in settings.</p>
+    <h3>What the steps really do</h3>
+    <ul>
+      <li><b>PromptShrink</b> runs on your actual text: it removes filler and wordy phrases and leaves code blocks alone.</li>
+      <li><b>Local arithmetic gate</b> answers pure math expressions on the backend with 0 model tokens and 0 Wh.</li>
+      <li><b>Routing</b> picks Sprout, Canopy or Forest from word count, complexity words, question marks, or task type (or uses the mode you explicitly select in the brevity bar).</li>
+      <li><b>Session cache</b> reuses an earlier answer when the trimmed question and mode match one you already asked in this session.</li>
+    </ul>
+    <h3>The numbers are estimates</h3>
+    <ul>
+      <li><b>Tokens</b> for live answers are provider-reported (including any hidden <code>reasoning_tokens</code> when reported). The typing preview estimates words × 1.33 before you send.</li>
+      <li><b>CO₂e</b> is output tokens × 0.0006 Wh × 400 g CO₂e/kWh, with input tokens at 1/800 of an output token, because generating text costs far more energy than reading it. The 0.0006 Wh comes from Epoch AI's 2025 estimate for a GPT-4o-class model and the 1/800 from a 2026 measurement on smaller models. Both are assumptions here, not measurements of any data centre.</li>
+      <li><b>The baseline is assumed unless measured.</b> Turning on <b>Measure baseline</b> in settings makes a second, unconstrained call per message to measure real token savings, which doubles API cost.</li>
+    </ul>
+    <h3>Privacy</h3>
+    <p>This page loads no outside fonts or third-party scripts and uses no analytics. Your questions go to the backend you configured, and from there to its model provider, whose data-retention policy applies. Your chat is saved only in this browser's localStorage under <code>arboris-live-v1</code>; the ✕ Clear button deletes it.</p>
+  </div>
 </dialog>
 
-<script src="app.js"></script>
 <script>
-/* V5 page behavior: empty state + composer docking + chips */
-(function(){
-  var chat=document.getElementById('chat');
-  var composer=document.getElementById('composer');
-  var home=document.getElementById('composer-home');
-  var dock=document.getElementById('composer-dock');
-  function sync(){
-    var has=chat.children.length>0;
-    document.body.classList.toggle('has-messages',has);
-    var target=has?dock:home;
-    if(composer.parentNode!==target)target.appendChild(composer);
+/* ═══════════════════════════════════════════════
+   Pure logic, same module.exports contract
+═══════════════════════════════════════════════ */
+function shrinkSegment(raw) {
+  var s = ' ' + raw + ' ';
+  var verbose=[
+    ['due to the fact that','because'],['in spite of the fact that','although'],
+    ['regardless of the fact that','although'],
+    ['in order to','to'],['at this point in time','now'],['at the present time','now'],
+    ['in the event that','if'],['for the purpose of','for'],
+    ['a large number of','many'],['has the ability to','can'],['is able to','can'],
+    ['each and every','each'],['first and foremost','first'],
+    ['prior to','before'],['subsequent to','after'],
+    ['with regard to','about'],['with respect to','about'],
+    ['in the near future','soon'],['on a regular basis','regularly'],
+    ['and also','and']
+  ];
+  verbose.forEach(function(pair){
+    var re=new RegExp('\\b'+pair[0].replace(/ /g,'\\s+')+'\\b','gi');
+    s=s.replace(re,pair[1]);
+  });
+  var fillers = [
+    'i was just wondering if you could possibly','i was just wondering if','just wondering if',
+    "i hope you're doing well",'i hope you are doing well',
+    'i would appreciate it if you could','i would like you to','i was hoping you could',
+    'could you please kindly','could you please','would you please','can you please','please kindly',
+    'thank you so much in advance','thanks so much',
+    'it is important to note that','it should be noted that','it is worth noting that','please note that','note that',
+    'in my personal opinion','in my opinion','i think that','i believe that',
+    'as mentioned before','as mentioned earlier','as i mentioned earlier','as i mentioned before',
+    'to be perfectly honest','to be honest','frankly speaking','in summary','to summarize',
+    'hi there','hello','in other words','in this day and age','if at all possible','needless to say',
+    'basically','actually','honestly','obviously','literally','kindly','really','very','please','just'
+  ];
+  fillers.forEach(function(p){
+    var re=new RegExp('\\b'+p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/ /g,'\\s+')+'\\b','gi');
+    s=s.replace(re,'');
+  });
+  s=s.replace(/\s+/g,' ').trim();
+  s=s.replace(/\s+([.,!?;:])/g,'$1');
+  s=s.replace(/,([.!?])/g,'$1');
+  s=s.replace(/,\s*$/,'');
+  s=s.replace(/([.!?])[.!?]+/g,'$1');
+  s=s.replace(/^[^A-Za-z0-9]+/,'');
+  if(s) s=s.replace(/(^|[.!?]\s+)([a-z])/g,function(m,p,c){return p+c.toUpperCase();});
+  return s;
+}
+function shrinkPrompt(raw){
+  var lines=raw.split('\n');
+  while(lines.length&&!lines[lines.length-1].trim())lines.pop();
+  var soRe=/^(best regards|kind regards|regards|cheers|sincerely|thanks|thank you)[,.]?(\s+[A-Za-z][A-Za-z .\-]{0,39})?\s*$/i;
+  var nameRe=/^[A-Za-z][A-Za-z .\-]{0,39}$/;
+  if(lines.length>=2){
+    var last=lines[lines.length-1].trim(),prev=lines[lines.length-2].trim();
+    if(soRe.test(prev)&&nameRe.test(last)&&last.split(/\s+/).length<=4){
+      lines.pop();lines.pop();
+    } else if(soRe.test(last)){
+      lines.pop();
+    }
+  } else if(lines.length===1&&soRe.test(lines[0].trim())){
+    lines.pop();
   }
-  new MutationObserver(sync).observe(chat,{childList:true});
-  sync();
-  document.querySelectorAll('.chip[data-q]').forEach(function(ch){
-    ch.addEventListener('click',function(){
-      var ci=document.getElementById('ci');
-      ci.value=ch.getAttribute('data-q');ci.focus();
-      document.getElementById('sb').click();
+  while(lines.length&&!lines[lines.length-1].trim())lines.pop();
+  var cleaned=lines.join('\n');
+  return cleaned.split(/(```[\s\S]*?```)/g).map(function(p){return p.startsWith('```')?p:shrinkSegment(p);}).join('').replace(/[ \t]+\n/g,'\n').trim();
+}
+
+/* LCS-based word diff with punctuation-normalised matching */
+function normWord(w){return w.toLowerCase().replace(/[^a-z0-9]/g,'');}
+function wordDiff(raw,shrunk){
+  if(raw===shrunk)return null;
+  var a=raw.split(/\s+/),b=shrunk.split(/\s+/);
+  var na=a.map(normWord),nb=b.map(normWord);
+  var m=a.length,n=b.length;
+  var dp=[];
+  for(var i=0;i<=m;i++){dp[i]=new Array(n+1).fill(0);}
+  for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)
+    dp[i][j]=na[i-1]===nb[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  var tokens=[],i=m,j=n;
+  while(i>0&&j>0){
+    if(na[i-1]===nb[j-1]){tokens.unshift({w:a[i-1],t:'k'});i--;j--;}
+    else if(dp[i-1][j]>=dp[i][j-1]){tokens.unshift({w:a[i-1],t:'r'});i--;}
+    else j--;
+  }
+  while(i>0){tokens.unshift({w:a[i-1],t:'r'});i--;}
+  var rawNorm=new Set(na);
+  var added=b.filter(function(w){return!rawNorm.has(normWord(w));});
+  return{tokens:tokens,added:added};
+}
+
+function stripCodeFences(text){return text.replace(/```[\s\S]*?```/g,' ');}
+function proseWordCount(text){var p=stripCodeFences(text).trim();return p?p.split(/\s+/).length:0;}
+var SPROUT_MAX=12,FOREST_MIN=35;
+var COMPLEXITY_MARKERS=['compare','pros and cons','versus','in detail','step by step','trade-off','trade-offs','explain both'];
+function routeMode(shrunk){
+  var prose=stripCodeFences(shrunk),p=prose.toLowerCase(),words=proseWordCount(shrunk);
+  var hasMarker=COMPLEXITY_MARKERS.some(function(m){return p.indexOf(m)>-1;});
+  var qCount=(prose.match(/\?/g)||[]).length;
+  if(hasMarker||qCount>=2||words>=FOREST_MIN)return'forest';
+  if(words<=SPROUT_MAX)return'sprout';
+  return'canopy';
+}
+function cacheKey(shrunk){return shrunk.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim();}
+function estTokens(text){return Math.max(1,Math.round(text.trim().split(/\s+/).length*1.33));}
+if(typeof module!=='undefined'&&module.exports){
+  module.exports={shrinkPrompt,routeMode,estTokens};
+}
+
+/* ═══════════════════════════════════════════════
+   DOM & Live Application
+═══════════════════════════════════════════════ */
+if(typeof document!=='undefined'){
+document.addEventListener('DOMContentLoaded',function(){
+
+/* Theme */
+var themeBtn=document.getElementById('theme-btn');
+function setThemeBtn(dark){
+  themeBtn.querySelector('.theme-icon').innerHTML=dark?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+  themeBtn.setAttribute('aria-label',dark?'Switch to light theme':'Switch to dark theme');
+}
+(function(){
+  var dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  setThemeBtn(dark);
+})();
+themeBtn.addEventListener('click',function(){
+  var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',isDark?'light':'dark');
+  setThemeBtn(!isDark);
+});
+
+/* State: live turns only. Old demo keys are deleted on load; live keys
+   migrate from the old greensearch-* names once, never overwriting new keys. */
+(function(){
+  try{
+    localStorage.removeItem('arboris-demo-v1');localStorage.removeItem('greensearch-demo-v1');
+    var old=localStorage.getItem('greensearch-live-v1');
+    if(old!==null){if(localStorage.getItem('arboris-live-v1')===null)localStorage.setItem('arboris-live-v1',old);localStorage.removeItem('greensearch-live-v1');}
+    var oldUrl=localStorage.getItem('greensearch-live-backend-url');
+    if(oldUrl!==null){if(localStorage.getItem('arboris-live-backend-url')===null)localStorage.setItem('arboris-live-backend-url',oldUrl);localStorage.removeItem('greensearch-live-backend-url');}
+  }catch(e){}
+})();
+
+var epoch=0;
+var seqCounter=0;
+var selectedMode='auto';
+var chatEl=document.getElementById('chat');
+var inputEl=document.getElementById('ci');
+var prevEl=document.getElementById('ip-prev');
+var cntEl=document.getElementById('ip-cnt');
+var liveEl=document.getElementById('sr-live');
+
+/* Brevity selector bar */
+var brevityBtns=document.querySelectorAll('#brevity-bar .brevity-btn');
+brevityBtns.forEach(function(btn){
+  btn.addEventListener('click',function(){
+    selectedMode=btn.getAttribute('data-mode')||'auto';
+    brevityBtns.forEach(function(b){
+      var act=b===btn;
+      b.classList.toggle('active',act);
+      b.setAttribute('aria-pressed',act?'true':'false');
+    });
+    updateAutoLabel(inputEl.value);
+  });
+});
+function updateAutoLabel(raw){
+  var autoBtn=document.querySelector('#brevity-bar .brevity-btn[data-mode="auto"]');
+  if(!autoBtn)return;
+  if(selectedMode==='auto'&&raw&&raw.trim()){
+    var shrunk=shrinkPrompt(raw);
+    var m=routeMode(shrunk||raw);
+    var lbl={sprout:'Sprout',canopy:'Canopy',forest:'Forest'}[m]||m;
+    autoBtn.textContent='Auto · '+lbl;
+  } else {
+    autoBtn.textContent='Auto';
+  }
+}
+
+/* Formatting helpers */
+function fmtCO2(v){
+  if(v>=1)return v.toFixed(2)+' g';
+  if(v>=0.001)return (v*1000).toFixed(v>=0.01?1:2)+' mg';
+  return v>0?(v*1e6).toFixed(0)+' µg':'0 g';
+}
+function fmtWh(v){return v>=0.01?v.toFixed(3)+' Wh':v>0?(v*1000).toFixed(3)+' mWh':'0 Wh';}
+
+/* Safe lightweight Markdown formatter (escapes HTML first, no external libs) */
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtInline(s){
+  return s
+    .replace(/`([^`\n]+)`/g,'<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,!?:;)]|$)/g,'$1<em>$2</em>');
+}
+function renderMarkdown(text){
+  if(!text)return'';
+  var parts=String(text).split(/(```[\s\S]*?```)/g);
+  var out=[];
+  parts.forEach(function(part){
+    if(part.slice(0,3)==='```'&&part.slice(-3)==='```'){
+      var rawFence=part.slice(3,-3);
+      var langMatch=rawFence.match(/^([a-zA-Z0-9_+-]+)\r?\n/);
+      var lang=langMatch?langMatch[1]:'code';
+      var inner=rawFence.replace(/^[a-zA-Z0-9_+-]+\r?\n/,'').replace(/\n$/,'');
+      out.push('<div class="code-block-wrap"><div class="code-block-hd"><span>'+escHtml(lang)+'</span><button type="button" class="code-copy-btn" aria-label="Copy code block">⧉ Copy</button></div><pre><code>'+escHtml(inner)+'</code></pre></div>');
+      return;
+    }
+    var blocks=part.trim().split(/\n\s*\n/);
+    blocks.forEach(function(block){
+      if(!block.trim())return;
+      var lines=block.split('\n');
+      /* Check markdown table */
+      if(lines.length>=2&&lines[0].indexOf('|')>-1&&/^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[1])){
+        var parseRow=function(r){return r.replace(/^\s*\||\|\s*$/g,'').split('|').map(function(c){return fmtInline(escHtml(c.trim()));});};
+        var ths=parseRow(lines[0]).map(function(c){return'<th>'+c+'</th>';}).join('');
+        var trs=lines.slice(2).filter(function(r){return r.trim();}).map(function(r){
+          return'<tr>'+parseRow(r).map(function(c){return'<td>'+c+'</td>';}).join('')+'</tr>';
+        }).join('');
+        out.push('<table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table>');
+        return;
+      }
+      /* Check unordered or ordered list */
+      var isUl=lines.every(function(l){return /^\s*[-*•]\s+/.test(l);});
+      var isOl=lines.every(function(l){return /^\s*\d+[.)]\s+/.test(l);});
+      if(isUl||isOl){
+        var tag=isUl?'ul':'ol';
+        var items=lines.map(function(l){
+          var body=l.replace(/^\s*(?:[-*•]|\d+[.)])\s+/,'');
+          return'<li>'+fmtInline(escHtml(body))+'</li>';
+        }).join('');
+        out.push('<'+tag+'>'+items+'</'+tag+'>');
+        return;
+      }
+      out.push('<p>'+lines.map(function(l){return fmtInline(escHtml(l));}).join('<br>')+'</p>');
     });
   });
-  var thread=document.getElementById('thread');
-  new MutationObserver(function(){thread.scrollTop=thread.scrollHeight;}).observe(chat,{childList:true,subtree:true});
+  return out.join('');
+}
+
+/* Smart scroll */
+function nearBottom(){return chatEl.scrollHeight-chatEl.scrollTop-chatEl.clientHeight<90;}
+function scrollBottom(){if(nearBottom())chatEl.scrollTop=chatEl.scrollHeight;}
+
+/* Screen-reader announcement */
+function announce(text){
+  liveEl.textContent='';
+  setTimeout(function(){liveEl.textContent=text;},60);
+}
+
+/* Typing indicator */
+function addTypingIndicator(parent){
+  var row=document.createElement('div');row.className='mr bot';
+  var b=document.createElement('div');b.className='dots-bubble';b.setAttribute('aria-hidden','true');
+  b.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  row.appendChild(b);parent.appendChild(row);scrollBottom();
+  return row;
+}
+
+/* Cache flash & Toast */
+var cfEl=document.getElementById('cache-flash');
+function showCacheFlash(){
+  cfEl.classList.add('show');
+  setTimeout(function(){cfEl.classList.remove('show');},1400);
+}
+var toastEl=document.getElementById('toast');
+var _toastTimer;
+function showToast(msg){
+  toastEl.textContent=msg;toastEl.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);
+}
+
+/* Clipboard with fallback */
+function copyText(txt,okMsg){
+  function fallback(){
+    var ok=false,ta=document.createElement('textarea');
+    ta.value=txt;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.top='0';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{ok=document.execCommand('copy');}catch(e){ok=false;}
+    ta.remove();
+    showToast(ok?okMsg:'Copy failed: clipboard unavailable here. Select the text and copy it manually.');
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){showToast(okMsg);},fallback);
+  } else fallback();
+}
+
+/* Diff row for PromptShrink */
+function makeDiffRow(diff,shrunk,raw){
+  if(!diff||raw===shrunk)return null;
+  var el=document.createElement('div');el.className='diff-row';
+  var hasChange=diff.tokens.some(function(t){return t.t==='r';});
+  if(!hasChange&&!diff.added.length)return null;
+  diff.tokens.forEach(function(tok){
+    var s=document.createElement('span');
+    s.className=tok.t==='r'?'dr':'dk';
+    s.textContent=tok.w+' ';
+    el.appendChild(s);
+  });
+  if(diff.added.length){
+    var arr=document.createElement('span');arr.className='diff-arrow';arr.textContent='→';el.appendChild(arr);
+    diff.added.forEach(function(w){
+      var s=document.createElement('span');s.className='da';s.textContent=' '+w;el.appendChild(s);
+    });
+  }
+  return el;
+}
+
+function attachUserShrinkDiff(urow,raw){
+  var shrunk=shrinkPrompt(raw);
+  if(!shrunk||shrunk===raw)return;
+  var diff=wordDiff(raw,shrunk);
+  var diffEl=makeDiffRow(diff,shrunk,raw);
+  if(!diffEl)return;
+  var saved=Math.max(1,estTokens(raw)-estTokens(shrunk));
+  diffEl.hidden=true;
+  var pill=document.createElement('button');
+  pill.type='button';
+  pill.className='shrink-pill';
+  pill.textContent='✂ PromptShrink −'+saved+' tok';
+  pill.title='Click to view trimmed filler words';
+  pill.setAttribute('aria-expanded','false');
+  pill.addEventListener('click',function(){
+    diffEl.hidden=!diffEl.hidden;
+    pill.setAttribute('aria-expanded',diffEl.hidden?'false':'true');
+  });
+  urow.appendChild(pill);
+  urow.appendChild(diffEl);
+}
+
+function short(s){s=s.replace(/\s+/g,' ').trim();return s.length>48?s.slice(0,48)+'…':s;}
+function actBtn(text,label,fn){
+  var b=document.createElement('button');
+  b.type='button';b.className='act';b.textContent=text;b.setAttribute('aria-label',label);b.title=label;
+  b.addEventListener('click',fn);
+  return b;
+}
+
+/* Copy stats */
+document.getElementById('copy-btn').addEventListener('click',function(){
+  if(!liveTotals.calls){showToast('No messages yet.');return;}
+  var txt='Arboris live session stats\n'+
+    'Live answers: '+liveTotals.calls+' ('+(liveTotals.local||0)+' local, '+liveTotals.hits+' cached)\n'+
+    'Input tokens: '+liveTotals.inTok+' ('+(liveTotals.shrunkTok||0)+' trimmed by PromptShrink)\n'+
+    'Output tokens: '+liveTotals.outTok+'\n'+
+    'Estimated energy: '+fmtWh(liveTotals.wh||0)+'\n'+
+    'Estimated CO2e: '+fmtCO2(liveTotals.co2g||0)+'\n'+
+    'Cache hits: '+liveTotals.hits+'\n'+
+    'Escalations: '+liveTotals.esc+'\n'+
+    '(provider-reported tokens, live answers only)\n'+
+    'Arboris live chat by Grant O\'Brien, github.com/succulentsdev';
+  copyText(txt,'Stats copied!');
+});
+
+/* Code block copy button delegation */
+chatEl.addEventListener('click',function(e){
+  var btn=e.target&&e.target.closest?e.target.closest('.code-copy-btn'):null;
+  if(!btn)return;
+  var wrap=btn.closest('.code-block-wrap');
+  var code=wrap?wrap.querySelector('code'):null;
+  if(code)copyText(code.textContent||'','Code copied!');
+});
+
+/* Client-side zero-model gate detector for typing preview */
+function isZeroModelQuery(raw){
+  var s=String(raw||'').trim().replace(/^(?:please\s+)?(?:what is|calculate|compute|work out|convert|how many|how much is)\s+/i,'').replace(/[?!.]+$/,'').trim();
+  if(!s||s.length>100)return false;
+  if(/^-?\d+(?:\.\d+)?\s*%\s*of\s+-?\d+(?:\.\d+)?$/i.test(s))return true;
+  if(/^-?\d+(?:\.\d+)?\s*[a-zA-Z°/]+\s+(?:to|in|into|as)\s+[a-zA-Z°/]+$/i.test(s))return true;
+  if(/^(?:0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|\d+)\s+(?:to|in|into|as)\s+(?:hex|hexadecimal|bin|binary|dec|decimal|oct|octal)$/i.test(s))return true;
+  if(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s+(?:to|in|into|as)\s+rgb$/i.test(s))return true;
+  if(/^rgb\s*\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)\s+(?:to|in|into|as)\s+hex$/i.test(s))return true;
+  if(/^[\d\s+\-*/().%]+$/.test(s)&&/[+\-*/%]/.test(s)&&s.indexOf('**')<0&&s.indexOf('//')<0)return true;
+  return false;
+}
+
+/* Live input preview & in-place Compress button */
+var compressBtn=document.getElementById('compress-btn');
+if(compressBtn){
+  compressBtn.addEventListener('click',function(){
+    var raw=inputEl.value;
+    var shrunk=shrinkPrompt(raw);
+    if(shrunk&&shrunk!==raw){
+      var saved=Math.max(1,estTokens(raw)-estTokens(shrunk));
+      inputEl.value=shrunk;
+      compressBtn.hidden=true;
+      inputEl.dispatchEvent(new Event('input'));
+      inputEl.focus();
+      showToast('Prompt compressed (−'+saved+' tok)');
+    }
+  });
+}
+var _previewDebounce;
+inputEl.addEventListener('input',function(){
+  clearTimeout(_previewDebounce);
+  _previewDebounce=setTimeout(function(){
+    var raw=inputEl.value;
+    updateAutoLabel(raw);
+    var wc=raw.trim()?raw.trim().split(/\s+/).length:0;
+    cntEl.textContent=wc?wc+' word'+(wc!==1?'s':''):'';
+    if(!raw.trim()){
+      prevEl.innerHTML='';prevEl.className='ip-preview';
+      if(compressBtn)compressBtn.hidden=true;
+      var be=document.getElementById('shrink-bar');if(be)be.classList.remove('active');return;
+    }
+    var shrunk=shrinkPrompt(raw);
+    if(compressBtn)compressBtn.hidden=!(shrunk&&shrunk!==raw);
+    if(isZeroModelQuery(shrunk||raw)){
+      prevEl.textContent='⚡ Zero-Model Gate: deterministic query — 0 GPU tokens · 0 Wh on send';
+      prevEl.className='ip-preview zero-gate';
+      var barEl0=document.getElementById('shrink-bar');
+      var fillEl0=document.getElementById('shrink-bar-fill');
+      if(barEl0)barEl0.classList.add('active');
+      if(fillEl0)fillEl0.style.width='100%';
+      return;
+    }
+    if(shrunk===raw||!shrunk){
+      prevEl.innerHTML='PromptShrink preview: no change (the backend shrinks on send)';
+      prevEl.className='ip-preview';
+      var barEl=document.getElementById('shrink-bar');
+      if(barEl)barEl.classList.remove('active');
+    } else {
+      var diff=wordDiff(raw,shrunk);
+      var removed=diff?diff.tokens.filter(function(t){return t.t==='r';}).map(function(t){return t.w;}):[];
+      var saved=estTokens(raw)-estTokens(shrunk);
+      prevEl.className='ip-preview active';
+      prevEl.innerHTML='';
+      prevEl.appendChild(document.createTextNode('PromptShrink preview: '));
+      if(removed.length){var px=document.createElement('span');px.className='px';px.textContent=removed.join(' ');prevEl.appendChild(px);prevEl.appendChild(document.createTextNode(' '));}
+      if(diff&&diff.added.length){var ad=document.createElement('span');ad.style.cssText='color:var(--amber);font-style:italic';ad.textContent='→ '+diff.added.join(' ');prevEl.appendChild(ad);prevEl.appendChild(document.createTextNode(' '));}
+      var sv=document.createElement('span');sv.style.opacity='.8';sv.textContent='(−'+saved+' tok)';prevEl.appendChild(sv);
+      var pct=Math.min(100,Math.round(saved/estTokens(raw)*100));
+      var barEl=document.getElementById('shrink-bar');
+      var fillEl=document.getElementById('shrink-bar-fill');
+      if(barEl)barEl.classList.add('active');
+      if(fillEl)fillEl.style.width=pct+'%';
+    }
+  },80);
+});
+inputEl.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){doSend();}
+});
+document.getElementById('sb').addEventListener('click',doSend);
+function doSend(){
+  var v=inputEl.value;inputEl.value='';
+  prevEl.innerHTML='';prevEl.className='ip-preview';cntEl.textContent='';
+  if(compressBtn)compressBtn.hidden=true;
+  var barEl=document.getElementById('shrink-bar');if(barEl)barEl.classList.remove('active');
+  updateAutoLabel('');
+  ask(v);
+}
+function ask(raw){sendLive(raw);}
+
+/* Clear */
+document.getElementById('cb').addEventListener('click',function(){
+  epoch++;
+  chatEl.innerHTML='';
+  clearLiveState();
+  var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.remove('chatting');
+  resetLive();
+  showToast('Chat cleared, saved session deleted.');
+});
+
+/* Export chat as Markdown */
+function pad2(n){return(n<10?'0':'')+n;}
+document.getElementById('export-btn').addEventListener('click',function(){
+  if(!liveTurns.length){showToast('Nothing to export yet.');return;}
+  var d=new Date();
+  var stamp=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'-'+pad2(d.getHours())+pad2(d.getMinutes())+pad2(d.getSeconds());
+  var L=['# Arboris live chat','','Exported '+d.toLocaleString()+'.','',
+    '> Real model answers from the backend URL you configured. Token counts are provider-reported.',''];
+  liveTurns.forEach(function(t,i){
+    L.push('## '+(i+1)+'. '+short(t.raw).replace(/[#\n]/g,' '),'');
+    L.push('**Question:**','');
+    t.raw.split('\n').forEach(function(line){L.push('> '+line);});
+    L.push('',t.error?('**Error:** '+t.error):t.answer,'');
+    if(t.meta)L.push('- '+liveMetaLine(t.meta),'');
+  });
+  var name='arboris-chat-'+stamp+'.md';
+  var url=URL.createObjectURL(new Blob([L.join('\n')],{type:'text/markdown;charset=utf-8'}));
+  var a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  showToast('Exported '+name);
+});
+
+/* How Arboris works dialog */
+var howDlg=document.getElementById('how-dlg'),howBtn=document.getElementById('how-btn');
+function closeHow(){if(howDlg.open){if(howDlg.close)howDlg.close();else howDlg.removeAttribute('open');}howBtn.focus();}
+howBtn.addEventListener('click',function(){
+  if(howDlg.showModal)howDlg.showModal();else howDlg.setAttribute('open','');
+  document.getElementById('how-close').focus();
+});
+document.getElementById('how-close').addEventListener('click',closeHow);
+howDlg.addEventListener('click',function(e){if(e.target===howDlg)closeHow();});
+howDlg.addEventListener('cancel',function(e){e.preventDefault();closeHow();});
+
+/* ═══ Live mode ═══ */
+var LIVE_URL_KEY='arboris-live-backend-url';
+var LIVE_STATE_KEY='arboris-live-v1';
+var LIVE_DEFAULT_URL=(window.location.hostname&&/\.run\.app$/i.test(window.location.hostname))
+  ?window.location.origin+'/api/chat'
+  :'http://localhost:8000/api/chat';
+var MODE_MULT={sprout:3.4,canopy:2.6,forest:1.9,full:1.9};
+var liveTurns=[],liveTotals=zeroLive(),liveCtrls=[];
+var liveSession=newLiveSession();
+var liveUrlEl=document.getElementById('live-url');
+var liveBaselineEl=document.getElementById('live-baseline');
+function zeroLive(){return{calls:0,inTok:0,outTok:0,unreported:0,hits:0,esc:0,exp:0,measured:0,saved:0,co2g:0,wh:0,waterLow:0,waterHigh:0,shrunkTok:0,local:0,stdOutTok:0};}
+function newLiveSession(){
+  var a=new Uint8Array(12),s='web-';
+  if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);
+  else for(var i=0;i<a.length;i++)a[i]=Math.floor(Math.random()*256);
+  for(var j=0;j<a.length;j++)s+=(a[j]<16?'0':'')+a[j].toString(16);
+  return s;
+}
+function loadLiveUrl(){
+  try{var u=localStorage.getItem(LIVE_URL_KEY);if(u)return u;}catch(e){}
+  return LIVE_DEFAULT_URL;
+}
+liveUrlEl.value=loadLiveUrl();
+function probeBackendHealth(){
+  var dot=document.getElementById('backend-dot');
+  var txt=document.getElementById('backend-status-txt');
+  var u=(liveUrlEl.value.trim()||LIVE_DEFAULT_URL);
+  if(!/^https?:\/\//i.test(u))return;
+  var healthUrl=u.replace(/\/api\/chat\/?$/i,'/api/health');
+  if(healthUrl===u)return;
+  if(typeof fetch!=='function')return;
+  fetch(healthUrl,{method:'GET',credentials:'omit',cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(h){
+      if(!h||typeof h!=='object')throw new Error('bad');
+      if(dot){dot.classList.add('online');dot.classList.remove('offline');}
+      var mName=String(h.primary_model||'connected').split('/').pop().replace(/:free$/,'');
+      if(txt)txt.textContent=(h.configured?'Live · ':'No key · ')+mName;
+      var hpShrink=document.getElementById('hp-shrink');
+      if(hpShrink)hpShrink.textContent='✂ PromptShrink '+(h.shrink_version||'v1');
+      var hpCache=document.getElementById('hp-cache');
+      if(hpCache)hpCache.textContent=h.semantic_cache?'♻ Semantic + Exact Cache':'♻ Session Cache';
+      var hpTask=document.getElementById('hp-task');
+      if(hpTask){
+        hpTask.textContent='🎯 Task Routing: '+(h.task_routing?('on ('+(h.quality_target||'balanced')+')'):'off');
+        hpTask.classList.toggle('active',!!h.task_routing);
+      }
+      var hpCascade=document.getElementById('hp-cascade');
+      if(hpCascade){
+        hpCascade.textContent='🪶 Small-Model Cascade: '+(h.small_model_routing?'on':'off');
+        hpCascade.classList.toggle('active',!!h.small_model_routing);
+      }
+      var hpEffort=document.getElementById('hp-effort');
+      if(hpEffort){
+        hpEffort.textContent='🧠 CoT Effort Cap: '+(h.reasoning_effort?'on':'off');
+        hpEffort.classList.toggle('active',!!h.reasoning_effort);
+      }
+      var hpBudget=document.getElementById('hp-budget');
+      if(hpBudget){
+        hpBudget.textContent='📏 Token Budget: '+(h.token_budget?'on':'off');
+        hpBudget.classList.toggle('active',!!h.token_budget);
+      }
+    })
+    .catch(function(){
+      if(dot){dot.classList.remove('online');dot.classList.add('offline');}
+      if(txt)txt.textContent='Backend offline';
+    });
+}
+liveUrlEl.addEventListener('change',function(){
+  var u=liveUrlEl.value.trim()||LIVE_DEFAULT_URL;liveUrlEl.value=u;
+  try{localStorage.setItem(LIVE_URL_KEY,u);}catch(e){}
+  probeBackendHealth();
+});
+setTimeout(probeBackendHealth,120);
+
+/* Interactive Annual Power & Carbon Savings Simulator */
+(function(){
+  var qpdEl=document.getElementById('sim-qpd');
+  if(!qpdEl)return;
+  function updateSim(){
+    var qpd=parseInt(qpdEl.value,10)||50;
+    var annualQueries=qpd*365;
+    var stdWhPerQ=420*0.0006+60*(0.0006/800);
+    var arbWhPerQ=135*0.0006+40*(0.0006/800);
+    var savedWhYear=Math.max(0,(stdWhPerQ-arbWhPerQ)*annualQueries);
+    var savedKwh=savedWhYear/1000;
+    var savedCo2G=savedWhYear*0.4;
+    var savedWaterMl=savedWhYear*1.15;
+    var ledHours=savedWhYear/9;
+    function setSim(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+    setSim('sim-qpd-val',qpd+' queries / day');
+    setSim('sim-wh',savedKwh>=1?savedKwh.toFixed(2)+' kWh':Math.round(savedWhYear)+' Wh');
+    setSim('sim-co2',savedCo2G>=1000?(savedCo2G/1000).toFixed(2)+' kg':Math.round(savedCo2G)+' g');
+    setSim('sim-water',savedWaterMl>=1000?(savedWaterMl/1000).toFixed(2)+' L':Math.round(savedWaterMl)+' mL');
+    setSim('sim-led',ledHours>=10?Math.round(ledHours)+' hrs':ledHours.toFixed(1)+' hrs');
+  }
+  qpdEl.addEventListener('input',updateSim);
+  updateSim();
+})();
+/* Settings popover */
+(function(){
+  var btn=document.getElementById('settings-btn'),pop=document.getElementById('settings-pop');
+  if(!btn||!pop)return;
+  btn.addEventListener('click',function(e){e.stopPropagation();pop.classList.toggle('open');btn.setAttribute('aria-expanded',pop.classList.contains('open'));});
+  document.addEventListener('click',function(e){if(!pop.contains(e.target)&&e.target!==btn){pop.classList.remove('open');btn.setAttribute('aria-expanded','false');}});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+})();
+function resetLive(){
+  liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
+  liveCtrls=[];liveTurns=[];liveTotals=zeroLive();liveSession=newLiveSession();
+  clearLiveState();
+  renderLiveTotals();
+}
+function saveLiveState(){
+  try{
+    localStorage.setItem(LIVE_STATE_KEY,JSON.stringify({v:1,savedAt:new Date().toISOString(),
+      turns:liveTurns.filter(function(t){return t.answer&&!t.error;}).map(function(t){
+        return{raw:t.raw,answer:t.answer,meta:t.meta};
+      }),
+      totals:liveTotals,session:liveSession}));
+  }catch(e){}
+}
+function loadLiveState(){
+  var s;
+  try{s=JSON.parse(localStorage.getItem(LIVE_STATE_KEY)||'null');}catch(e){return null;}
+  if(!s||s.v!==1||!Array.isArray(s.turns)||!s.turns.length||!s.totals)return null;
+  var ok=s.turns.every(function(t){return t&&typeof t.raw==='string'&&typeof t.answer==='string';});
+  return ok?s:null;
+}
+function clearLiveState(){try{localStorage.removeItem(LIVE_STATE_KEY);}catch(e){}}
+function renderLiveTotals(){
+  var T=liveTotals;
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  var wh=T.wh||0,co2=T.co2g||0,wLow=T.waterLow||0,wHigh=T.waterHigh||0;
+  set('lt-calls',T.calls);
+  set('lt-local',(T.local||0)+' local · '+(T.hits||0)+' cached');
+  set('lt-in',T.inTok);
+  set('lt-shrunk',(T.shrunkTok||0)+' trimmed by PromptShrink');
+  set('lt-out',T.outTok);
+  set('lt-wh',fmtWh(wh));
+  set('lt-water',wHigh>0?(wLow.toFixed(3)+'–'+wHigh.toFixed(3)+' mL water'):'0 mL cooling water');
+  set('lt-co2',fmtCO2(co2));
+  set('lt-finland',fmtCO2(co2*(30/400))+' at 30 g/kWh (FI)');
+  set('lt-hits',T.hits);set('lt-esc',T.esc);
+  set('lt-unrep',T.unreported?('+'+T.unreported+' not reported'):'');
+  set('lt-saved',T.measured?T.saved:'—');
+  set('lt-saved-lbl',T.measured?('saved vs baseline (measured, '+T.measured+' msg'+(T.measured!==1?'s':'')+')'):'saved vs baseline (measured)');
+
+  /* Update visual comparison bars & real-world equivalents */
+  var stdOut=T.stdOutTok||Math.round((T.outTok||0)*2.4);
+  var stdWh=stdOut*0.0006+(T.inTok||0)*(0.0006/800);
+  var avoidedWh=Math.max(0,stdWh-wh);
+  var avoidedPct=stdOut>0?Math.max(0,Math.round((1-(T.outTok/stdOut))*100)):0;
+  set('lt-est-saved',T.calls?(T.measured?'measured on live unconstrained calls':'~'+avoidedPct+'% modeled vs verbose multiplier'):'enable Measure baseline to test');
+  set('eco-comp-badge',T.calls?('−'+avoidedPct+'% output energy ('+(T.measured?'measured':'modeled')+')'):'Awaiting first turn');
+  set('eco-bar-std-lbl',T.measured?'Unconstrained baseline (measured)':'Standard verbose reference (modeled)');
+  set('eco-bar-arb-txt',T.outTok+' out-tok · '+fmtWh(wh));
+  set('eco-bar-std-txt',stdOut+' out-tok · '+fmtWh(stdWh));
+  var arbBar=document.getElementById('eco-bar-arb'),stdBar=document.getElementById('eco-bar-std');
+  if(arbBar)arbBar.style.width=(T.calls&&stdOut>0?Math.max(6,Math.min(100,Math.round((T.outTok/stdOut)*100))):0)+'%';
+  if(stdBar)stdBar.style.width=(T.calls&&stdOut>0?100:0)+'%';
+
+  var ledSec=(wh*3600)/9;
+  set('eq-led',ledSec>=1?ledSec.toFixed(1)+' s':(ledSec>0?(ledSec*1000).toFixed(0)+' ms':'0.0 s'));
+  set('eq-water',wHigh>0?(wLow.toFixed(3)+'–'+wHigh.toFixed(3)+' mL'):'0 mL');
+  set('eq-avoided',fmtWh(avoidedWh)+' ('+fmtCO2(avoidedWh*0.4)+')');
+  set('eq-avoided-lbl',T.measured?'measured energy avoided':'modeled energy avoided');
+  set('eq-finland',co2>0?('−'+fmtCO2(co2*(370/400))):'−92.5%');
+}
+function isNum(v){return typeof v==='number'&&isFinite(v);}
+function liveMetaLine(m){
+  var p=[];
+  p.push('mode: '+m.mode);
+  if(m.cache_hit)p.push('cache hit (0 new tokens'+(m.cached_from_model?', answer from '+m.cached_from_model:'')+')');
+  else if(m.local_answer)p.push('answered locally (no model call)');
+  else p.push('model: '+m.model,m.escalated?'escalated':'not escalated');
+  if(m.provider_model&&m.provider_model!==m.model)p.push('provider reported: '+m.provider_model);
+  if(m.truncated)p.push('truncated at the token cap');
+  if(isNum(m.input_tokens)&&isNum(m.output_tokens)){
+    var tokStr='tokens in '+m.input_tokens+' / out '+m.output_tokens;
+    if(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0)tokStr+=' ('+m.reasoning_tokens+' reasoning)';
+    p.push(tokStr);
+  } else p.push('tokens not reported by provider');
+  if(m.expansion)p.push('expanded (more detail on an earlier question)');
+  if(m.semantic_cache_hit)p.push('semantic cache hit'+(isNum(m.semantic_similarity)?' (similarity '+m.semantic_similarity+')':''));
+  if(m.cache_fallback)p.push('cache fallback ('+(m.cache_bypass_reason||'fresh call failed')+')');
+  if(m.task_type&&m.routed_by==='task'){var tt2=m.difficulty_tier||m.task_tier;p.push('task: '+m.task_type+(tt2?' · '+tt2+' tier':''));}
+  if(isNum(m.answer_score))p.push('score: '+m.answer_score);
+  if(isNum(m.token_budget))p.push('budget: '+m.token_budget+' tok');
+  if(m.reasoning_effort)p.push('reasoning effort: '+m.reasoning_effort);
+  if(m.long_input_pruned&&isNum(m.pruned_sentences))p.push('pruned '+m.pruned_sentences+' sentence'+(m.pruned_sentences!==1?'s':''));
+  if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){var e2=m.energy,et2='energy (est.): '+fmtWh(e2.energy_wh)+', '+fmtCO2(e2.co2e_g)+' CO₂e';if(isNum(e2.water_ml_low)&&isNum(e2.water_ml_high))et2+=', '+e2.water_ml_low+'–'+e2.water_ml_high+' mL water';p.push(et2);}
+  if(isNum(m.latency_ms))p.push(m.latency_ms+' ms');
+  if(m.baseline){
+    if(m.baseline.error)p.push('baseline: '+m.baseline.error);
+    else if(isNum(m.baseline.saved_total_tokens))p.push('measured saving: '+m.baseline.saved_total_tokens+' tokens vs unconstrained baseline');
+    else p.push('baseline: '+(m.baseline.note||'not measured'));
+  }
+  return p.join(' · ');
+}
+function modeTag(mode,cacheHit,title){
+  var mStr=String(mode||'unknown');
+  var cap=mStr.charAt(0).toUpperCase()+mStr.slice(1);
+  var cls='tx';
+  if(cap==='Sprout')cls='ts';else if(cap==='Canopy')cls='tc';else if(cap==='Forest'||cap==='Full')cls='tf';
+  return infoTag((cacheHit?'cached · ':'')+cap,title,cls);
+}
+function infoTag(text,title,cls){
+  var t=document.createElement('span');t.className='tag '+(cls||'tg-info');t.textContent=text;
+  if(title)t.title=title;return t;
+}
+
+/* Interactive per-answer Energy & Carbon Receipt Drawer */
+function buildEcoDrawer(t){
+  var m=t.meta||{},e=m.energy||{};
+  var drawer=document.createElement('div');
+  drawer.className='eco-drawer';
+  drawer.hidden=true;
+  var inTok=isNum(m.input_tokens)?m.input_tokens:0;
+  var outTok=isNum(m.output_tokens)?m.output_tokens:0;
+  var wh=isNum(e.energy_wh)?e.energy_wh:(outTok*0.0006+inTok*(0.0006/800));
+  var co2=isNum(e.co2e_g)?e.co2e_g:(wh*0.4);
+  var outWh=outTok*0.0006;
+  var inWh=inTok*(0.0006/800);
+  var mult=MODE_MULT[m.mode]||2.6;
+  var hasMeasured=m.baseline&&isNum(m.baseline.baseline_output_tokens);
+  var stdOut=hasMeasured?m.baseline.baseline_output_tokens:(m.local_answer||m.cache_hit?45:Math.max(outTok,Math.round(outTok*mult)));
+  var stdWh=stdOut*0.0006+inTok*(0.0006/800);
+  var savedPct=stdWh>0?Math.max(0,Math.round((1-(wh/stdWh))*100)):0;
+  var arbWidth=stdWh>0?Math.max(4,Math.min(100,Math.round((wh/stdWh)*100))):0;
+  var waterTxt=(isNum(e.water_ml_low)&&isNum(e.water_ml_high))?(e.water_ml_low+'–'+e.water_ml_high+' mL'):'0 mL';
+  var ledMs=((wh*3600)/9)*1000;
+
+  var levers=[];
+  if(m.local_answer)levers.push('⚡ Zero-Model Local Gate (0 Wh)');
+  if(m.cache_hit)levers.push(m.semantic_cache_hit?'♻ Semantic Cache Hit (0 Wh)':'♻ Exact Session Cache (0 Wh)');
+  if(m.shrink&&m.shrink.changed)levers.push('✂ PromptShrink (−'+(m.shrink.saved_tokens_est||1)+' in-tok)');
+  if(m.mode==='sprout')levers.push('🌱 Sprout Cap (~2 sentences)');
+  else if(m.mode==='canopy')levers.push('🌿 Canopy Cap (~4 sentences)');
+  else levers.push('🌲 Forest Budget (~6 sentences)');
+  if(m.task_type&&m.routed_by==='task')levers.push('🎯 Task Route: '+m.task_type);
+  if(m.routed_to_small)levers.push('🪶 Small-Model Tier');
+  if(m.reasoning_effort)levers.push('🧠 Reasoning Effort: '+m.reasoning_effort);
+  if(isNum(m.token_budget))levers.push('📏 Token Budget ≤'+m.token_budget);
+  if(m.long_input_pruned)levers.push('📄 Long-Input Pruned');
+
+  drawer.innerHTML=
+    '<div class="eco-drawer-hd"><span>⚡ Per-Message Energy &amp; Carbon Receipt</span><span>−'+savedPct+'% vs '+(hasMeasured?'measured':'modeled')+' verbose</span></div>'+
+    '<div class="eco-drawer-grid">'+
+      '<div class="eco-cell"><span class="eco-cell-v">'+fmtWh(outWh)+'</span><span class="eco-cell-k">Decode ('+outTok+' out-tok'+(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0?', '+m.reasoning_tokens+' CoT':'')+')</span></div>'+
+      '<div class="eco-cell"><span class="eco-cell-v">'+(inWh>0?(inWh*1e6).toFixed(2)+' µWh':'0 Wh')+'</span><span class="eco-cell-k">Prefill ('+inTok+' in-tok · 1/800 wt)</span></div>'+
+      '<div class="eco-cell"><span class="eco-cell-v">'+fmtCO2(co2)+'</span><span class="eco-cell-k">CO₂e at 400 g/kWh ('+fmtCO2(co2*(30/400))+' in FI)</span></div>'+
+      '<div class="eco-cell"><span class="eco-cell-v">'+waterTxt+'</span><span class="eco-cell-k">Cooling water · '+(ledMs>=1000?(ledMs/1000).toFixed(1)+'s':ledMs.toFixed(0)+'ms')+' 9W LED</span></div>'+
+    '</div>'+
+    '<div class="eco-comp-row" style="margin-bottom:8px">'+
+      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>This Arboris reply ('+m.mode+')</span><span>'+outTok+' tok · '+fmtWh(wh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill arboris" style="width:'+arbWidth+'%"></div></div></div>'+
+      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>'+(hasMeasured?'Measured unconstrained baseline':'Modeled verbose baseline ('+mult+'×)')+'</span><span>'+stdOut+' tok · '+fmtWh(stdWh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill standard" style="width:100%"></div></div></div>'+
+    '</div>'+
+    '<div class="eco-levers">'+levers.map(function(l){return'<span class="eco-lever-pill">'+escHtml(l)+'</span>';}).join('')+'</div>'+
+    '<div class="eco-drawer-note">'+escHtml(e.note||'Arithmetic estimate from provider-reported tokens (0.0006 Wh/out-tok, 1/800 input ratio, 400 gCO₂e/kWh).')+'</div>';
+  return drawer;
+}
+
+function liveMetaRow(t){
+  var m=t.meta,mm=document.createElement('div');mm.className='mm';
+  mm.appendChild(infoTag('LIVE','Answered by your backend','tg-live'));
+  mm.appendChild(modeTag(m.mode,!!m.cache_hit,m.mode_source==='explicit'?'Mode chosen explicitly':'Mode picked by the backend router'));
+  if(!m.cache_hit&&!m.local_answer){
+    mm.appendChild(infoTag(String(m.model),'Model that produced this answer'));
+    if(m.provider_model&&m.provider_model!==m.model)mm.appendChild(infoTag('via '+m.provider_model,'Model the provider says answered (its own claim, e.g. the model a router picked)'));
+    if(m.escalated)mm.appendChild(infoTag('↑ escalated',m.escalation_reason||''));
+  } else if(m.cached_from_model){
+    mm.appendChild(infoTag('from '+m.cached_from_model+(m.cached_answer_was_escalated?' (escalated)':''),'Cached answer: no model was called for this message'));
+  }
+  var tokLabel=isNum(m.input_tokens)&&isNum(m.output_tokens)?(m.input_tokens+' in / '+m.output_tokens+' out'+(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0?' ('+m.reasoning_tokens+' reasoning)':'')):'tokens not reported';
+  mm.appendChild(infoTag(tokLabel,'Provider-reported tokens for this message'));
+  var drawerEl=null;
+  if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){
+    var e=m.energy,etxt='⚡ '+fmtWh(e.energy_wh)+' · '+fmtCO2(e.co2e_g)+' CO₂e';
+    if(isNum(e.water_ml_low)&&isNum(e.water_ml_high))etxt+=' · '+e.water_ml_low+'–'+e.water_ml_high+' mL water';
+    var rBtn=document.createElement('button');
+    rBtn.type='button';
+    rBtn.className='tag tg-receipt tg-receipt-btn';
+    rBtn.textContent=etxt+' (est.) ▾';
+    rBtn.title='Click to toggle visual Energy & Carbon Receipt breakdown';
+    rBtn.setAttribute('aria-expanded','false');
+    drawerEl=buildEcoDrawer(t);
+    rBtn.addEventListener('click',function(){
+      drawerEl.hidden=!drawerEl.hidden;
+      rBtn.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');
+    });
+    mm.appendChild(rBtn);
+  }
+  if(m.local_answer)mm.appendChild(infoTag('answered locally','No model was called: pure arithmetic, percentage, or unit conversion answered on the backend, 0 tokens','ts'));
+  if(m.semantic_cache_hit)mm.appendChild(infoTag('semantic cache hit'+(isNum(m.semantic_similarity)?' ('+m.semantic_similarity+')':''),'Cached answer reused: a similar prompt in this session, with identical numbers'));
+  if(m.cache_fallback)mm.appendChild(infoTag('cache fallback',m.cache_bypass_reason||'Fresh model call failed; returned cached answer as fallback','tg-warn'));
+  if(m.task_type&&m.routed_by==='task'){var tt=m.difficulty_tier||m.task_tier;mm.appendChild(infoTag('task: '+m.task_type+(tt?' · '+tt+' tier':''),'Task routing: model tier picked by task type'+(m.difficulty_score!==undefined?' (difficulty '+m.difficulty_score+')':'')));}
+  if(isNum(m.answer_score))mm.appendChild(infoTag('score '+m.answer_score,'Local FrugalGPT-style answer quality score (0–1)'));
+  if(isNum(m.token_budget))mm.appendChild(infoTag('budget ≤'+m.token_budget+' tok','L3 explicit token budget instruction sent in system prompt'));
+  if(m.reasoning_effort)mm.appendChild(infoTag('effort: '+m.reasoning_effort,'L2 reasoning_effort cap sent to provider'));
+  if(m.long_input_pruned&&isNum(m.pruned_sentences))mm.appendChild(infoTag('pruned '+m.pruned_sentences+' sent.','Long-input extractive pruning dropped '+m.pruned_sentences+' low-signal sentences'));
+  if(isNum(m.latency_ms))mm.appendChild(infoTag(m.latency_ms+' ms','Backend latency'));
+  if(m.truncated)mm.appendChild(infoTag('truncated','The answer hit the token cap: a cut-off last sentence was dropped or marked with …','tg-warn'));
+  if(m.baseline){
+    var b=m.baseline;
+    mm.appendChild(infoTag(b.error?'baseline failed':(isNum(b.saved_total_tokens)?'saved '+b.saved_total_tokens+' (measured)':'baseline: no counts'),b.error||b.note||''));
+  }
+  mm.appendChild(actBtn('⧉ Copy','Copy live answer to: '+short(t.raw),function(){copyText(t.answer,'Answer copied!');}));
+  if(m.expansion)mm.appendChild(infoTag('expanded','This answer was requested as more detail on an earlier question'));
+  else mm.appendChild(actBtn('More detail','Ask for a longer answer to this question (a second, primary-model call)',function(){sendLive('Explain in more detail: '+t.raw,'More detail: '+short(t.raw),t.raw);}));
+  var container=document.createElement('div');
+  container.appendChild(mm);
+  if(drawerEl)container.appendChild(drawerEl);
+  return container;
+}
+/* Minimal SSE block parser: "event: x" + "data: <json>" lines. */
+function parseSSEBlock(block){
+  var ev='message',data=[];
+  block.split(/\r?\n/).forEach(function(line){
+    if(!line||line.charAt(0)===':')return;
+    var i=line.indexOf(':'),f=i<0?line:line.slice(0,i),v=i<0?'':line.slice(i+1);
+    if(v.charAt(0)===' ')v=v.slice(1);
+    if(f==='event')ev=v;else if(f==='data')data.push(v);
+  });
+  if(!data.length)return null;
+  try{return{event:ev,data:JSON.parse(data.join('\n'))};}catch(e){return null;}
+}
+/* POST to the backend; on = {chunk(text), meta(obj), error(msg), done()}. */
+function liveRequest(url,body,on){
+  var ctrl=window.AbortController?new AbortController():null;
+  if(ctrl)liveCtrls.push(ctrl);
+  var settled=false,gotResponse=false;
+  function finish(){settled=true;if(ctrl)liveCtrls=liveCtrls.filter(function(c){return c!==ctrl;});}
+  function fail(msg){if(settled)return;finish();on.error(msg);}
+  function handle(block){
+    if(settled)return;
+    var e=parseSSEBlock(block);if(!e)return;
+    if(e.event==='chunk'&&e.data&&typeof e.data.text==='string')on.chunk(e.data.text);
+    else if(e.event==='meta')on.meta(e.data||{});
+    else if(e.event==='error')fail(e.data&&typeof e.data.error==='string'?e.data.error:'The backend reported an error.');
+    else if(e.event==='done'){finish();on.done();}
+  }
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'text/event-stream, application/json'},
+    body:JSON.stringify(body),credentials:'omit',cache:'no-store',signal:ctrl?ctrl.signal:undefined})
+  .then(function(res){
+    gotResponse=true;
+    var ct=res.headers.get('Content-Type')||'';
+    if(!res.ok){
+      return res.text().then(function(txt){
+        var msg=null;try{var j=JSON.parse(txt);if(j&&typeof j.error==='string')msg=j.error;}catch(e){}
+        fail(msg||('The backend returned an error (HTTP '+res.status+').'));
+      });
+    }
+    if(ct.indexOf('text/event-stream')<0){
+      return res.json().then(function(j){
+        if(!j||typeof j.answer!=='string')throw new Error('bad shape');
+        on.chunk(j.answer);on.meta(j.meta||{});finish();on.done();
+      });
+    }
+    var reader=res.body.getReader(),dec=new TextDecoder(),buf='';
+    function pump(){
+      return reader.read().then(function(r){
+        if(r.done){
+          buf+=dec.decode();if(buf.trim())handle(buf);
+          fail('The answer stream ended early. Try again.');
+          return;
+        }
+        buf+=dec.decode(r.value,{stream:true});
+        var parts=buf.split(/\r?\n\r?\n/);buf=parts.pop();
+        parts.forEach(handle);
+        if(!settled)return pump();
+      });
+    }
+    return pump();
+  })
+  .catch(function(e){
+    if(e&&e.name==='AbortError'){finish();return;}
+    fail(gotResponse?'The backend sent a reply this page could not read. Try again.'
+      :'Could not reach the backend at '+url+'. Is it running, and does it allow this page\'s origin?');
+  });
+}
+function accumulateTurnIntoTotals(T,m){
+  T.calls++;
+  if(m.cache_hit)T.hits++;
+  if(m.local_answer)T.local=(T.local||0)+1;
+  if(m.escalated)T.esc++;
+  if(m.expansion)T.exp++;
+  if(m.shrink&&isNum(m.shrink.saved_tokens_est))T.shrunkTok=(T.shrunkTok||0)+m.shrink.saved_tokens_est;
+  if(isNum(m.input_tokens)&&isNum(m.output_tokens)){
+    T.inTok+=m.input_tokens;T.outTok+=m.output_tokens;
+    var mult=MODE_MULT[m.mode]||2.6;
+    var baseOut=(m.baseline&&isNum(m.baseline.baseline_output_tokens))?m.baseline.baseline_output_tokens:(m.local_answer||m.cache_hit?45:Math.round(m.output_tokens*mult));
+    T.stdOutTok=(T.stdOutTok||0)+baseOut;
+  } else T.unreported++;
+  if(m.energy){
+    if(isNum(m.energy.energy_wh))T.wh=(T.wh||0)+m.energy.energy_wh;
+    if(isNum(m.energy.co2e_g))T.co2g=(T.co2g||0)+m.energy.co2e_g;
+    if(isNum(m.energy.water_ml_low))T.waterLow=(T.waterLow||0)+m.energy.water_ml_low;
+    if(isNum(m.energy.water_ml_high))T.waterHigh=(T.waterHigh||0)+m.energy.water_ml_high;
+  }
+  if(m.baseline&&isNum(m.baseline.saved_total_tokens)){T.measured++;T.saved+=m.baseline.saved_total_tokens;}
+}
+function sendLive(raw,display,expandOf){
+  if(!raw.trim())return;
+  var url=liveUrlEl.value.trim()||LIVE_DEFAULT_URL;
+  var t={live:true,raw:raw,seq:++seqCounter,answer:'',meta:null,error:null};
+  liveTurns.push(t);
+  var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
+  var urow=document.createElement('div');urow.className='mr user';
+  var ub=document.createElement('div');ub.className='bubble';ub.textContent=display||raw;
+  urow.appendChild(ub);
+  if(!expandOf)attachUserShrinkDiff(urow,raw);
+  wrap.appendChild(urow);chatEl.appendChild(wrap);
+  chatEl.scrollTop=chatEl.scrollHeight;
+  var ind=addTypingIndicator(wrap),bubble=null;
+  function ensureBubble(cls){
+    if(ind){ind.remove();ind=null;}
+    if(!bubble){
+      var row=document.createElement('div');row.className='mr bot';
+      bubble=document.createElement('div');bubble.className='bubble'+(cls?' '+cls:'');
+      row.appendChild(bubble);wrap.appendChild(row);
+    }
+    return bubble;
+  }
+  if(!/^https?:\/\//i.test(url)){
+    t.error='The backend URL must start with http:// or https://.';
+    ensureBubble('err').textContent=t.error;return;
+  }
+  var reqMode=expandOf?'full':(selectedMode||'auto');
+  var body={prompt:raw,session_id:liveSession,mode:reqMode,stream:true,measure_baseline:!!liveBaselineEl.checked};
+  if(expandOf)body.expand_of=expandOf;
+  liveRequest(url,body,{
+    chunk:function(text){
+      if(liveTurns.indexOf(t)<0)return;
+      t.answer+=text;ensureBubble('typing').textContent=t.answer;scrollBottom();
+    },
+    meta:function(m){t.meta=m;},
+    error:function(msg){
+      if(liveTurns.indexOf(t)<0)return;
+      t.error=msg;var b=ensureBubble('err');b.classList.remove('typing');b.classList.add('err');
+      b.textContent=(t.answer?t.answer+'\n\n':'')+msg;
+      scrollBottom();announce('Live backend error: '+msg);
+    },
+    done:function(){
+      if(liveTurns.indexOf(t)<0)return;
+      var b=ensureBubble();b.classList.remove('typing');
+      b.innerHTML=renderMarkdown(t.answer);
+      var m=t.meta||{};t.meta=m;
+      wrap.appendChild(liveMetaRow(t));scrollBottom();
+      if(m.cache_hit)showCacheFlash();
+      accumulateTurnIntoTotals(liveTotals,m);
+      renderLiveTotals();
+      saveLiveState();
+      announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);
+    }
+  });
+}
+
+/* Restore live turns */
+var savedLive=loadLiveState();
+if(savedLive){
+  liveSession=savedLive.session||newLiveSession();
+  liveTotals=Object.assign(zeroLive(),savedLive.totals||{});
+  savedLive.turns.forEach(function(st){
+    var t={live:true,raw:st.raw,seq:++seqCounter,answer:st.answer,meta:st.meta||{},error:null};
+    liveTurns.push(t);
+    var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
+    var urow=document.createElement('div');urow.className='mr user';
+    var ub=document.createElement('div');ub.className='bubble';ub.textContent=st.raw;
+    urow.appendChild(ub);
+    attachUserShrinkDiff(urow,st.raw);
+    wrap.appendChild(urow);
+    var brow=document.createElement('div');brow.className='mr bot';
+    var bb=document.createElement('div');bb.className='bubble';bb.innerHTML=renderMarkdown(st.answer);
+    brow.appendChild(bb);wrap.appendChild(brow);
+    wrap.appendChild(liveMetaRow(t));
+    chatEl.appendChild(wrap);
+  });
+  renderLiveTotals();
+  if(liveTurns.length){
+    chatEl.scrollTop=chatEl.scrollHeight;
+    var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.add('chatting');
+  }
+}
+});
+}
+
+// ── Hero chat mode switch ──
+(function(){
+  if(typeof document==='undefined')return;
+  var hero = document.querySelector('.hero');
+  if(!hero) return;
+  function activateChatMode(){
+    if(!hero.classList.contains('chatting')){
+      hero.classList.add('chatting');
+    }
+  }
+  var chatEl = document.getElementById('chat');
+  if(chatEl){
+    var obs = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.addedNodes.length) activateChatMode();
+      });
+    });
+    obs.observe(chatEl, {childList: true});
+  }
+  var cb = document.getElementById('cb');
+  if(cb){
+    cb.addEventListener('click', function(){
+      setTimeout(function(){
+        if(chatEl && chatEl.children.length <= 1){
+          hero.classList.remove('chatting');
+        }
+      }, 100);
+    });
+  }
 })();
 </script>
 </body>

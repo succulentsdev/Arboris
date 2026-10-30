@@ -114,8 +114,19 @@ class TestLocalCalc(unittest.TestCase):
         self.assertEqual(try_local_calc("100 C in F"), "100 °C = 212 °F")
         self.assertEqual(try_local_calc("32 F to C"), "32 °F = 0 °C")
         self.assertEqual(try_local_calc("2048 MB to GB"), "2048 MB = 2 GB")
+        self.assertEqual(try_local_calc("60 mph to km/h"), "60 mph = 96.5606 km/h")
+        self.assertEqual(try_local_calc("1 kWh to J"), "1 kWh = 3600000 J")
+        self.assertEqual(try_local_calc("120 min to hours"), "120 min = 2 hr")
         # Incompatible unit categories fall through to the model.
         self.assertIsNone(try_local_calc("Convert 100 km to kg"))
+
+    def test_base_and_color_conversions(self):
+        self.assertEqual(try_local_calc("Convert 255 to hex"), "255 = 0xff")
+        self.assertEqual(try_local_calc("0xff in decimal"), "0xff = 255")
+        self.assertEqual(try_local_calc("42 in binary"), "42 = 0b101010")
+        self.assertEqual(try_local_calc("0b101010 to dec"), "0b101010 = 42")
+        self.assertEqual(try_local_calc("Convert #cf4a28 to rgb"), "#cf4a28 = rgb(207, 74, 40)")
+        self.assertEqual(try_local_calc("rgb(207, 74, 40) to hex"), "rgb(207, 74, 40) = #cf4a28")
 
 
 class TestCascadeScorerAndBudget(unittest.TestCase):
