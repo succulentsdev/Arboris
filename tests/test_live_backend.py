@@ -736,6 +736,24 @@ class HTTPTests(unittest.TestCase):
         resp, _ = self.request(port, "POST", "/api/other", {"prompt": "x"})
         self.assertEqual(resp.status, 404)
 
+    def test_serves_index_and_hero_image(self):
+        backend, _, _ = make_backend()
+        port = self.start(backend)
+        resp, html = self.request(port, "GET", "/")
+        self.assertEqual(resp.status, 200)
+        self.assertIn("text/html", resp.getheader("Content-Type"))
+        self.assertIn("Arboris", html)
+
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+        conn.request("GET", "/hero.jpg")
+        img_resp = conn.getresponse()
+        img_bytes = img_resp.read()
+        conn.close()
+        self.assertEqual(img_resp.status, 200)
+        self.assertEqual(img_resp.getheader("Content-Type"), "image/jpeg")
+        self.assertIn("max-age=86400", img_resp.getheader("Cache-Control") or "")
+        self.assertTrue(img_bytes.startswith(b"\xff\xd8\xff"))
+
 
 class EntryPointAndSiteTests(unittest.TestCase):
     def test_help_lists_env_vars(self):
@@ -770,6 +788,15 @@ class EntryPointAndSiteTests(unittest.TestCase):
         # The page must never handle a provider key.
         self.assertNotIn("Authorization", html)
         self.assertNotRegex(html, r"api_key|apiKey|ARBORIS_API_KEY")
+        # Hero image is extracted to website/hero.jpg (no 900KB base64 JPEG in index.html).
+        self.assertNotIn("data:image/jpeg;base64,", html)
+        self.assertIn("url('hero.jpg')", html)
+        self.assertTrue((ROOT / "website" / "hero.jpg").is_file())
+        # Brevity selector bar, methodology section, and valid head structure.
+        self.assertIn('id="brevity-bar"', html)
+        self.assertIn('id="methodology"', html)
+        self.assertEqual(html.lower().count("<head>"), 1)
+        self.assertEqual(html.lower().count("<body>"), 1)
 
 
     def test_env_example_has_no_real_key(self):

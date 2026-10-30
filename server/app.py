@@ -1534,6 +1534,7 @@ def chunk_text(text, words_per_chunk=CHUNK_WORDS):
 
 def make_handler(backend):
     site_index = ROOT / "website" / "index.html"
+    site_hero_jpg = ROOT / "website" / "hero.jpg"
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Arboris"
@@ -1577,6 +1578,14 @@ def make_handler(backend):
             self.wfile.write(body)
 
         def _send_error(self, status, message, extra=None):
+            if getattr(self, "command", None) == "POST" and not getattr(self, "_body_read", False):
+                try:
+                    n = int(self.headers.get("Content-Length", "0"))
+                    if 0 < n <= MAX_BODY_BYTES:
+                        self.rfile.read(n)
+                except Exception:
+                    pass
+                self._body_read = True
             self._send_json(status, {"error": message}, extra)
 
         def log_request(self, code="-", size="-"):
@@ -1616,6 +1625,15 @@ def make_handler(backend):
                 self.end_headers()
                 self.wfile.write(body)
                 return
+            if path == "/hero.jpg" and site_hero_jpg.is_file():
+                body = site_hero_jpg.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             self._send_error(404, MSG_NOT_FOUND)
 
         def do_POST(self):
@@ -1636,6 +1654,7 @@ def make_handler(backend):
                 return self._send_error(400, "Request body is missing")
             if length > MAX_BODY_BYTES:
                 return self._send_error(413, "Request body is too large")
+            self._body_read = True
             body = self.rfile.read(length)
             try:
                 req = parse_chat_request(body)

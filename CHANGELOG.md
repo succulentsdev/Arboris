@@ -1,4 +1,13 @@
 # Changelog
+- **Unreleased -- Website design pass, static hero image, and UI transparency (2026-10-30):**
+  - Extracted the 905 KB inline base64 hero JPEG from `website/index.html` into `website/hero.jpg` (~663 KB binary JPEG) and updated `server/app.py` to serve `GET /hero.jpg` with `Cache-Control: public, max-age=86400`, cutting `website/index.html` from ~958 KB to ~33 KB.
+  - Fixed malformed double `<head>`/`<body>` markup at the top of `website/index.html`, added `lang="en"`, removed ~180 lines of dead CSS/JS from the pre-0.9.0 demo layout, and fixed broken mobile CSS selectors.
+  - Added interactive verbosity selector (`Auto`, `Sprout`, `Canopy`, `Forest`) above the chat composer; `Auto` displays the live predicted route (`Auto · Sprout/Canopy/Forest`) while typing and sends explicit `mode` overrides when selected.
+  - Added collapsible `✂ PromptShrink −N tok` diff pill on sent user messages (`makeDiffRow()`) so users can inspect removed filler phrases after sending.
+  - Added safe, zero-dependency Markdown formatting (`renderMarkdown`) for assistant answers (fenced code blocks, inline code, lists, bold/italic, tables) while escaping raw HTML before formatting.
+  - Surfaced richer backend telemetry in answer badges and the totals bar: `reasoning_tokens`, `reasoning_effort`, `token_budget`, `answer_score`, `long_input_pruned`, `cache_fallback`, styled energy receipt pills, and cumulative `CO2e (est.)` in `#totals-live`.
+  - Replaced the permanently hidden `.main` / `.sidebar` DOM block with a visible `#methodology` 3-card reference section (routing & brevity modes, output-weighted energy formula, and Finland `europe-north1` context) and linked it from the header.
+  - Aligned client-side `shrinkSegment()` rule order in `website/index.html` with `arboris/shrink.py` (`verbose` phrase replacements before `fillers`).
 - **Unreleased -- Reasoning effort caps and reasoning_tokens transparency (2026-10-30):**
   - L2 lever: opt-in `reasoning_effort` caps per mode (sprout→low, canopy→low, full→medium). When `ARBORIS_REASONING_EFFORT=1`, the server sends `reasoning_effort` in the provider payload, reducing hidden reasoning tokens on compatible models (o1, o3 via OpenRouter). Off by default; does not affect non-reasoning models.
   - `reasoning_tokens` transparency: providers now parse `completion_tokens_details.reasoning_tokens` from responses. These are INCLUDED in `completion_tokens` (not additive), so no energy formula change. Reported in meta, energy receipt, and the receipt note when present.

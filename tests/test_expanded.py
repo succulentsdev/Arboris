@@ -12,6 +12,7 @@ Run from the repository root:
 """
 
 import json
+import shutil
 import subprocess
 import sys
 import unittest
@@ -155,6 +156,9 @@ class TestWebsiteLiveOnly(unittest.TestCase):
         for gone in ("EXPANDED_TOPICS", "detectTopic", "greenAnswer",
                      "integrateChat", "TOPIC_META", "TEMPLATES"):
             self.assertNotIn(gone, html)
+        self.assertIn("module.exports={shrinkPrompt,routeMode,estTokens}", html)
+        if not shutil.which("node"):
+            return
         js_code = """
 var fs = require('fs');
 var html = fs.readFileSync('website/index.html','utf8');
