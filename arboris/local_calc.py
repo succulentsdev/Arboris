@@ -39,7 +39,19 @@ _PERCENT_OF_RE = re.compile(
     re.IGNORECASE,
 )
 _UNIT_CONV_RE = re.compile(
-    r"^(-?\d+(?:\.\d+)?)\s*([a-zA-Z°]+)\s+(?:to|in|into|as)\s+([a-zA-Z°]+)$",
+    r"^(-?\d+(?:\.\d+)?)\s*([a-zA-Z°/]+)\s+(?:to|in|into|as)\s+([a-zA-Z°/]+)$",
+    re.IGNORECASE,
+)
+_BASE_CONV_RE = re.compile(
+    r"^(0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|\d+)\s+(?:to|in|into|as)\s+(hex|hexadecimal|bin|binary|dec|decimal|oct|octal)$",
+    re.IGNORECASE,
+)
+_HEX_TO_RGB_RE = re.compile(
+    r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\s+(?:to|in|into|as)\s+rgb$",
+    re.IGNORECASE,
+)
+_RGB_TO_HEX_RE = re.compile(
+    r"^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)\s+(?:to|in|into|as)\s+hex$",
     re.IGNORECASE,
 )
 
@@ -64,15 +76,24 @@ _UNIT_ALIASES = {
     "gb": ("data", "GB"), "gigabyte": ("data", "GB"), "gigabytes": ("data", "GB"),
     "mb": ("data", "MB"), "megabyte": ("data", "MB"), "megabytes": ("data", "MB"),
     "tb": ("data", "TB"), "terabyte": ("data", "TB"), "terabytes": ("data", "TB"),
+    "mph": ("speed", "mph"), "kmh": ("speed", "km/h"), "kph": ("speed", "km/h"), "km/h": ("speed", "km/h"), "m/s": ("speed", "m/s"),
+    "wh": ("energy", "Wh"), "kwh": ("energy", "kWh"), "j": ("energy", "J"), "joule": ("energy", "J"), "joules": ("energy", "J"), "kj": ("energy", "kJ"), "kilojoules": ("energy", "kJ"),
+    "s": ("time", "s"), "sec": ("time", "s"), "secs": ("time", "s"), "second": ("time", "s"), "seconds": ("time", "s"),
+    "min": ("time", "min"), "mins": ("time", "min"), "minute": ("time", "min"), "minutes": ("time", "min"),
+    "hr": ("time", "hr"), "hrs": ("time", "hr"), "hour": ("time", "hr"), "hours": ("time", "hr"),
+    "day": ("time", "days"), "days": ("time", "days"),
 }
 
-# Base factors per category (to meters, grams, liters, MB)
+# Base factors per category (to meters, grams, liters, MB, m/s, J, seconds)
 _BASE_FACTOR = {
     "km": 1000.0, "m": 1.0, "cm": 0.01, "mm": 0.001,
     "mi": 1609.344, "ft": 0.3048, "in": 0.0254,
     "kg": 1000.0, "g": 1.0, "lb": 453.59237, "oz": 28.349523125,
     "L": 1.0, "gal": 3.785411784,
     "TB": 1048576.0, "GB": 1024.0, "MB": 1.0,
+    "m/s": 1.0, "km/h": 1.0 / 3.6, "mph": 0.44704,
+    "J": 1.0, "kJ": 1000.0, "Wh": 3600.0, "kWh": 3600000.0,
+    "s": 1.0, "min": 60.0, "hr": 3600.0, "days": 86400.0,
 }
 
 
@@ -89,6 +110,36 @@ def _try_unit_or_percent(expr):
         total = float(m_pct.group(2))
         val = (pct / 100.0) * total
         return f"{_fmt_num(pct)}% of {_fmt_num(total)} = {_fmt_num(val)}"
+
+    m_base = _BASE_CONV_RE.match(expr)
+    if m_base:
+        raw_num, target = m_base.group(1), m_base.group(2).lower()
+        try:
+            n = int(raw_num, 0)
+        except ValueError:
+            return None
+        if target in ("hex", "hexadecimal"):
+            return f"{raw_num} = {hex(n)}"
+        if target in ("bin", "binary"):
+            return f"{raw_num} = {bin(n)}"
+        if target in ("oct", "octal"):
+            return f"{raw_num} = {oct(n)}"
+        return f"{raw_num} = {n}"
+
+    m_hex = _HEX_TO_RGB_RE.match(expr)
+    if m_hex:
+        h = m_hex.group(1)
+        if len(h) == 3:
+            h = "".join(c * 2 for c in h)
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return f"#{m_hex.group(1).lower()} = rgb({r}, {g}, {b})"
+
+    m_rgb = _RGB_TO_HEX_RE.match(expr)
+    if m_rgb:
+        r, g, b = int(m_rgb.group(1)), int(m_rgb.group(2)), int(m_rgb.group(3))
+        if all(0 <= v <= 255 for v in (r, g, b)):
+            return f"rgb({r}, {g}, {b}) = #{r:02x}{g:02x}{b:02x}"
+        return None
 
     m_unit = _UNIT_CONV_RE.match(expr)
     if m_unit:

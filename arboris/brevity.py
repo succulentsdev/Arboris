@@ -36,11 +36,27 @@ ELLIPSIS = "\u2026"
 _FILLER_SENTENCES = [
     r"i hope you(?: are|'re) doing well[.!]?",
     r"please let me know if you have any questions[.!]?",
+    r"feel free to ask if you have any (?:further |other )?questions[.!]?",
+    r"hope this helps[.!]?",
+    r"i hope this helps[.!]?",
     r"thanks so much for reaching out[.!]?",
     r"thank you so much in advance[.!]?",
+    r"certainly[.!]",
+    r"sure(?: thing)?[.!]",
+    r"of course[.!]",
+    r"absolutely[.!]",
+    r"great question[.!]",
+    r"that(?:'s| is) a great question[.!]",
+    r"i(?:'d| would) be happy to help(?: with that)?[.!]",
+    r"happy to help[.!]",
 ]
 _FILLER_FULL = [re.compile(p, re.IGNORECASE) for p in _FILLER_SENTENCES]
-_FILLER_LEAD = re.compile(r"^as an ai language model,\s*", re.IGNORECASE)
+_FILLER_LEAD = re.compile(
+    r"^(?:as an ai(?: language model| assistant)?,\s*"
+    r"|(?:certainly|sure|of course|absolutely)[,!]\s+(?:here(?:'s| is) (?:the answer|a brief explanation):\s*)?"
+    r"|here(?:'s| is) a (?:concise|brief|quick) (?:answer|explanation|overview):\s*)",
+    re.IGNORECASE,
+)
 
 
 def split_sentences(text):
