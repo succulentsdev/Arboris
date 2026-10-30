@@ -86,6 +86,13 @@ BREVITY_SYSTEM = {
 }
 MAX_TOKENS = {"sprout": 120, "canopy": 240, "full": 400}
 
+# L3 explicit token budget: a soft "use under N tokens" instruction
+# appended to the system prompt, opt-in via ARBORIS_TOKEN_BUDGET.
+# Values are set slightly below MAX_TOKENS so the model aims to finish
+# before the hard cap truncates.  Too-tight budgets can paradoxically
+# raise token usage (TALE effect), so these are conservative.
+TOKEN_BUDGET = {"sprout": 100, "canopy": 200, "full": 350}
+
 
 def _matches(prompt, *patterns):
     """True if any pattern matches on a word boundary.

@@ -30,6 +30,7 @@ from arboris.router import route_mode
 from arboris.providers import (
     BREVITY_SYSTEM,
     MAX_TOKENS,
+    TOKEN_BUDGET,
     DemoProvider,
     OpenAICompatibleProvider,
     ProviderError,
@@ -153,6 +154,12 @@ def _run_one(provider, session, prompt, mode_arg, opts=None):
             return None
 
     # --- Output side: call the model ---
+    # Build the system prompt: brevity instruction + optional token budget.
+    system = BREVITY_SYSTEM[mode] if constrain else None
+    if system and opts.get("token_budget"):
+        budget = TOKEN_BUDGET.get(mode)
+        if budget is not None:
+            system = system + f" Use under {budget} tokens."
     cascade_result = None
     try:
         if opts.get("cascade"):
@@ -165,7 +172,7 @@ def _run_one(provider, session, prompt, mode_arg, opts=None):
             )
             cascade_result = run_cascade(
                 provider, escalation, shrunk_prompt,
-                system=BREVITY_SYSTEM[mode] if constrain else None,
+                system=system,
                 max_tokens=MAX_TOKENS[mode] if constrain else None,
                 threshold=opts.get("cascade_threshold", -1.0),
             )
@@ -173,7 +180,7 @@ def _run_one(provider, session, prompt, mode_arg, opts=None):
         else:
             comp = provider.complete_ex(
                 shrunk_prompt,
-                system=BREVITY_SYSTEM[mode] if constrain else None,
+                system=system,
                 max_tokens=MAX_TOKENS[mode] if constrain else None,
             )
         base = None
@@ -280,6 +287,8 @@ def main(argv=None):
                         help="Compare against a real unconstrained reply (live: one extra API call)")
     parser.add_argument("--no-constrain", action="store_true",
                         help="Live: do not ask for a short answer; generate in full, then trim")
+    parser.add_argument("--token-budget", action="store_true",
+                        help="Add 'Use under N tokens.' to the system prompt (sprout 100, canopy 200, full 350)")
     parser.add_argument("--wh-per-token", type=float, default=WH_PER_TOKEN,
                         help="Assumed energy per generated token, in Wh (default %(default)s)")
     parser.add_argument("--grid-g-per-kwh", type=float, default=GRID_G_PER_KWH,
@@ -306,6 +315,7 @@ def main(argv=None):
     opts = {
         "measure_baseline": args.measure_baseline,
         "no_constrain": args.no_constrain,
+        "token_budget": args.token_budget,
         "wh_per_token": args.wh_per_token,
         "grid_g_per_kwh": args.grid_g_per_kwh,
         "no_cache": args.no_cache,

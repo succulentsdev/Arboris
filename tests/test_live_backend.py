@@ -1701,3 +1701,62 @@ class ReasoningEffortTests(unittest.TestCase):
         backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
         result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
         self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+
+class TokenBudgetTests(unittest.TestCase):
+    """L3 lever: explicit token budget instruction in system prompt."""
+
+    def test_budget_appended_when_enabled(self):
+        """When token_budget=True, system prompt includes 'Use under N tokens.'"""
+        backend, primary, _ = make_backend(token_budget=True)
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        system = primary.calls[-1]["system"]
+        self.assertIn("Use under 100 tokens.", system)
+
+    def test_budget_not_appended_when_disabled(self):
+        """When token_budget=False (default), no budget in system prompt."""
+        backend, primary, _ = make_backend()
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        system = primary.calls[-1]["system"]
+        self.assertNotIn("Use under", system)
+
+    def test_budget_per_mode(self):
+        """Each mode gets its own budget value in the system prompt."""
+        from arboris.providers import TOKEN_BUDGET
+        backend, primary, _ = make_backend(token_budget=True)
+        for mode_name, expected in TOKEN_BUDGET.items():
+            backend.chat(ChatRequest(prompt="hello", mode=mode_name, session_id=SESSION))
+            system = primary.calls[-1]["system"]
+            self.assertIn(f"Use under {expected} tokens.", system)
+
+    def test_budget_in_meta(self):
+        """Meta reports the budget value when enabled."""
+        backend, _, _ = make_backend(token_budget=True)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertEqual(result["meta"]["token_budget"], 100)
+
+    def test_budget_none_in_meta_when_disabled(self):
+        """Meta reports None when budget is off."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_budget_none_for_local_calc(self):
+        """Local-calc answers have no budget (no model call)."""
+        backend, _, _ = make_backend(token_budget=True)
+        result = backend.chat(ChatRequest(prompt="2 + 2", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_budget_none_for_cache_hit(self):
+        """Cache-hit answers have no budget (no model call)."""
+        backend, _, _ = make_backend(token_budget=True)
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_config_env_var(self):
+        """ARBORIS_TOKEN_BUDGET env var is parsed."""
+        cfg = Config.from_env({"ARBORIS_TOKEN_BUDGET": "1"})
+        self.assertTrue(cfg.token_budget)
+        cfg2 = Config.from_env({})
+        self.assertFalse(cfg2.token_budget)

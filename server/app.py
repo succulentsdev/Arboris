@@ -64,6 +64,7 @@ from arboris.cascade import CascadeResult, run_cascade  # noqa: E402
 from arboris.providers import (  # noqa: E402
     BREVITY_SYSTEM,
     MAX_TOKENS,
+    TOKEN_BUDGET,
     OpenAICompatibleProvider,
     ProviderError,
 )
@@ -267,6 +268,12 @@ ENV_VARS = [
      "models that support reasoning_effort (o1, o3, etc.); other "
      "models ignore it. Meta reports reasoning_effort and "
      "reasoning_tokens when the provider reports them."),
+    ("ARBORIS_TOKEN_BUDGET", "off",
+     "1/true/yes/on appends 'Use under N tokens.' to the system "
+     "prompt per mode (sprout 100, canopy 200, full 350), giving "
+     "the model an explicit length target below the hard max_tokens "
+     "cap. Off by default: enable live, compare token counts, then "
+     "decide. Meta reports token_budget."),
     ("ARBORIS_SEMANTIC_CACHE", "off",
      "1/true/yes/on enables a conservative lexical semantic cache: "
      "a fact/definition prompt with a difflib ratio at least 0.90 "
@@ -412,6 +419,7 @@ class Config:
     long_input_pruning: bool = False
     long_input_max_chars: int = 1500
     reasoning_effort: bool = False
+    token_budget: bool = False
     semantic_cache: bool = False
     debug_log: bool = False
     # GREENSEARCH_* names read because their ARBORIS_* twin was unset.
@@ -517,6 +525,8 @@ class Config:
             in ("1", "true", "yes", "on"),
             long_input_max_chars=_long_input_max_chars(env),
             reasoning_effort=env.get("ARBORIS_REASONING_EFFORT", "").strip().lower()
+            in ("1", "true", "yes", "on"),
+            token_budget=env.get("ARBORIS_TOKEN_BUDGET", "").strip().lower()
             in ("1", "true", "yes", "on"),
             semantic_cache=env.get("ARBORIS_SEMANTIC_CACHE", "").strip().lower()
             in ("1", "true", "yes", "on"),
@@ -979,6 +989,7 @@ class Backend:
             "long_input_pruning": cfg.long_input_pruning,
             "long_input_max_chars": cfg.long_input_max_chars,
             "reasoning_effort": cfg.reasoning_effort,
+            "token_budget": cfg.token_budget,
             "semantic_cache": cfg.semantic_cache,
             "provider_streaming": False,
         }
@@ -1033,6 +1044,10 @@ class Backend:
             mode = route_mode(prompt) if req.mode == "auto" else req.mode
             routed_by = "explicit" if req.mode != "auto" else "word_count"
             system_prompt = BREVITY_SYSTEM[mode]
+        # L3: explicit token budget instruction (opt-in).
+        budget = TOKEN_BUDGET.get(mode) if cfg.token_budget else None
+        if budget is not None:
+            system_prompt = system_prompt + f" Use under {budget} tokens."
         self.debug(f"prompt={req.prompt!r} shrunk={prompt!r} mode={mode}")
 
         meta = {
@@ -1089,6 +1104,7 @@ class Backend:
                 "input_tokens": 0,
                 "output_tokens": 0,
                 "reasoning_tokens": None,
+                "token_budget": None,
                 "new_output_tokens": 0,
                 "tokens_source": "local calculation: no model call, 0 new tokens",
                 "trimmed": False,
@@ -1171,6 +1187,7 @@ class Backend:
                         "input_tokens": 0,
                         "output_tokens": 0,
                         "reasoning_tokens": None,
+                        "token_budget": None,
                         "new_output_tokens": 0,
                         "tokens_source": "cache hit: no model call, 0 new tokens",
                         "energy": energy_receipt(
@@ -1221,6 +1238,7 @@ class Backend:
                         "new_output_tokens": 0,
                         "tokens_source": "semantic cache hit: no model call, 0 new tokens",
                         "reasoning_tokens": None,
+                        "token_budget": None,
                         "energy": energy_receipt(
                             0, 0, model=sem_entry.get("model"),
                             model_tier="small" if use_small and sem_entry.get("model") == cfg.small_model else "primary",
@@ -1277,6 +1295,7 @@ class Backend:
         meta["temperature"] = temperature
         meta["stop_sequences"] = stop
         meta["reasoning_effort"] = reasoning
+        meta["token_budget"] = budget
         def _score(prompt_arg, comp):
             return score_answer(
                 prompt_arg, comp.text, mode=mode,
@@ -1334,6 +1353,7 @@ class Backend:
                     "new_output_tokens": 0,
                     "tokens_source": "cache fallback: no new model call, 0 new tokens",
                     "reasoning_tokens": None,
+                    "token_budget": None,
                     "energy": energy_receipt(
                         0, 0, model=bad_cache_entry.get("model"),
                         model_tier="small" if use_small and bad_cache_entry.get("model") == cfg.small_model else "primary",
@@ -1717,6 +1737,7 @@ def main(argv=None):
         f"task stop sequences: {'on' if config.task_stop_sequences else 'off'} | "
         f"long-input pruning: {'on' if config.long_input_pruning else 'off'} | "
         f"reasoning effort: {'on' if config.reasoning_effort else 'off'} | "
+        f"token budget: {'on' if config.token_budget else 'off'} | "
         f"semantic cache: {'on' if config.semantic_cache else 'off'} | "
         f"shrink: {config.shrink_version} | "
         f"prompt logging: {'ON (stderr only)' if config.debug_log else 'off'}"
