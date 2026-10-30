@@ -1494,6 +1494,18 @@ def make_handler(backend):
             # No Origin header: not a cross-site browser request (curl, tests).
             return origin is None or origin.rstrip("/") in backend.config.allowed_origins
 
+        def _client_ip(self):
+            # Behind a reverse proxy (Cloud Run's load balancer, nginx, ...)
+            # the socket peer is the proxy, not the visitor: per-IP rate
+            # limiting must read X-Forwarded-For. Take the leftmost entry
+            # (the original client as seen by the first proxy). Caveat: a
+            # client can spoof this header to dodge the limit, so this stays
+            # a POC-grade guard, not commercial metering.
+            fwd = self.headers.get("X-Forwarded-For")
+            if fwd:
+                return fwd.split(",")[0].strip()
+            return self.client_address[0]
+
         def _cors_headers(self):
             origin = self.headers.get("Origin")
             if origin and origin.rstrip("/") in backend.config.allowed_origins:
@@ -1560,7 +1572,7 @@ def make_handler(backend):
                 return self._send_error(404, MSG_NOT_FOUND)
             if not self._origin_ok():
                 return self._send_error(403, MSG_ORIGIN)
-            allowed, retry_after = backend.allow_request(self.client_address[0])
+            allowed, retry_after = backend.allow_request(self._client_ip())
             if not allowed:
                 return self._send_error(429, MSG_RATE_LIMITED,
                                         {"Retry-After": str(retry_after)})
