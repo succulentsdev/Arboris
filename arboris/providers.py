@@ -69,6 +69,11 @@ class Completion:
     # The response's top-level "model" field, when reported. A router id
     # such as openrouter/free may report the model it routed to here.
     response_model: Optional[str] = None
+    # Reasoning tokens from completion_tokens_details.reasoning_tokens,
+    # when the provider reports them.  These are INCLUDED in
+    # completion_tokens (they are not additive), so the energy formula
+    # does not change; this is a transparency breakdown.
+    reasoning_tokens: Optional[int] = None
 
 
 # Generation-side brevity: asking the model for a short answer (and capping
@@ -80,6 +85,13 @@ BREVITY_SYSTEM = {
     "full": "Answer in at most 6 short sentences.",
 }
 MAX_TOKENS = {"sprout": 120, "canopy": 240, "full": 400}
+
+# L3 explicit token budget: a soft "use under N tokens" instruction
+# appended to the system prompt, opt-in via ARBORIS_TOKEN_BUDGET.
+# Values are set slightly below MAX_TOKENS so the model aims to finish
+# before the hard cap truncates.  Too-tight budgets can paradoxically
+# raise token usage (TALE effect), so these are conservative.
+TOKEN_BUDGET = {"sprout": 100, "canopy": 200, "full": 350}
 
 
 def _matches(prompt, *patterns):
@@ -141,8 +153,8 @@ class DemoProvider:
         return self.complete_ex(prompt).text
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
-        """Offline provider ignores system/max_tokens/stop/temperature: it has no model.
+                    stop=None, temperature=None, reasoning_effort=None):
+        """Offline provider ignores system/max_tokens/stop/temperature/reasoning_effort.
 
         It also has no logprobs: avg_logprob stays None, so a cascade
         must not escalate (or claim confidence) from a demo answer.
@@ -260,7 +272,7 @@ class OpenAICompatibleProvider:
         return self.complete_ex(prompt).text
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
+                    stop=None, temperature=None, reasoning_effort=None):
         if prompt is None or not prompt.strip():
             raise ValueError("Empty prompt: type a prompt first.")
         messages = []
@@ -277,6 +289,8 @@ class OpenAICompatibleProvider:
             payload["stop"] = list(stop)
         if temperature is not None:
             payload["temperature"] = temperature
+        if reasoning_effort is not None:
+            payload["reasoning_effort"] = reasoning_effort
         request = urllib.request.Request(
             self.base_url + "/chat/completions",
             data=json.dumps(payload).encode(),
@@ -336,6 +350,7 @@ class OpenAICompatibleProvider:
             avg_logprob=_avg_logprob(data),
             finish_reason=_str_or_none(_first_choice(data).get("finish_reason")),
             response_model=_str_or_none(data.get("model")),
+            reasoning_tokens=_reasoning_tokens(usage),
         )
 
 
@@ -371,6 +386,19 @@ def _avg_logprob(data):
     if not values:
         return None
     return sum(values) / len(values)
+
+
+def _reasoning_tokens(usage):
+    """Extract reasoning_tokens from completion_tokens_details, or None.
+
+    OpenAI-compatible providers may report
+    usage.completion_tokens_details.reasoning_tokens. These are INCLUDED
+    in completion_tokens (not additive). None means "not reported".
+    """
+    details = usage.get("completion_tokens_details")
+    if not isinstance(details, dict):
+        return None
+    return _int_or_none(details.get("reasoning_tokens"))
 
 
 def _int_or_none(value):

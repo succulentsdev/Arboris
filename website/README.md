@@ -2,17 +2,18 @@
 
 The live site, Python package and CLI are all named **Arboris** (renamed from GreenSearch in 0.9.0). This page has no demo mode and no pre-written answers: every question goes to an Arboris backend, which holds the API key. The page never sees a key.
 
-A single-file, ChatGPT-style site. On the hosted site the backend serves this page, so the backend URL defaults to the same origin (`/api/chat`). On your own machine the default is `http://localhost:8000/api/chat`, i.e. `python server/app.py`. You can enter a different backend URL in the settings popover. See [SELFHOST.md](SELFHOST.md) for hosting it.
+A ChatGPT-style site (`website/index.html` plus the static background image `website/hero.jpg`). On the hosted site the backend serves both `/index.html` and `/hero.jpg`, so the backend URL defaults to the same origin (`/api/chat`). On your own machine the default is `http://localhost:8000/api/chat`, i.e. `python server/app.py`. You can enter a different backend URL in the settings popover. See [SELFHOST.md](SELFHOST.md) for hosting it.
 
 ## What it does
 
 - Chat input, multi-turn in one session. Every send goes to the backend as the raw text; the backend runs PromptShrink, its session cache, routing, the small-model cascade and the brevity trim, so nothing is shrunk twice.
-- A typing preview under the input shows what PromptShrink would trim (client-side estimate only; the backend shrinks on send).
-- Live answers stream back (SSE) and show meta tags: model used (plus the model the provider reports, when that differs), whether it escalated, cache hits, provider-reported tokens, latency, and a **truncated** marker when the answer hit the token cap.
-- Live totals (provider-reported): live answers, input tokens, output tokens, cache hits, escalations, and measured savings when the baseline checkbox is on.
+- **Verbosity selector** (`Auto`, `Sprout`, `Canopy`, `Forest`): `Auto` routes each prompt automatically and displays the live predicted mode (`Auto · Sprout`, `Auto · Canopy`, or `Auto · Forest`) as you type, or you can override the mode for any turn.
+- A typing preview under the input shows what PromptShrink would trim (client-side estimate only; the backend shrinks on send), and each sent question includes a collapsible **`✂ PromptShrink −N tok`** pill that expands an inline diff of removed filler phrases.
+- Live answers stream back (SSE) with safe, zero-dependency Markdown formatting (code blocks, inline code, lists, bold/italic, tables) and show meta tags: model used (plus the model the provider reports, when that differs), whether it escalated, cache hits, provider-reported tokens, hidden `reasoning_tokens` (and `reasoning_effort` when enabled), `token_budget`, `answer_score`, latency, and a **truncated** marker when the answer hit the token cap.
+- Live totals (provider-reported): live answers, input tokens, output tokens, estimated CO2e (`CO2e (est.)`), cache hits, escalations, and measured savings when the baseline checkbox is on.
 - Per-answer actions: **Copy** copies the answer text; **More detail** asks for a longer answer to the same question (a second, primary-model call).
 - Settings popover: backend URL, and **Measure baseline** (off by default; makes a second, unconstrained call per message to measure real savings, which doubles API cost).
-- Finland panel: Google Cloud Finland (europe-north1) 98% carbon-free energy, grid 30 gCO2eq/kWh. The panel states clearly that the hosted backend runs in us-central1, not Finland, so Finland numbers do not change the live CO2 numbers. Clean-energy hosting is a separate lever.
+- **Methodology & Finland section**: three reference cards below the chat fold covering routing & brevity modes, the output-weighted energy/CO2e formula, and the Google Cloud Finland (`europe-north1`, 98% carbon-free energy, grid 30 gCO2eq/kWh) reference. The section states clearly that the hosted backend runs in `us-central1`, not Finland, so Finland numbers do not change the live CO2 numbers. Clean-energy hosting is a separate lever.
 
 ### Saved in your browser (localStorage)
 

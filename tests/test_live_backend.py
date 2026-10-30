@@ -65,7 +65,8 @@ class FakeProvider:
 
     def __init__(self, model, text=LONG_ANSWER, avg_logprob=None,
                  completion_tokens=50, prompt_tokens=10, error=None,
-                 logprobs_error=None, finish_reason=None):
+                 logprobs_error=None, finish_reason=None,
+                 reasoning_tokens=None):
         self.model = model
         self.text = text
         self.logprobs_error = logprobs_error  # raised only when logprobs=True
@@ -74,13 +75,15 @@ class FakeProvider:
         self.completion_tokens = completion_tokens
         self.prompt_tokens = prompt_tokens
         self.error = error
+        self.reasoning_tokens = reasoning_tokens
         self.calls = []
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
+                    stop=None, temperature=None, reasoning_effort=None):
         self.calls.append({"prompt": prompt, "system": system,
                            "max_tokens": max_tokens, "logprobs": logprobs,
-                           "stop": stop, "temperature": temperature})
+                           "stop": stop, "temperature": temperature,
+                           "reasoning_effort": reasoning_effort})
         if self.error is not None:
             raise self.error
         if logprobs and self.logprobs_error is not None:
@@ -91,6 +94,7 @@ class FakeProvider:
             prompt_tokens=self.prompt_tokens,
             avg_logprob=self.avg_logprob if logprobs else None,
             finish_reason=self.finish_reason,
+            reasoning_tokens=self.reasoning_tokens,
         )
 
 
@@ -732,6 +736,24 @@ class HTTPTests(unittest.TestCase):
         resp, _ = self.request(port, "POST", "/api/other", {"prompt": "x"})
         self.assertEqual(resp.status, 404)
 
+    def test_serves_index_and_hero_image(self):
+        backend, _, _ = make_backend()
+        port = self.start(backend)
+        resp, html = self.request(port, "GET", "/")
+        self.assertEqual(resp.status, 200)
+        self.assertIn("text/html", resp.getheader("Content-Type"))
+        self.assertIn("Arboris", html)
+
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+        conn.request("GET", "/hero.jpg")
+        img_resp = conn.getresponse()
+        img_bytes = img_resp.read()
+        conn.close()
+        self.assertEqual(img_resp.status, 200)
+        self.assertEqual(img_resp.getheader("Content-Type"), "image/jpeg")
+        self.assertIn("max-age=86400", img_resp.getheader("Cache-Control") or "")
+        self.assertTrue(img_bytes.startswith(b"\xff\xd8\xff"))
+
 
 class EntryPointAndSiteTests(unittest.TestCase):
     def test_help_lists_env_vars(self):
@@ -766,6 +788,15 @@ class EntryPointAndSiteTests(unittest.TestCase):
         # The page must never handle a provider key.
         self.assertNotIn("Authorization", html)
         self.assertNotRegex(html, r"api_key|apiKey|ARBORIS_API_KEY")
+        # Hero image is extracted to website/hero.jpg (no 900KB base64 JPEG in index.html).
+        self.assertNotIn("data:image/jpeg;base64,", html)
+        self.assertIn("url('hero.jpg')", html)
+        self.assertTrue((ROOT / "website" / "hero.jpg").is_file())
+        # Brevity selector bar, methodology section, and valid head structure.
+        self.assertIn('id="brevity-bar"', html)
+        self.assertIn('id="methodology"', html)
+        self.assertEqual(html.lower().count("<head>"), 1)
+        self.assertEqual(html.lower().count("<body>"), 1)
 
 
     def test_env_example_has_no_real_key(self):
@@ -1339,6 +1370,59 @@ class ProviderParsingTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status, 404)
         self.assertIn("HTTP 404", str(ctx.exception))
 
+    def test_reasoning_tokens_parsed(self):
+        comp = self.call({"choices": [{"message": {"content": "Hi."}}],
+                          "usage": {"completion_tokens": 50, "prompt_tokens": 10,
+                                    "completion_tokens_details": {"reasoning_tokens": 30}}})
+        self.assertEqual(comp.reasoning_tokens, 30)
+
+    def test_reasoning_tokens_none_when_absent(self):
+        comp = self.call({"choices": [{"message": {"content": "Hi."}}],
+                          "usage": {"completion_tokens": 50, "prompt_tokens": 10}})
+        self.assertIsNone(comp.reasoning_tokens)
+
+    def test_reasoning_effort_forwarded_in_payload(self):
+        """reasoning_effort is sent in the request payload when provided."""
+        import urllib.error
+        from unittest import mock
+        from arboris.providers import OpenAICompatibleProvider
+
+        provider = OpenAICompatibleProvider("https://example.invalid/v1",
+                                            api_key=SENTINEL_KEY, model="m")
+        resp = io.BytesIO(json.dumps({"choices": [{"message": {"content": "Hi."}}]}).encode())
+        resp.__enter__ = lambda *a: resp
+        resp.__exit__ = lambda *a: False
+        captured = {}
+
+        def fake_urlopen(req, **kw):
+            captured["payload"] = json.loads(req.data.decode())
+            return resp
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            provider.complete_ex("hi", reasoning_effort="low")
+        self.assertEqual(captured["payload"]["reasoning_effort"], "low")
+
+    def test_reasoning_effort_omitted_when_none(self):
+        """reasoning_effort is not in payload when not provided."""
+        import urllib.error
+        from unittest import mock
+        from arboris.providers import OpenAICompatibleProvider
+
+        provider = OpenAICompatibleProvider("https://example.invalid/v1",
+                                            api_key=SENTINEL_KEY, model="m")
+        resp = io.BytesIO(json.dumps({"choices": [{"message": {"content": "Hi."}}]}).encode())
+        resp.__enter__ = lambda *a: resp
+        resp.__exit__ = lambda *a: False
+        captured = {}
+
+        def fake_urlopen(req, **kw):
+            captured["payload"] = json.loads(req.data.decode())
+            return resp
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            provider.complete_ex("hi")
+        self.assertNotIn("reasoning_effort", captured["payload"])
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -1574,3 +1658,132 @@ class ProvenRoutingServerTests(unittest.TestCase):
                                          session_id=SESSION))
         self.assertIsNone(steps["meta"]["stop_sequences"])
         self.assertIsNone(primary.calls[-1]["stop"])
+
+
+class ReasoningEffortTests(unittest.TestCase):
+    """L2 lever: reasoning effort caps and reasoning_tokens transparency."""
+
+    def test_reasoning_effort_sent_when_enabled(self):
+        """When reasoning_effort=True, the provider receives the per-mode effort."""
+        backend, primary, _ = make_backend(reasoning_effort=True)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        # DNS routes to sprout → reasoning_effort should be "low"
+        self.assertEqual(primary.calls[-1]["reasoning_effort"], "low")
+        self.assertEqual(result["meta"]["reasoning_effort"], "low")
+
+    def test_reasoning_effort_not_sent_when_disabled(self):
+        """When reasoning_effort=False (default), no effort is sent."""
+        backend, primary, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(primary.calls[-1]["reasoning_effort"])
+        self.assertIsNone(result["meta"]["reasoning_effort"])
+
+    def test_reasoning_effort_per_mode(self):
+        """Each mode maps to the correct effort level."""
+        from server.app import REASONING_EFFORT
+        self.assertEqual(REASONING_EFFORT["sprout"], "low")
+        self.assertEqual(REASONING_EFFORT["canopy"], "low")
+        self.assertEqual(REASONING_EFFORT["full"], "medium")
+
+    def test_reasoning_tokens_reported_in_meta(self):
+        """When provider reports reasoning_tokens, they appear in meta."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2, reasoning_tokens=15)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertEqual(result["meta"]["reasoning_tokens"], 15)
+
+    def test_reasoning_tokens_none_when_not_reported(self):
+        """When provider does not report reasoning_tokens, meta has None."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+    def test_reasoning_tokens_in_energy_receipt(self):
+        """reasoning_tokens appear in the energy receipt."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2, reasoning_tokens=10)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        energy = result["meta"]["energy"]
+        self.assertEqual(energy["reasoning_tokens"], 10)
+
+    def test_reasoning_tokens_in_energy_note(self):
+        """reasoning_tokens get a breakdown line in the energy note."""
+        primary = FakeProvider(PRIMARY, avg_logprob=-0.2,
+                               completion_tokens=50, reasoning_tokens=20)
+        backend, _, _ = make_backend(primary=primary)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        note = result["meta"]["energy"]["note"]
+        self.assertIn("20 were reasoning tokens", note)
+        self.assertIn("included in output, not additive", note)
+
+    def test_local_calc_has_reasoning_tokens_none(self):
+        """Local-calc answers (no model call) have reasoning_tokens=None."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is 2+2?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+    def test_cache_hit_has_reasoning_tokens_none(self):
+        """Exact cache hits have reasoning_tokens=None in meta."""
+        backend, _, _ = make_backend()
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["reasoning_tokens"])
+
+
+class TokenBudgetTests(unittest.TestCase):
+    """L3 lever: explicit token budget instruction in system prompt."""
+
+    def test_budget_appended_when_enabled(self):
+        """When token_budget=True, system prompt includes 'Use under N tokens.'"""
+        backend, primary, _ = make_backend(token_budget=True)
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        system = primary.calls[-1]["system"]
+        self.assertIn("Use under 100 tokens.", system)
+
+    def test_budget_not_appended_when_disabled(self):
+        """When token_budget=False (default), no budget in system prompt."""
+        backend, primary, _ = make_backend()
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        system = primary.calls[-1]["system"]
+        self.assertNotIn("Use under", system)
+
+    def test_budget_per_mode(self):
+        """Each mode gets its own budget value in the system prompt."""
+        from arboris.providers import TOKEN_BUDGET
+        backend, primary, _ = make_backend(token_budget=True)
+        for mode_name, expected in TOKEN_BUDGET.items():
+            backend.chat(ChatRequest(prompt="hello", mode=mode_name, session_id=SESSION))
+            system = primary.calls[-1]["system"]
+            self.assertIn(f"Use under {expected} tokens.", system)
+
+    def test_budget_in_meta(self):
+        """Meta reports the budget value when enabled."""
+        backend, _, _ = make_backend(token_budget=True)
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertEqual(result["meta"]["token_budget"], 100)
+
+    def test_budget_none_in_meta_when_disabled(self):
+        """Meta reports None when budget is off."""
+        backend, _, _ = make_backend()
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_budget_none_for_local_calc(self):
+        """Local-calc answers have no budget (no model call)."""
+        backend, _, _ = make_backend(token_budget=True)
+        result = backend.chat(ChatRequest(prompt="2 + 2", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_budget_none_for_cache_hit(self):
+        """Cache-hit answers have no budget (no model call)."""
+        backend, _, _ = make_backend(token_budget=True)
+        backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        result = backend.chat(ChatRequest(prompt="What is DNS?", session_id=SESSION))
+        self.assertIsNone(result["meta"]["token_budget"])
+
+    def test_config_env_var(self):
+        """ARBORIS_TOKEN_BUDGET env var is parsed."""
+        cfg = Config.from_env({"ARBORIS_TOKEN_BUDGET": "1"})
+        self.assertTrue(cfg.token_budget)
+        cfg2 = Config.from_env({})
+        self.assertFalse(cfg2.token_budget)

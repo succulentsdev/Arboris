@@ -36,11 +36,11 @@ class TestQualityCheck(unittest.TestCase):
             {"prompt": "x", "must_contain": ["Paris"]}, "paris is in france.")
         self.assertEqual(status, "PASS")
 
-    def test_golden_set_has_thirty_cases_across_types(self):
+    def test_golden_set_has_sixty_two_cases_across_types(self):
         cases = load_cases(Path(__file__).resolve().parents[1] / "spec" / "quality_cases.json")
-        self.assertEqual(len(cases), 30)
+        self.assertEqual(len(cases), 62)
         types = {c["task_type"] for c in cases}
-        self.assertTrue({"fact", "definition", "steps", "reasoning", "math", "code", "creative"} <= types)
+        self.assertTrue({"fact", "definition", "steps", "reasoning", "math", "code", "creative", "long_input"} <= types)
         for case in cases:
             with self.subTest(prompt=case["prompt"]):
                 self.assertTrue(case["must_contain"], "every case needs at least one key fact")

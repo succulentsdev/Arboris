@@ -21,7 +21,7 @@ from arboris.brevity import apply_brevity, split_sentences, strip_filler_clauses
 from arboris.cli import main
 from arboris.footprint import CO2_PER_TOKEN_G, footprint
 from arboris.providers import (
-    DemoProvider, OpenAICompatibleProvider, ProviderError,
+    DemoProvider, OpenAICompatibleProvider, ProviderError, TOKEN_BUDGET,
 )
 from arboris.router import route_mode
 from arboris.session import Session
@@ -270,6 +270,60 @@ class TestCliHonesty(unittest.TestCase):
             )
         self.assertEqual(code, 2)
         self.assertIn("Error:", err)
+
+
+class TestTokenBudget(unittest.TestCase):
+    """L3: explicit token budget instruction in system prompt."""
+
+    def test_budget_values_are_below_max_tokens(self):
+        from arboris.providers import MAX_TOKENS
+        for mode in ("sprout", "canopy", "full"):
+            self.assertLess(TOKEN_BUDGET[mode], MAX_TOKENS[mode])
+
+    def test_budget_appended_to_system_prompt_in_cli(self):
+        """--token-budget appends 'Use under N tokens.' to system prompt."""
+        with mock.patch("urllib.request.urlopen", return_value=reply("Short.")) as urlopen:
+            out, err = io.StringIO(), io.StringIO()
+            with mock.patch.dict(os.environ, {"ARBORIS_API_KEY": "k"}):
+                with redirect_stdout(out), redirect_stderr(err):
+                    main(["hello", "--provider", "live", "--mode", "sprout", "--token-budget"])
+        body = json.loads(urlopen.call_args[0][0].data)
+        system = body["messages"][0]["content"]
+        self.assertIn("Use under 100 tokens.", system)
+        self.assertTrue(system.startswith("Answer in at most 2 short sentences."))
+
+    def test_no_budget_without_flag(self):
+        """Without --token-budget, system prompt has no budget instruction."""
+        with mock.patch("urllib.request.urlopen", return_value=reply("Short.")) as urlopen:
+            out, err = io.StringIO(), io.StringIO()
+            with mock.patch.dict(os.environ, {"ARBORIS_API_KEY": "k"}):
+                with redirect_stdout(out), redirect_stderr(err):
+                    main(["hello", "--provider", "live", "--mode", "sprout"])
+        body = json.loads(urlopen.call_args[0][0].data)
+        system = body["messages"][0]["content"]
+        self.assertNotIn("Use under", system)
+
+    def test_budget_per_mode(self):
+        """Each mode gets its own budget value."""
+        for mode_name, expected_budget in TOKEN_BUDGET.items():
+            with mock.patch("urllib.request.urlopen", return_value=reply("Ok.")) as urlopen:
+                out, err = io.StringIO(), io.StringIO()
+                with mock.patch.dict(os.environ, {"ARBORIS_API_KEY": "k"}):
+                    with redirect_stdout(out), redirect_stderr(err):
+                        main(["hello", "--provider", "live", "--mode", mode_name, "--token-budget"])
+            body = json.loads(urlopen.call_args[0][0].data)
+            system = body["messages"][0]["content"]
+            self.assertIn(f"Use under {expected_budget} tokens.", system)
+
+    def test_no_budget_with_no_constrain(self):
+        """--no-constrain disables system prompt entirely, so no budget."""
+        with mock.patch("urllib.request.urlopen", return_value=reply("Hi.")) as urlopen:
+            out, err = io.StringIO(), io.StringIO()
+            with mock.patch.dict(os.environ, {"ARBORIS_API_KEY": "k"}):
+                with redirect_stdout(out), redirect_stderr(err):
+                    main(["hello", "--provider", "live", "--token-budget", "--no-constrain"])
+        body = json.loads(urlopen.call_args[0][0].data)
+        self.assertEqual(len(body["messages"]), 1)  # no system message
 
 
 if __name__ == "__main__":

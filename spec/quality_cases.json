@@ -1,1 +1,75 @@
-{"cases":[{"must_contain":["Paris"],"prompt":"What is the capital of France?","task_type":"fact"},{"must_contain":["Tokyo"],"prompt":"What is the capital of Japan?","task_type":"fact"},{"must_contain":["Shakespeare"],"prompt":"Who wrote Hamlet?","task_type":"fact"},{"must_contain":["Au"],"prompt":"What is the chemical symbol for gold?","task_type":"fact"},{"must_contain":["Jupiter"],"prompt":"What is the largest planet in our solar system?","task_type":"fact"},{"must_contain":["1969"],"prompt":"In what year did humans first land on the Moon?","task_type":"fact"},{"must_contain":["domain","name"],"prompt":"What is DNS?","task_type":"definition"},{"must_contain":["sunlight","plant"],"prompt":"What is photosynthesis?","task_type":"definition"},{"must_contain":["mass","attract"],"prompt":"What is gravity?","task_type":"definition"},{"must_contain":["step","problem"],"prompt":"What is an algorithm?","task_type":"definition"},{"must_contain":["price"],"prompt":"What is inflation?","task_type":"definition"},{"must_contain":["interface","software"],"prompt":"What is an API?","task_type":"definition"},{"must_contain":["restart","router"],"prompt":"How do I reset my router?","task_type":"steps"},{"must_contain":["water","boil"],"prompt":"How do I boil an egg?","task_type":"steps"},{"must_contain":["bulb","off"],"prompt":"How do I change a light bulb?","task_type":"steps"},{"must_contain":["restart","phone"],"prompt":"How do I restart my phone?","task_type":"steps"},{"must_contain":["coffee","water"],"prompt":"How do I brew coffee?","task_type":"steps"},{"must_contain":["charging","emissions"],"prompt":"What are the pros and cons of electric cars versus petrol cars?","task_type":"reasoning"},{"must_contain":["portable","power"],"prompt":"Should I buy a laptop or a desktop for home use?","task_type":"reasoning"},{"must_contain":["rent","mortgage"],"prompt":"Compare renting versus buying a house.","task_type":"reasoning"},{"must_contain":["bicycle","e-bike"],"prompt":"Which is better for a beginner, a bicycle or an e-bike?","task_type":"reasoning"},{"must_contain":["19"],"prompt":"What is 12 + 7?","task_type":"math"},{"must_contain":["30"],"prompt":"What is 15% of 200?","task_type":"math"},{"must_contain":["60"],"prompt":"What is 3 times 4 times 5?","task_type":"math"},{"must_contain":["5"],"prompt":"What is (10 + 5) divided by 3?","task_type":"math"},{"must_contain":["63"],"prompt":"What is 100 minus 37?","task_type":"math"},{"must_contain":["def","return"],"prompt":"Write a Python function that adds two numbers.","task_type":"code"},{"must_contain":["def","2"],"prompt":"Write a Python function that checks if a number is even.","task_type":"code"},{"must_contain":["cat"],"prompt":"Write a short story about a cat.","task_type":"creative"},{"must_contain":["autumn"],"prompt":"Write a haiku about autumn.","task_type":"creative"}],"note":"Quality golden set for Arboris, 30 prompts across task types. Each case lists key facts a correct answer must contain (case-insensitive substring match). This is a weak, transparent judge, not a real quality judge: it catches missing facts and wrong answers, it does not judge style, completeness, or reasoning. Creative cases only check topic, not quality. Run live answers through scripts/quality_check.py; do not run this against the demo provider's canned answers, which were not written to these prompts."}
+{
+  "cases": [
+    {"must_contain": ["Paris"], "prompt": "What is the capital of France?", "task_type": "fact"},
+    {"must_contain": ["Tokyo"], "prompt": "What is the capital of Japan?", "task_type": "fact"},
+    {"must_contain": ["Shakespeare"], "prompt": "Who wrote Hamlet?", "task_type": "fact"},
+    {"must_contain": ["Au"], "prompt": "What is the chemical symbol for gold?", "task_type": "fact"},
+    {"must_contain": ["Jupiter"], "prompt": "What is the largest planet in our solar system?", "task_type": "fact"},
+    {"must_contain": ["1969"], "prompt": "In what year did humans first land on the Moon?", "task_type": "fact"},
+    {"must_contain": ["1776"], "prompt": "In what year was the US Declaration of Independence signed?", "task_type": "fact"},
+    {"must_contain": ["Everest"], "prompt": "What is the tallest mountain in the world?", "task_type": "fact"},
+
+    {"must_contain": ["domain", "name"], "prompt": "What is DNS?", "task_type": "definition"},
+    {"must_contain": ["sunlight", "plant"], "prompt": "What is photosynthesis?", "task_type": "definition"},
+    {"must_contain": ["mass", "attract"], "prompt": "What is gravity?", "task_type": "definition"},
+    {"must_contain": ["step", "problem"], "prompt": "What is an algorithm?", "task_type": "definition"},
+    {"must_contain": ["price"], "prompt": "What is inflation?", "task_type": "definition"},
+    {"must_contain": ["interface", "software"], "prompt": "What is an API?", "task_type": "definition"},
+    {"must_contain": ["data", "secure"], "prompt": "What is encryption?", "task_type": "definition"},
+    {"must_contain": ["supply", "demand"], "prompt": "What is the law of supply and demand?", "task_type": "definition"},
+
+    {"must_contain": ["restart", "router"], "prompt": "How do I reset my router?", "task_type": "steps"},
+    {"must_contain": ["water", "boil"], "prompt": "How do I boil an egg?", "task_type": "steps"},
+    {"must_contain": ["bulb", "off"], "prompt": "How do I change a light bulb?", "task_type": "steps"},
+    {"must_contain": ["restart", "phone"], "prompt": "How do I restart my phone?", "task_type": "steps"},
+    {"must_contain": ["coffee", "water"], "prompt": "How do I brew coffee?", "task_type": "steps"},
+    {"must_contain": ["paint", "dry"], "prompt": "How do I paint a wall?", "task_type": "steps"},
+    {"must_contain": ["flat", "spare"], "prompt": "How do I change a flat tire?", "task_type": "steps"},
+    {"must_contain": ["repository", "commit"], "prompt": "How do I set up a Git repository for a new project?", "task_type": "steps"},
+
+    {"must_contain": ["charging", "emissions"], "prompt": "What are the pros and cons of electric cars versus petrol cars?",  "task_type": "reasoning"},
+    {"must_contain": ["portable", "power"], "prompt": "Should I buy a laptop or a desktop for home use?", "task_type": "reasoning"},
+    {"must_contain": ["rent", "mortgage"], "prompt": "Compare renting versus buying a house.", "task_type": "reasoning"},
+    {"must_contain": ["bicycle", "e-bike"], "prompt": "Which is better for a beginner, a bicycle or an e-bike?", "task_type": "reasoning"},
+    {"must_contain": ["cloud", "local"], "prompt": "Compare cloud storage versus local storage for a small business.", "task_type": "reasoning"},
+    {"must_contain": ["privacy", "convenience"], "prompt": "What are the trade-offs of using a password manager versus memorizing passwords?", "task_type": "reasoning"},
+    {"must_contain": ["remote", "office"], "prompt": "Compare the pros and cons of remote work versus working in an office.", "task_type": "reasoning"},
+    {"must_contain": ["open", "proprietary"], "prompt": "Compare open-source software versus proprietary software for a startup.", "task_type": "reasoning"},
+
+    {"must_contain": ["19"], "prompt": "What is 12 + 7?", "task_type": "math"},
+    {"must_contain": ["30"], "prompt": "What is 15% of 200?", "task_type": "math"},
+    {"must_contain": ["60"], "prompt": "What is 3 times 4 times 5?", "task_type": "math"},
+    {"must_contain": ["5"], "prompt": "What is (10 + 5) divided by 3?", "task_type": "math"},
+    {"must_contain": ["63"], "prompt": "What is 100 minus 37?", "task_type": "math"},
+    {"must_contain": ["256"], "prompt": "What is 2 to the power of 8?", "task_type": "math"},
+    {"must_contain": ["144"], "prompt": "What is 12 squared?", "task_type": "math"},
+    {"must_contain": ["7"], "prompt": "What is the square root of 49?", "task_type": "math"},
+
+    {"must_contain": ["def", "return"], "prompt": "Write a Python function that adds two numbers.", "task_type": "code"},
+    {"must_contain": ["def", "2"], "prompt": "Write a Python function that checks if a number is even.", "task_type": "code"},
+    {"must_contain": ["def", "reverse"], "prompt": "Write a Python function that reverses a string.", "task_type": "code"},
+    {"must_contain": ["def", "for"], "prompt": "Write a Python function that finds the maximum value in a list.", "task_type": "code"},
+    {"must_contain": ["SELECT", "FROM"], "prompt": "Write a SQL query to find all users older than 30.", "task_type": "code"},
+    {"must_contain": ["function", "return"], "prompt": "Write a JavaScript function that checks if a string is a palindrome.", "task_type": "code"},
+    {"must_contain": ["def", "if"], "prompt": "Write a Python function that returns the Fibonacci sequence up to n terms.", "task_type": "code"},
+    {"must_contain": ["def", "dict"], "prompt": "Write a Python function that counts how many times each word appears in a sentence.", "task_type": "code"},
+
+    {"must_contain": ["cat"], "prompt": "Write a short story about a cat.", "task_type": "creative"},
+    {"must_contain": ["autumn"], "prompt": "Write a haiku about autumn.", "task_type": "creative"},
+    {"must_contain": ["rain"], "prompt": "Write a limerick about rain.", "task_type": "creative"},
+    {"must_contain": ["robot"], "prompt": "Write a short paragraph about a robot learning to cook.", "task_type": "creative"},
+
+    {"must_contain": ["revenue", "growth"], "prompt": "Summarize the key points: 'Our company reported Q3 revenue of $4.2 billion, up 12% year-over-year. Operating margins expanded to 28%, driven by cost reductions in supply chain and a shift to higher-margin software subscriptions. Headcount grew by 3% to 15,200 employees. We project Q4 revenue between $4.5B and $4.7B, with continued margin expansion. Key risks include currency headwinds and ongoing regulatory scrutiny in the EU.'", "task_type": "long_input"},
+    {"must_contain": ["symptom", "treatment"], "prompt": "Extract the medical facts from this paragraph: 'The patient, a 45-year-old male, presented with persistent cough lasting three weeks, low-grade fever of 99.5F, and fatigue. Chest X-ray revealed bilateral infiltrates. Sputum culture confirmed bacterial pneumonia. Treatment was initiated with amoxicillin 500mg three times daily for ten days. The patient was advised to rest, stay hydrated, and return if symptoms worsened.'", "task_type": "long_input"},
+    {"must_contain": ["Python", "package"], "prompt": "Summarize the following error log and suggest a fix: 'Traceback (most recent call last):\\n  File \"app.py\", line 42, in main\\n    from mypackage.utils import helper\\nModuleNotFoundError: No module named mypackage.utils\\n\\nThe project structure is:\\nproject/\\n  app.py\\n  mypackage/\\n    __init__.py\\n    utils.py\\n\\nI am running the script from the project root with: python app.py'", "task_type": "long_input"},
+    {"must_contain": ["Alice", "budget"], "prompt": "Read this meeting transcript and list the action items: 'Alice: We need to finalize the Q4 budget by Friday. Bob: I will send the updated spreadsheet by Wednesday. Carol: I can review it Thursday morning. Alice: Great, and Dave, can you check the vendor contracts? Dave: Sure, I will have that done by end of day Tuesday. Alice: Perfect. Also, someone needs to book the conference room for the Friday review meeting. Carol: I will handle that.'", "task_type": "long_input"},
+    {"must_contain": ["Product A", "12"], "prompt": "Compare these two product labels and tell me which has more protein: 'Product A: Serving size 1 cup (240ml). Calories 150, Total Fat 8g, Protein 12g, Carbs 6g, Calcium 30% DV, Iron 2% DV. Product B: Serving size 1 cup (240ml). Calories 120, Total Fat 5g, Protein 8g, Carbs 15g, Calcium 45% DV, Iron 10% DV.'", "task_type": "long_input"},
+    {"must_contain": ["list", "item"], "prompt": "Fix the HTML errors in this snippet and explain what was wrong: '<div><p>Hello world</p><ul><li>First item<li>Second item</ul><img src=\"photo.jpg\"><br></br></div>'", "task_type": "long_input"},
+    {"must_contain": ["Berlin", "capital"], "prompt": "Read this passage and answer the question: 'Germany is a federal republic in central Europe. Its capital and largest city is Berlin. The country has a population of over 83 million people and is the most populous member state of the European Union. Germany is known for its engineering, automobiles, and beer culture.' Question: What is the capital of Germany?", "task_type": "long_input"},
+    {"must_contain": ["3", "apple"], "prompt": "Solve this word problem: 'Sarah has 5 apples. She gives 2 apples to her friend Tom. Then her mother gives her 3 more apples and 2 oranges. She eats 1 apple and 1 orange. How many apples does Sarah have now?'", "task_type": "long_input"},
+
+    {"must_contain": ["ocean"], "prompt": "Write a four-line poem about the ocean.", "task_type": "creative"},
+    {"must_contain": ["space"], "prompt": "Write a one-paragraph scene set on a space station.", "task_type": "creative"}
+  ],
+  "note": "Quality golden set for Arboris, 62 prompts across task types. Each case lists key facts a correct answer must contain (case-insensitive substring match). This is a weak, transparent judge, not a real quality judge: it catches missing facts and wrong answers, it does not judge style, completeness, or reasoning. Creative cases only check topic, not quality. Run live answers through scripts/quality_check.py; do not run this against the demo provider's canned answers, which were not written to these prompts."
+}

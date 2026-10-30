@@ -107,6 +107,16 @@ class TestLocalCalc(unittest.TestCase):
         self.assertIsNone(try_local_calc("12"))
         self.assertIsNone(try_local_calc("2 ** 10"))
 
+    def test_percentages_and_unit_conversions(self):
+        self.assertEqual(try_local_calc("What is 15% of 240?"), "15% of 240 = 36")
+        self.assertEqual(try_local_calc("12.5% of 80"), "12.5% of 80 = 10")
+        self.assertEqual(try_local_calc("Convert 100 km to miles"), "100 km = 62.1371 mi")
+        self.assertEqual(try_local_calc("100 C in F"), "100 °C = 212 °F")
+        self.assertEqual(try_local_calc("32 F to C"), "32 °F = 0 °C")
+        self.assertEqual(try_local_calc("2048 MB to GB"), "2048 MB = 2 GB")
+        # Incompatible unit categories fall through to the model.
+        self.assertIsNone(try_local_calc("Convert 100 km to kg"))
+
 
 class TestCascadeScorerAndBudget(unittest.TestCase):
     def test_scorer_escalates_without_logprobs(self):

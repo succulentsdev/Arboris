@@ -12,3 +12,4 @@ env.yaml
 *.patch
 arboris-redeploy.ps1
 results/
+*.exe

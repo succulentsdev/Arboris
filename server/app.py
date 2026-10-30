@@ -64,6 +64,7 @@ from arboris.cascade import CascadeResult, run_cascade  # noqa: E402
 from arboris.providers import (  # noqa: E402
     BREVITY_SYSTEM,
     MAX_TOKENS,
+    TOKEN_BUDGET,
     OpenAICompatibleProvider,
     ProviderError,
 )
@@ -130,6 +131,10 @@ MAX_CACHE_ENTRIES_PER_SESSION = 200
 CHUNK_WORDS = 3
 
 MODES = ("sprout", "canopy", "full")
+# Reasoning effort per mode, sent only when ARBORIS_REASONING_EFFORT is on.
+# sprout and canopy get "low" (minimal reasoning), full gets "medium".
+# None means "do not send the parameter" (provider default).
+REASONING_EFFORT = {"sprout": "low", "canopy": "low", "full": "medium"}
 _SESSION_ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 # Fields a client must never send. The key lives on the server only, and
 # model choice is server configuration.
@@ -255,6 +260,20 @@ ENV_VARS = [
      "Prompt length above which long-input pruning runs, when "
      "pruning is on. Must be at least 500; anything else refuses "
      "to start."),
+    ("ARBORIS_REASONING_EFFORT", "off",
+     "1/true/yes/on sends a reasoning_effort parameter to cap "
+     "hidden reasoning tokens: sprout gets 'low', canopy gets "
+     "'low', full gets 'medium'. Off by default: no reasoning_effort "
+     "is sent, so the provider's default applies. Only affects "
+     "models that support reasoning_effort (o1, o3, etc.); other "
+     "models ignore it. Meta reports reasoning_effort and "
+     "reasoning_tokens when the provider reports them."),
+    ("ARBORIS_TOKEN_BUDGET", "off",
+     "1/true/yes/on appends 'Use under N tokens.' to the system "
+     "prompt per mode (sprout 100, canopy 200, full 350), giving "
+     "the model an explicit length target below the hard max_tokens "
+     "cap. Off by default: enable live, compare token counts, then "
+     "decide. Meta reports token_budget."),
     ("ARBORIS_SEMANTIC_CACHE", "off",
      "1/true/yes/on enables a conservative lexical semantic cache: "
      "a fact/definition prompt with a difflib ratio at least 0.90 "
@@ -399,6 +418,8 @@ class Config:
     task_stop_sequences: bool = False
     long_input_pruning: bool = False
     long_input_max_chars: int = 1500
+    reasoning_effort: bool = False
+    token_budget: bool = False
     semantic_cache: bool = False
     debug_log: bool = False
     # GREENSEARCH_* names read because their ARBORIS_* twin was unset.
@@ -503,6 +524,10 @@ class Config:
             long_input_pruning=env.get("ARBORIS_LONG_INPUT_PRUNING", "").strip().lower()
             in ("1", "true", "yes", "on"),
             long_input_max_chars=_long_input_max_chars(env),
+            reasoning_effort=env.get("ARBORIS_REASONING_EFFORT", "").strip().lower()
+            in ("1", "true", "yes", "on"),
+            token_budget=env.get("ARBORIS_TOKEN_BUDGET", "").strip().lower()
+            in ("1", "true", "yes", "on"),
             semantic_cache=env.get("ARBORIS_SEMANTIC_CACHE", "").strip().lower()
             in ("1", "true", "yes", "on"),
             debug_log=env.get("ARBORIS_DEBUG_LOG", "").strip().lower()
@@ -694,13 +719,15 @@ class _Recorder:
         self.completion = None
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
+                    stop=None, temperature=None, reasoning_effort=None):
         self.attempted = True
         extra = {}
         if stop is not None:
             extra["stop"] = stop
         if temperature is not None:
             extra["temperature"] = temperature
+        if reasoning_effort is not None:
+            extra["reasoning_effort"] = reasoning_effort
         self.completion = self.provider.complete_ex(
             prompt, system=system, max_tokens=max_tokens, logprobs=logprobs, **extra
         )
@@ -827,7 +854,7 @@ class _ModelChain:
         self.completion = None
 
     def complete_ex(self, prompt, system=None, max_tokens=None, logprobs=False,
-                    stop=None, temperature=None):
+                    stop=None, temperature=None, reasoning_effort=None):
         self.attempted = True
         errors = []
         for i, model in enumerate(self.models):
@@ -835,7 +862,8 @@ class _ModelChain:
             provider = self.backend._make(model)
             try:
                 comp = self._call(provider, model, role, prompt, system,
-                                  max_tokens, logprobs, stop, temperature)
+                                  max_tokens, logprobs, stop, temperature,
+                                  reasoning_effort)
             except ProviderError as exc:
                 errors.append(exc)
                 self.backend.log(f"{role} call failed: {_status_text(exc)} model={model}")
@@ -854,12 +882,14 @@ class _ModelChain:
         raise _most_specific(errors)
 
     def _call(self, provider, model, role, prompt, system, max_tokens, logprobs,
-              stop=None, temperature=None):
+              stop=None, temperature=None, reasoning_effort=None):
         extra = {}
         if stop is not None:
             extra["stop"] = stop
         if temperature is not None:
             extra["temperature"] = temperature
+        if reasoning_effort is not None:
+            extra["reasoning_effort"] = reasoning_effort
         try:
             return provider.complete_ex(
                 prompt, system=system, max_tokens=max_tokens, logprobs=logprobs, **extra
@@ -958,6 +988,8 @@ class Backend:
             "task_stop_sequences": cfg.task_stop_sequences,
             "long_input_pruning": cfg.long_input_pruning,
             "long_input_max_chars": cfg.long_input_max_chars,
+            "reasoning_effort": cfg.reasoning_effort,
+            "token_budget": cfg.token_budget,
             "semantic_cache": cfg.semantic_cache,
             "provider_streaming": False,
         }
@@ -1012,6 +1044,10 @@ class Backend:
             mode = route_mode(prompt) if req.mode == "auto" else req.mode
             routed_by = "explicit" if req.mode != "auto" else "word_count"
             system_prompt = BREVITY_SYSTEM[mode]
+        # L3: explicit token budget instruction (opt-in).
+        budget = TOKEN_BUDGET.get(mode) if cfg.token_budget else None
+        if budget is not None:
+            system_prompt = system_prompt + f" Use under {budget} tokens."
         self.debug(f"prompt={req.prompt!r} shrunk={prompt!r} mode={mode}")
 
         meta = {
@@ -1067,6 +1103,8 @@ class Backend:
                 "avg_logprob": None,
                 "input_tokens": 0,
                 "output_tokens": 0,
+                "reasoning_tokens": None,
+                "token_budget": None,
                 "new_output_tokens": 0,
                 "tokens_source": "local calculation: no model call, 0 new tokens",
                 "trimmed": False,
@@ -1148,6 +1186,8 @@ class Backend:
                         "answer_score": cached_score,
                         "input_tokens": 0,
                         "output_tokens": 0,
+                        "reasoning_tokens": None,
+                        "token_budget": None,
                         "new_output_tokens": 0,
                         "tokens_source": "cache hit: no model call, 0 new tokens",
                         "energy": energy_receipt(
@@ -1197,6 +1237,8 @@ class Backend:
                         "output_tokens": 0,
                         "new_output_tokens": 0,
                         "tokens_source": "semantic cache hit: no model call, 0 new tokens",
+                        "reasoning_tokens": None,
+                        "token_budget": None,
                         "energy": energy_receipt(
                             0, 0, model=sem_entry.get("model"),
                             model_tier="small" if use_small and sem_entry.get("model") == cfg.small_model else "primary",
@@ -1248,9 +1290,12 @@ class Backend:
         stop = (["\n\n"] if cfg.task_stop_sequences and not is_expansion
                 and task_route is not None
                 and task_route.task_type in ("fact", "definition") else None)
+        reasoning = REASONING_EFFORT.get(mode) if cfg.reasoning_effort else None
         meta["max_tokens_used"] = effective_max_tokens
         meta["temperature"] = temperature
         meta["stop_sequences"] = stop
+        meta["reasoning_effort"] = reasoning
+        meta["token_budget"] = budget
         def _score(prompt_arg, comp):
             return score_answer(
                 prompt_arg, comp.text, mode=mode,
@@ -1270,11 +1315,13 @@ class Backend:
                     score_escalates=cfg.scorer_escalation,
                     max_total_tokens=cfg.max_cascade_output_tokens or None,
                     stop=stop, temperature=temperature,
+                    reasoning_effort=reasoning,
                 )
             else:
                 comp = primary.complete_ex(
                     model_prompt, system=system_prompt, max_tokens=effective_max_tokens,
                     logprobs=True, stop=stop, temperature=temperature,
+                    reasoning_effort=reasoning,
                 )
                 scored = _score(model_prompt, comp)
                 result = CascadeResult(
@@ -1305,6 +1352,8 @@ class Backend:
                     "output_tokens": 0,
                     "new_output_tokens": 0,
                     "tokens_source": "cache fallback: no new model call, 0 new tokens",
+                    "reasoning_tokens": None,
+                    "token_budget": None,
                     "energy": energy_receipt(
                         0, 0, model=bad_cache_entry.get("model"),
                         model_tier="small" if use_small and bad_cache_entry.get("model") == cfg.small_model else "primary",
@@ -1348,6 +1397,7 @@ class Backend:
             fragment_fixed = False
         output_tokens = _sum_or_none([c.completion_tokens for c in calls])
         input_tokens = _sum_or_none([c.prompt_tokens for c in calls])
+        reasoning_tokens = _sum_or_none([c.reasoning_tokens for c in calls])
         model_used = escalation.model if result.escalated else primary.model
         is_truncated = fragment_fixed or getattr(comp, "finish_reason", None) == "length"
 
@@ -1383,6 +1433,7 @@ class Backend:
             "scorer_escalation": cfg.scorer_escalation,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "reasoning_tokens": reasoning_tokens,
             "new_output_tokens": output_tokens,
             "tokens_source": "provider-reported" if output_tokens is not None
             else "not reported by provider",
@@ -1390,6 +1441,7 @@ class Backend:
                 input_tokens, output_tokens, model=model_used,
                 model_tier="small" if use_small and primary.model == cfg.small_model else "primary",
                 escalated=result.escalated,
+                reasoning_tokens=reasoning_tokens,
                 grid_g_per_kwh=cfg.grid_g_per_kwh),
             "trimmed": answer != raw_text,
             "truncated": is_truncated,
@@ -1482,6 +1534,7 @@ def chunk_text(text, words_per_chunk=CHUNK_WORDS):
 
 def make_handler(backend):
     site_index = ROOT / "website" / "index.html"
+    site_hero_jpg = ROOT / "website" / "hero.jpg"
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Arboris"
@@ -1493,6 +1546,18 @@ def make_handler(backend):
             origin = self.headers.get("Origin")
             # No Origin header: not a cross-site browser request (curl, tests).
             return origin is None or origin.rstrip("/") in backend.config.allowed_origins
+
+        def _client_ip(self):
+            # Behind a reverse proxy (Cloud Run's load balancer, nginx, ...)
+            # the socket peer is the proxy, not the visitor: per-IP rate
+            # limiting must read X-Forwarded-For. Take the leftmost entry
+            # (the original client as seen by the first proxy). Caveat: a
+            # client can spoof this header to dodge the limit, so this stays
+            # a POC-grade guard, not commercial metering.
+            fwd = self.headers.get("X-Forwarded-For")
+            if fwd:
+                return fwd.split(",")[0].strip()
+            return self.client_address[0]
 
         def _cors_headers(self):
             origin = self.headers.get("Origin")
@@ -1513,6 +1578,14 @@ def make_handler(backend):
             self.wfile.write(body)
 
         def _send_error(self, status, message, extra=None):
+            if getattr(self, "command", None) == "POST" and not getattr(self, "_body_read", False):
+                try:
+                    n = int(self.headers.get("Content-Length", "0"))
+                    if 0 < n <= MAX_BODY_BYTES:
+                        self.rfile.read(n)
+                except Exception:
+                    pass
+                self._body_read = True
             self._send_json(status, {"error": message}, extra)
 
         def log_request(self, code="-", size="-"):
@@ -1552,6 +1625,15 @@ def make_handler(backend):
                 self.end_headers()
                 self.wfile.write(body)
                 return
+            if path == "/hero.jpg" and site_hero_jpg.is_file():
+                body = site_hero_jpg.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             self._send_error(404, MSG_NOT_FOUND)
 
         def do_POST(self):
@@ -1560,7 +1642,7 @@ def make_handler(backend):
                 return self._send_error(404, MSG_NOT_FOUND)
             if not self._origin_ok():
                 return self._send_error(403, MSG_ORIGIN)
-            allowed, retry_after = backend.allow_request(self.client_address[0])
+            allowed, retry_after = backend.allow_request(self._client_ip())
             if not allowed:
                 return self._send_error(429, MSG_RATE_LIMITED,
                                         {"Retry-After": str(retry_after)})
@@ -1572,6 +1654,7 @@ def make_handler(backend):
                 return self._send_error(400, "Request body is missing")
             if length > MAX_BODY_BYTES:
                 return self._send_error(413, "Request body is too large")
+            self._body_read = True
             body = self.rfile.read(length)
             try:
                 req = parse_chat_request(body)
@@ -1672,6 +1755,8 @@ def main(argv=None):
         f"task temperature: {'on' if config.task_temperature else 'off'} | "
         f"task stop sequences: {'on' if config.task_stop_sequences else 'off'} | "
         f"long-input pruning: {'on' if config.long_input_pruning else 'off'} | "
+        f"reasoning effort: {'on' if config.reasoning_effort else 'off'} | "
+        f"token budget: {'on' if config.token_budget else 'off'} | "
         f"semantic cache: {'on' if config.semantic_cache else 'off'} | "
         f"shrink: {config.shrink_version} | "
         f"prompt logging: {'ON (stderr only)' if config.debug_log else 'off'}"
