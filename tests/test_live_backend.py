@@ -640,6 +640,18 @@ class HTTPTests(unittest.TestCase):
                 self.assertEqual(resp.status, 403)
                 self.assertIsNone(resp.getheader("Access-Control-Allow-Origin"))
 
+    def test_cors_allows_same_https_custom_domain_host(self):
+        backend, _, _ = make_backend(allowed_origins=("https://arboris-123.run.app",))
+        port = self.start(backend)
+        resp, _ = self.request(port, "GET", "/api/health", None, {
+            "Host": "arboris.chat", "Origin": "https://arboris.chat"})
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(resp.getheader("Access-Control-Allow-Origin"), "https://arboris.chat")
+        # Mismatched origin vs Host is still rejected.
+        resp, _ = self.request(port, "GET", "/api/health", None, {
+            "Host": "arboris.chat", "Origin": "https://evil.chat"})
+        self.assertEqual(resp.status, 403)
+
     def test_rate_limit_triggers_over_http(self):
         backend, small, _ = make_backend(rate_limit_per_hour=2)
         port = self.start(backend)

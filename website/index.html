@@ -1908,9 +1908,11 @@ howDlg.addEventListener('cancel',function(e){e.preventDefault();closeHow();});
 /* ═══ Live mode ═══ */
 var LIVE_URL_KEY='arboris-live-backend-url';
 var LIVE_STATE_KEY='arboris-live-v1';
-var LIVE_DEFAULT_URL=(window.location.hostname&&/\.run\.app$/i.test(window.location.hostname))
+var LIVE_DEFAULT_URL=(window.location.hostname&&(/\.run\.app$/i.test(window.location.hostname)||/(^|\.)arboris\.chat$/i.test(window.location.hostname)))
   ?window.location.origin+'/api/chat'
-  :'http://localhost:8000/api/chat';
+  :(/^https?:$/i.test(window.location.protocol)&&!/\.github\.io$/i.test(window.location.hostname||''))
+    ?window.location.origin+'/api/chat'
+    :'http://localhost:8000/api/chat';
 var MODE_MULT={sprout:3.4,canopy:2.6,forest:1.9,full:1.9};
 var liveTurns=[],liveTotals=zeroLive(),liveCtrls=[];
 var liveSession=newLiveSession();
@@ -1925,7 +1927,17 @@ function newLiveSession(){
   return s;
 }
 function loadLiveUrl(){
-  try{var u=localStorage.getItem(LIVE_URL_KEY);if(u)return u;}catch(e){}
+  try{
+    var u=localStorage.getItem(LIVE_URL_KEY);
+    if(u){
+      var onRemoteHttps=window.location.protocol==='https:'&&!/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname||'');
+      if(onRemoteHttps&&/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(u)){
+        localStorage.removeItem(LIVE_URL_KEY);
+      } else {
+        return u;
+      }
+    }
+  }catch(e){}
   return LIVE_DEFAULT_URL;
 }
 liveUrlEl.value=loadLiveUrl();

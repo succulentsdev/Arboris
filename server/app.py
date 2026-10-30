@@ -1692,10 +1692,20 @@ def make_handler(backend):
 
         # -- helpers --------------------------------------------------------
 
+        def _same_https_host(self, origin):
+            if not origin or not origin.startswith("https://"):
+                return False
+            host = (self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or "").split(",")[0].strip().lower()
+            if not host or host.startswith(("localhost", "127.0.0.1")):
+                return False
+            return origin.rstrip("/").lower() == f"https://{host}"
+
         def _origin_ok(self):
             origin = self.headers.get("Origin")
             # No Origin header: not a cross-site browser request (curl, tests).
-            return origin is None or origin.rstrip("/") in backend.config.allowed_origins
+            return (origin is None
+                    or origin.rstrip("/") in backend.config.allowed_origins
+                    or self._same_https_host(origin))
 
         def _client_ip(self):
             # Behind a reverse proxy (Cloud Run's load balancer, nginx, ...)
@@ -1711,7 +1721,8 @@ def make_handler(backend):
 
         def _cors_headers(self):
             origin = self.headers.get("Origin")
-            if origin and origin.rstrip("/") in backend.config.allowed_origins:
+            if origin and (origin.rstrip("/") in backend.config.allowed_origins
+                           or self._same_https_host(origin)):
                 self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
 
