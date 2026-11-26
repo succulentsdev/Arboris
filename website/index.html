@@ -257,8 +257,8 @@ body {
 /* ── Sleek Architectural Hero & Live Chat Viewport (No Hero Photo) ── */
 .hero {
   position: relative;
-  min-height: 70vh;
-  min-height: 70svh;
+  min-height: 52vh;
+  min-height: 52svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -355,7 +355,7 @@ body {
 
 /* ── Chat Area inside Hero ── */
 .hero-chat-area {
-  flex: 1; width: 100%; max-width: 960px; margin: 0 auto;
+  flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;
   overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
   padding: 78px 24px 12px; scroll-behavior: smooth;
   justify-content: flex-end; text-align: left;
@@ -375,8 +375,8 @@ body {
 .mr.user { align-items: flex-end }
 .mr.bot { align-items: flex-start }
 .bubble {
-  max-width: 78%; padding: 14px 20px; border-radius: var(--r);
-  line-height: 1.65; word-break: break-word; font-size: 15.5px;
+  max-width: 78%; padding: 18px 25px; border-radius: var(--r);
+  line-height: 1.65; word-break: break-word; font-size: 19px;
   box-shadow: 0 4px 18px rgba(0,0,0,.18);
 }
 .mr.user .bubble {
@@ -492,14 +492,14 @@ body {
 
 /* ── Sleek Floating Composer Card & Brevity Controls ── */
 .hero-bottom {
-  width: 100%; max-width: 960px; margin: 0 auto;
+  width: 100%; max-width: 1200px; margin: 0 auto;
   padding: 8px 24px 28px; flex-shrink: 0;
 }
 .composer-card {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 20px;
-  padding: 14px 16px 12px;
+  padding: 18px 20px 15px;
   box-shadow: var(--shadow), 0 0 0 1px rgba(61,212,192,.04);
   transition: border-color .2s, box-shadow .2s;
 }
@@ -509,7 +509,7 @@ body {
 }
 .ip-bar {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; min-height: 24px; margin-bottom: 8px; flex-wrap: wrap;
+  gap: 12px; min-height: 30px; margin-bottom: 10px; flex-wrap: wrap;
 }
 .brevity-bar {
   display: inline-flex; align-items: center; gap: 3px;
@@ -518,35 +518,35 @@ body {
 }
 .brevity-btn {
   background: transparent; border: none; color: var(--ink2);
-  font: 600 12px var(--font-mono); padding: 5px 13px; border-radius: 99px;
+  font: 600 15px var(--font-mono); padding: 6px 16px; border-radius: 99px;
   cursor: pointer; transition: background .18s, color .18s;
 }
 .brevity-btn:hover { color: var(--ink) }
 .brevity-btn.active { background: var(--teal); color: #fff }
 
 .ip-preview {
-  font-size: 12px; font-family: var(--font-mono); color: var(--glass-muted);
+  font-size: 15px; font-family: var(--font-mono); color: var(--glass-muted);
   transition: color .2s; flex: 1; text-align: left; min-width: 160px;
 }
 .ip-preview.active { color: var(--ink) }
 .ip-preview .px { color: var(--red); text-decoration: line-through; opacity: .85 }
 .ip-count {
-  font-size: 11px; font-family: var(--font-mono); color: var(--glass-muted);
+  font-size: 14px; font-family: var(--font-mono); color: var(--glass-muted);
   white-space: nowrap;
 }
 
 .ir { display: flex; gap: 8px; align-items: center }
 .ir input {
-  flex: 1; min-width: 0; min-height: 56px; padding: 14px 18px; border-radius: 12px;
+  flex: 1; min-width: 0; min-height: 70px; padding: 18px 22px; border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg);
-  color: var(--glass-input-ink); font-size: 17px; font-family: var(--font-body);
+  color: var(--glass-input-ink); font-size: 21px; font-family: var(--font-body);
   outline: none; transition: border-color .2s;
 }
 .ir input::placeholder { color: var(--ink3) }
 .ir input:focus { border-color: var(--mint) }
 .btn-attach {
-  min-height: 56px; min-width: 46px; padding: 0 13px; border-radius: 12px;
+  min-height: 70px; min-width: 58px; padding: 0 16px; border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface2); color: var(--ink2);
   cursor: pointer; transition: filter .18s, transform .1s;
@@ -554,27 +554,27 @@ body {
 }
 .btn-attach:hover { color: var(--ink); border-color: var(--border2) }
 .btn-attach:active { transform: scale(.98) }
-.attach-chip { font-size: 12px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px }
+.attach-chip { font-size: 15px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 225px }
 .btn-s {
-  min-height: 56px; padding: 12px 28px; border-radius: 12px; border: none;
+  min-height: 70px; padding: 15px 35px; border-radius: 12px; border: none;
   background: var(--send-bg); color: var(--send-ink);
-  font-weight: 600; font-size: 16px; cursor: pointer;
+  font-weight: 600; font-size: 20px; cursor: pointer;
   font-family: var(--font-body); transition: filter .2s, transform .1s;
   white-space: nowrap;
 }
 .btn-s:hover { filter: brightness(1.12) }
 .btn-s:active { transform: scale(.98) }
 .btn-mic{
-  min-height:56px;min-width:46px;
+  min-height:70px;min-width:58px;
   background:var(--surface2);border:1px solid var(--border);
-  color:var(--ink2);border-radius:12px;padding:0 13px;
+  color:var(--ink2);border-radius:12px;padding:0 16px;
   cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;
 }
 .btn-mic:hover{color:var(--ink);border-color:var(--border2)}
 .btn-mic.recording{color:var(--mint);border-color:var(--mint-border);background:var(--mint-soft)}
 
 .shrink-bar {
-  height: 2px; border-radius: 1px; background: var(--border);
+  height: 3px; border-radius: 1px; background: var(--border);
   margin-top: 8px; overflow: hidden; opacity: 0; transition: opacity .3s;
 }
 .shrink-bar.active { opacity: 1 }
@@ -583,7 +583,7 @@ body {
   width: 0%; transition: width .35s cubic-bezier(.4,0,.2,1);
 }
 .hint {
-  font-size: 11.5px; color: var(--ink3); margin-top: 8px;
+  font-size: 14px; color: var(--ink3); margin-top: 10px;
   font-family: var(--font-mono);
 }
 .hero.chatting .hero-bottom .hint { display: none }
@@ -595,17 +595,17 @@ body {
   --rv-node: #6FBF8E;
   --rv-bg: var(--bg, #0E1813);
   display: flex; align-items: center;
-  max-width: 960px; margin: 0 auto; box-sizing: border-box;
-  padding: 6px 64px 46px 34px;
+  max-width: 1200px; margin: 0 auto; box-sizing: border-box;
+  padding: 8px 80px 58px 42px;
 }
 .rv-start, .rv-node { position: relative; flex: none; z-index: 1 }
-.rv-dot { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--rv-wire); transition: background .2s }
+.rv-dot { display: block; width: 15px; height: 15px; border-radius: 50%; background: var(--rv-wire); transition: background .2s }
 .rv-active .rv-dot { background: var(--rv-current) }
 .rv-label, .rv-text { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; text-align: center }
-.rv-label { top: 24px; font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
-.rv-text { top: 26px }
+.rv-label { top: 30px; font: 700 16px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-text { top: 32px }
 .rv-stage { flex: 1; display: flex; align-items: center; min-width: 0 }
-.rv-wire { position: relative; flex: 1; height: 3px; background: var(--rv-wire); margin: 0 -3px 0 -2px }
+.rv-wire { position: relative; flex: 1; height: 4px; background: var(--rv-wire); margin: 0 -3px 0 -2px }
 .rv-fill {
   position: absolute; left: 0; top: 0; bottom: 0; width: 0;
   background: var(--rv-current);
@@ -613,8 +613,8 @@ body {
   transition-property: width; transition-timing-function: linear;
 }
 .rv-diamond {
-  display: block; width: 16px; height: 16px; transform: rotate(45deg);
-  border: 2px solid var(--rv-wire); background: var(--rv-bg);
+  display: block; width: 20px; height: 20px; transform: rotate(45deg);
+  border: 2.5px solid var(--rv-wire); background: var(--rv-bg);
   transition: background .25s, border-color .25s;
 }
 .rv-lit .rv-diamond {
@@ -622,9 +622,9 @@ body {
   border-color: color-mix(in srgb, var(--rv-node) 60%, #fff);
   animation: rvPulse .7s ease-out;
 }
-.rv-name { font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-name { font: 700 16px var(--font-body, inherit); color: var(--ink3, #7F9586) }
 .rv-lit .rv-name { color: var(--ink, #E7EFE8) }
-.rv-note { font: 11px var(--font-mono, monospace); margin-top: 2px; color: var(--ink3, #7F9586) }
+.rv-note { font: 14px var(--font-mono, monospace); margin-top: 3px; color: var(--ink3, #7F9586) }
 .rv-lit .rv-note { color: var(--rv-current) }
 .rv-failed .rv-fill { background: var(--red, #f07068); box-shadow: none }
 @keyframes rvPulse {
@@ -1564,7 +1564,7 @@ if(typeof module!=='undefined'&&module.exports){
 /* Arboris route animation: vanilla JS, no dependencies. */
 (function (global) {
   'use strict';
-  var SWEEP_MS = 450;         // per stage of the reveal sweep: the bar fills one wire,
+  var SWEEP_MS = 600;         // per stage of the reveal sweep: the bar fills one wire,
                               // lights its benchmark, then moves on. The route is
                               // determined from the server's meta first, so the sweep
                               // always shows what actually ran, and the answer reveals
@@ -1581,11 +1581,17 @@ if(typeof module!=='undefined'&&module.exports){
   function stepsFromMeta(meta, shrinkTokens) {
     meta = meta || {};
     var s = [];
+    // PromptShrink runs on every prompt, before anything else, so it is
+    // always a checkpoint; when nothing was cut the note says so.
+    if (meta.shrink) {
+      var cut = meta.shrink.changed ? (meta.shrink.saved_tokens_est || shrinkTokens || 1) : 0;
+      s.push({ name: 'PromptShrink', note: cut ? cut + ' tokens cut' : 'Already short' });
+    }
     if (meta.local_answer) s.push({ name: 'Zero-model gate', note: 'Answered here' });
-    var cut = meta.shrink && meta.shrink.changed ? (meta.shrink.saved_tokens_est || shrinkTokens || 1) : 0;
-    if (!meta.local_answer && cut) s.push({ name: 'PromptShrink', note: cut + ' tokens cut' });
     if (meta.cache_hit) s.push({ name: 'Session cache', note: meta.semantic_cache_hit ? 'Similar answer reused' : 'Answer reused' });
     if (!meta.local_answer && !meta.cache_hit) s.push({ name: 'Model cascade', note: meta.routed_to_small ? 'Small model' : 'Full model' });
+    // Fresh model answers are scored by the transparent scorer before the receipt.
+    if (!meta.local_answer && !meta.cache_hit && typeof meta.answer_score === 'number' && isFinite(meta.answer_score)) s.push({ name: 'Quality check', note: 'Score ' + meta.answer_score.toFixed(2) });
     s.push({ name: 'Output cost', note: fmtWh(meta) });
     return s;
   }

@@ -16,6 +16,12 @@ const route = ctx.ArborisRoute;
 const ok = typeof route === 'object' && route !== null
   && typeof route.createRouteSession === 'function'
   && typeof route.stepsFromMeta === 'function'
-  && route.SWEEP_MS === 450;
-console.log(JSON.stringify({ arborisRoute: typeof route, sweepMs: route && route.SWEEP_MS }));
-process.exit(ok ? 0 : 1);
+  && route.SWEEP_MS === 600;
+const modelMeta = { shrink: { changed: true, saved_tokens_est: 5 }, routed_to_small: true, answer_score: 0.87, energy: { energy_wh: 0.017 } };
+const modelSteps = route.stepsFromMeta(modelMeta, 0).map(s => s.name);
+const localMeta = { shrink: { changed: false, saved_tokens_est: 0 }, local_answer: true, energy: { energy_wh: 0 } };
+const localSteps = route.stepsFromMeta(localMeta, 0).map(s => s.name);
+const stepsOk = JSON.stringify(modelSteps) === JSON.stringify(['PromptShrink', 'Model cascade', 'Quality check', 'Output cost'])
+  && JSON.stringify(localSteps) === JSON.stringify(['PromptShrink', 'Zero-model gate', 'Output cost']);
+console.log(JSON.stringify({ arborisRoute: typeof route, sweepMs: route && route.SWEEP_MS, modelSteps, localSteps }));
+process.exit(ok && stepsOk ? 0 : 1);

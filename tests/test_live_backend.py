@@ -853,7 +853,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn('data-mode="sprout"', html)
         self.assertNotIn('data-mode="forest"', html)
         self.assertNotIn('\U0001f4ce Attach', html)
-        self.assertIn('min-height: 70svh', html)
+        self.assertIn('min-height: 52svh', html)
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)
@@ -877,7 +877,9 @@ class EntryPointAndSiteTests(unittest.TestCase):
         )
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn('"arborisRoute":"object"', out.stdout)
-        self.assertIn('"sweepMs":450', out.stdout)
+        self.assertIn('"sweepMs":600', out.stdout)
+        self.assertIn('"modelSteps":["PromptShrink","Model cascade","Quality check","Output cost"]', out.stdout)
+        self.assertIn('"localSteps":["PromptShrink","Zero-model gate","Output cost"]', out.stdout)
 
     def test_env_example_has_no_real_key(self):
         text = (ROOT / ".env.example").read_text(encoding="utf-8")
