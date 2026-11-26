@@ -896,6 +896,16 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertIn('The receipt', meth)
         self.assertIn('How Arboris compares', meth)
         self.assertIn('This session', meth)
+        # Trees (round 14, 2026-11-26): one tree per 10,000 messages,
+        # planted by hand from seed, with the offset math, the seed
+        # caveats, and the EcoGPT comparison. The planted count is
+        # updated by hand when trees are planted.
+        self.assertIn('Trees', meth)
+        self.assertIn('1 tree per 10,000 messages', meth)
+        self.assertIn('id="trees-planted"', meth)
+        self.assertIn('1 per 10,000 messages, planted by hand from seed', meth)
+        self.assertIn('1 per 100 chats free', meth)
+        self.assertIn('Trees for the Future', meth)
         self.assertIn('class="cmp"', meth)
         self.assertIn('id="st-calls"', meth)
         self.assertIn('id="st-wh"', meth)

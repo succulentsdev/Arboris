@@ -44,6 +44,13 @@
   <p><b>Honest note:</b> the hosted backend runs in <code>us-central1</code>, and OpenRouter does not disclose where upstream model inference runs. Live receipts therefore use the 400 g/kWh illustrative grid factor. A backend in Finland would not put model inference in Finland.</p>
   <p style="font-size:12px"><a href="https://cloud.google.com/sustainability/region-carbon" target="_blank" rel="noopener" style="color:var(--teal)">Google Cloud region carbon data →</a></p>
 
+  <h2>Trees</h2>
+  <p>Arboris plants one tree for every 10,000 messages. The trees are planted by hand, from seed, by Grant, at his local barn.</p>
+  <p><b>Trees planted so far: <span id="trees-planted">20</span></b> (100 seeds planted at his local barn; about 1 in 5 become a young tree. Updated by hand as trees actually establish).</p>
+  <p>Why 10,000? A typical Arboris answer is about 80 output tokens, about 0.02 g of CO2e. A mature tree absorbs about 21 kg of CO2 a year, about 800 kg over a 40 year life. So one tree for one year offsets about 1 million Arboris queries, and one tree over its life offsets about 40 million. At 1 tree per 10,000 messages, the planting is about 100 times the carbon the messages emit, so the offset holds even with conservative numbers.</p>
+  <p><b>Honest notes.</b> Seeds are not trees. Only about 1 in 5 seeds becomes a young tree, so about 5 seeds are planted for each tree counted, and only trees that actually establish are counted. A seed also takes a decade or more to absorb carbon at the full rate, so the planting offsets the carbon over the coming decades, not today. The count above is trees planted, not carbon offset today.</p>
+  <p><b>How this compares to EcoGPT.</b> EcoGPT plants 1 tree per 100 chats free (1 per 50 on Pro) through Trees for the Future. That is 100 times more trees per message than Arboris, about 10,000 times the carbon per year versus about 100 times for Arboris. Both rates massively over-offset the actual carbon. The difference is that EcoGPT outsources the planting to a verified organisation and publishes no per-query energy figure, so you cannot check their offset math from their own numbers, while Arboris plants by hand, publishes the math above, and counts only trees that establish.</p>
+
   <hr class="rule">
 
   <h2>How Arboris compares</h2>
@@ -54,7 +61,7 @@
       <tr><th>Model size</th><td>OpenRouter free-router primary, 2.6B small model first when routing is on</td><td>Not published</td><td>Small open models, about 10x fewer active parameters</td></tr>
       <tr><th>Where it runs</th><td>us-central1, 88% carbon-free, 432 gCO2eq/kWh</td><td>Not published</td><td>Finland, Hamina, 98% carbon-free (2023)</td></tr>
       <tr><th>Energy per answer</th><td>0.0006 Wh per output token, estimate from published factors</td><td>About 0.3 Wh for a typical query (Epoch AI, 2025)</td><td>No per-prompt energy figure published</td></tr>
-      <tr><th>Trees</th><td>None yet</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
+      <tr><th>Trees</th><td>1 per 10,000 messages, planted by hand from seed</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
       <tr><th>Account and ads</th><td>No account, no ads, the API key never reaches the browser</td><td>Free to start, paid plans from $8 a month</td><td>Free 60/day, 500/day with a free account and ads</td></tr>
     </tbody>
   </table></div>
