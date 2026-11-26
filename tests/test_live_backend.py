@@ -873,7 +873,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertIn('href="telemetry.html#methodology"', html)
         self.assertIn("arboris-totals-v1", html)
         self.assertIn('mask-image: linear-gradient(to bottom, transparent, black 56px)', html)
-        self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
+        self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0; padding-bottom: 33vh }', html)
         self.assertEqual(html.lower().count("<head>"), 1)
         self.assertEqual(html.lower().count("<body>"), 1)
 

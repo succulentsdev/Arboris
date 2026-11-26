@@ -231,14 +231,20 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
         self.assertIn("var bw=b.offsetWidth||0", html)
         self.assertIn("var w=Math.min(Math.max(bw,180),cap)", html)
         self.assertIn("svEl.style.width=w+'px'", html)
-        # The Wh lines wrap instead of overflowing when it is narrow.
-        sub = re.search(r"\.sv-sub \{[^}]*\}", html).group(0)
-        self.assertIn("flex-wrap: wrap", sub)
 
     def test_chat_sits_higher_than_the_bottom(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         area = re.search(r"\.hero-chat-area \{[^}]*\}", html).group(0)
         self.assertIn("padding: 78px 24px 12vh", area)
+
+    def test_composer_sits_a_third_up_the_screen(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # When chatting the hero keeps the composer about a third of
+        # the way up: bottom padding inside the 100svh height, so the
+        # chat and the composer live in the top two thirds.
+        chatting = re.search(r"\.hero\.chatting \{[^}]*\}", html).group(0)
+        self.assertIn("height: 100svh", chatting)
+        self.assertIn("padding-bottom: 33vh", chatting)
 
 
 class TestSavingsReceipt(unittest.TestCase):
@@ -247,10 +253,12 @@ class TestSavingsReceipt(unittest.TestCase):
     The gray track is the full length of a typical chatbot answer, the
     teal fill is only as far as this reply used, the empty part is the
     saving. No red anywhere in the receipt; plain words ("less energy",
-    "typical chatbot") with real units in small text; a running chat
-    total in everyday terms; a 300ms grow, once, when the reply
-    finishes; and a neutral "about the same" for a reply that saves
-    little or nothing.
+    "typical chatbot"); one little fun fact right under the graphic,
+    the chat's total saving in everyday terms, rotating so the user
+    does not always see the same one; no Wh numbers and no running
+    total wording on the surface (the drawer keeps the numbers); a
+    300ms grow, once, when the reply finishes; and a neutral "about
+    the same" for a reply that saves little or nothing.
     """
 
     def test_receipt_is_a_comparison_bar_under_the_answer(self):
@@ -264,16 +272,22 @@ class TestSavingsReceipt(unittest.TestCase):
         self.assertNotIn("sv-bars", html)
         self.assertNotIn("sv-base", html)
         self.assertNotIn("insertBefore(svStrip", html)
-        # Headline in plain words, real units in small text underneath.
+        # Headline in plain words; no Wh numbers on the surface.
         self.assertIn("'% less energy'", html)
-        self.assertIn("This reply · ", html)
-        self.assertIn("Typical chatbot · ", html)
-        self.assertIn("typical chatbot", html)
+        self.assertNotIn("This reply · ", html)
+        self.assertNotIn("Typical chatbot · ", html)
+        self.assertNotIn("This chat: ", html)
+        self.assertNotIn("saved across ", html)
         self.assertNotIn("modeled verbose", html)
-        # Running total for the chat, in everyday terms (phone charge).
-        self.assertIn("This chat: ", html)
-        self.assertIn("saved across ", html)
+        # One fun fact under the graphic: the chat's total saving in
+        # everyday terms, rotating by message number.
+        self.assertIn("sv-fun", html)
+        self.assertIn("(totCalls-1)%5", html)
         self.assertIn("about a phone charge for ", html)
+        self.assertIn("of streaming video", html)
+        self.assertIn("of a phone battery", html)
+        self.assertIn("Google search", html)
+        self.assertIn("of reading on an e-reader", html)
         self.assertIn("Phone-charge equivalent assumes a 10W charger", html)
         # Edge case: a reply that saves little says so in neutral gray.
         self.assertIn("about the same as a typical chatbot", html)
