@@ -308,5 +308,76 @@ class TestSavingsReceipt(unittest.TestCase):
         self.assertNotIn("stripEl.setAttribute('aria-expanded'", html)
 
 
+class TestComposerScreenshotLayout(unittest.TestCase):
+    """Round 15 (2026-11-26): the composer copies the screenshot chatbox.
+
+    Input on top of the card, borderless, the card is the box. Below
+    it, a controls row: the brevity modes as individual pills on the
+    left, Attach / Mic / circular Send with an up arrow on the right.
+    No Turbo dropdown: Arboris has no Turbo mode, so none is invented.
+    """
+
+    def test_composer_copies_screenshot(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # Input on top: the input comes before the brevity bar in the DOM.
+        self.assertLess(html.index('id="ci"'), html.index('id="brevity-bar"'))
+        # The controls row holds the brevity bar and the action buttons.
+        self.assertIn('class="composer-controls"', html)
+        self.assertIn('class="composer-actions"', html)
+        self.assertIn('id="brevity-bar"', html)
+        self.assertIn('id="attach-btn"', html)
+        self.assertIn('id="mic-btn"', html)
+        # Send is a circular button with an up arrow, not a "Send" label.
+        self.assertIn('id="sb"', html)
+        self.assertIn('M12 19V5M5 12l7-7 7 7', html)
+        self.assertNotIn('>Send</button>', html)
+        self.assertIn('border-radius: 50%', html)
+        # The input is borderless and transparent: the card is the box.
+        self.assertIn('background: transparent;', html)
+        # The brevity buttons are individual pills, not a segmented group.
+        self.assertIn('.brevity-btn {\n  background: transparent; border: 1px solid var(--border);', html)
+        self.assertNotIn('class="ip-bar"', html)
+        # No Turbo dropdown was invented.
+        self.assertNotIn('Turbo', html)
+
+
+class TestPhotoBackground(unittest.TestCase):
+    """Round 16 (2026-11-26): the hero background is a photo gallery.
+
+    A vanilla port of the MorphGallery fbm-noise dissolve, as a fixed
+    canvas behind the hero. 12 photos: the 6 demo shots plus 6 Unsplash
+    nature shots, all CORS-enabled. One header button cycles to the next
+    photo. No autoplay, no arrows, no thumbnails.
+    """
+
+    def test_photo_background(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('id="bg-canvas"', html)
+        self.assertIn('id="bg-overlay"', html)
+        self.assertIn('id="bg-btn"', html)
+        # 12 photos: 6 demo shots + 6 Unsplash.
+        self.assertEqual(html.count('cdn.21st.dev/assets/mirror/'), 6)
+        self.assertEqual(html.count('images.unsplash.com/photo-'), 6)
+        # The hero is transparent so the photo shows through, and the
+        # dot-grid texture hides while a photo is showing.
+        self.assertIn('background: transparent;', html)
+        self.assertIn('body.bg-photo .hero::before { display: none }', html)
+        # The dissolve shader is in the page, with the fbm noise.
+        self.assertIn('var BG_VERT', html)
+        self.assertIn('var BG_FRAG', html)
+        self.assertIn('fbm(', html)
+        self.assertIn('snoise(', html)
+        # The button cycles, and the init runs on load.
+        self.assertIn('bgInit();', html)
+        self.assertIn('function bgInit()', html)
+        self.assertIn('function bgFallbackSet', html)
+        self.assertIn('function bgLoadImage', html)
+        # No autoplay, no arrows, no thumbnails: it is a background
+        # changer, not a gallery page.
+        self.assertNotIn('autoplay', html)
+        self.assertNotIn('bg-arrow', html)
+        self.assertNotIn('bg-thumb', html)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -239,6 +239,21 @@ body {
 .profile-new button:hover { border-color: var(--mint-border); color: var(--mint) }
 
 /* ── Sleek Architectural Hero & Live Chat Viewport (No Hero Photo) ── */
+/* ── Photo background (round 16) ── */
+#bg-canvas {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none; opacity: 0;
+  transition: opacity 400ms ease;
+}
+#bg-canvas.on { opacity: 1 }
+#bg-overlay {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(7,11,9,.68) 0%, rgba(7,11,9,.52) 30%,
+    rgba(7,11,9,.52) 70%, rgba(7,11,9,.78) 100%);
+}
+body.bg-photo .hero::before { display: none }
+
 .hero {
   position: relative;
   min-height: 60vh;
@@ -248,7 +263,7 @@ body {
   align-items: center;
   justify-content: flex-end;
   text-align: center;
-  background: var(--hero-mesh), var(--bg);
+  background: transparent;
   overflow: hidden;
 }
 .hero::before {
@@ -488,22 +503,23 @@ body {
 .composer-card:focus-within {
   box-shadow: var(--shadow), 0 0 24px rgba(61,212,192,.1);
 }
-.ip-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; min-height: 30px; margin-bottom: 10px; flex-wrap: wrap;
+.composer-controls {
+  display: flex; align-items: center; gap: 12px; min-height: 40px;
+  margin-top: 10px; flex-wrap: wrap;
+}
+.composer-actions {
+  display: flex; align-items: center; gap: 4px; margin-left: auto;
 }
 .brevity-bar {
-  display: inline-flex; align-items: center; gap: 3px;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 99px; padding: 2px;
+  display: inline-flex; align-items: center; gap: 6px;
 }
 .brevity-btn {
-  background: transparent; border: none; color: var(--ink2);
-  font: 600 15px var(--font-mono); padding: 6px 16px; border-radius: 99px;
-  cursor: pointer; transition: background .18s, color .18s;
+  background: transparent; border: 1px solid var(--border); color: var(--ink2);
+  font: 600 14px var(--font-mono); padding: 7px 14px; border-radius: 99px;
+  cursor: pointer; transition: background .18s, color .18s, border-color .18s;
 }
-.brevity-btn:hover { color: var(--ink) }
-.brevity-btn.active { background: var(--teal); color: #fff }
+.brevity-btn:hover { color: var(--ink); border-color: var(--border2) }
+.brevity-btn.active { background: var(--teal); color: #fff; border-color: transparent }
 
 .ip-preview {
   font-size: 15px; font-family: var(--font-mono); color: var(--glass-muted);
@@ -518,40 +534,39 @@ body {
 
 .ir { display: flex; gap: 8px; align-items: center }
 .ir input {
-  flex: 1; min-width: 0; min-height: 70px; padding: 18px 22px; border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg);
+  flex: 1; min-width: 0; min-height: 64px; padding: 16px 6px 6px; border: none;
+  background: transparent;
   color: var(--glass-input-ink); font-size: 21px; font-family: var(--font-body);
-  outline: none; transition: border-color .2s;
+  outline: none;
 }
 .ir input::placeholder { color: var(--ink3) }
 .ir input:focus { border-color: var(--mint) }
 .btn-attach {
-  min-height: 70px; min-width: 58px; padding: 0 16px; border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface2); color: var(--ink2);
-  cursor: pointer; transition: filter .18s, transform .1s;
+  min-height: 40px; min-width: 40px; padding: 0 10px; border-radius: 50%;
+  border: none;
+  background: transparent; color: var(--ink2);
+  cursor: pointer; transition: filter .18s, transform .1s, color .18s;
   display: flex; align-items: center; justify-content: center;
 }
-.btn-attach:hover { color: var(--ink); border-color: var(--border2) }
-.btn-attach:active { transform: scale(.98) }
+.btn-attach:hover { color: var(--ink) }
+.btn-attach:active { transform: scale(.96) }
 .attach-chip { font-size: 15px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 225px }
 .btn-s {
-  min-height: 70px; padding: 15px 35px; border-radius: 12px; border: none;
+  min-height: 44px; min-width: 44px; width: 44px; height: 44px; padding: 0;
+  border-radius: 50%; border: none;
   background: var(--send-bg); color: var(--send-ink);
-  font-weight: 600; font-size: 20px; cursor: pointer;
-  font-family: var(--font-body); transition: filter .2s, transform .1s;
-  white-space: nowrap;
+  cursor: pointer; transition: filter .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center;
 }
 .btn-s:hover { filter: brightness(1.12) }
 .btn-s:active { transform: scale(.98) }
 .btn-mic{
-  min-height:70px;min-width:58px;
-  background:var(--surface2);border:1px solid var(--border);
-  color:var(--ink2);border-radius:12px;padding:0 16px;
+  min-height:40px;min-width:40px;
+  background:transparent;border:none;
+  color:var(--ink2);border-radius:50%;padding:0 10px;
   cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;
 }
-.btn-mic:hover{color:var(--ink);border-color:var(--border2)}
+.btn-mic:hover{color:var(--ink)}
 .btn-mic.recording{color:var(--mint);border-color:var(--mint-border);background:var(--mint-soft)}
 
 .shrink-bar {
@@ -1176,13 +1191,13 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
   .hero-bottom { padding: 8px 12px 20px }
   .composer-card { padding: 10px 10px 8px }
   .ir input { padding: 12px 12px; font-size: 15px }
-  .btn-s { padding: 12px 16px; font-size: 14px }
+  .btn-s { min-height: 40px; min-width: 40px; width: 40px; height: 40px; padding: 0 }
   .ti { min-width: 82px; padding: 10px 8px }
   .tn { font-size: 18px }
   .eco-telemetry-wrap { padding: 0 12px }
 }
 @media (max-width: 400px) {
-  .btn-s { padding: 12px 14px; font-size: 14px }
+  .btn-s { min-height: 36px; min-width: 36px; width: 36px; height: 36px; padding: 0 }
   .ir input { padding: 12px 10px; font-size: 15px }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1201,6 +1216,8 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 </style>
 </head>
 <body>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+<div id="bg-overlay" aria-hidden="true"></div>
 
 <header class="hd">
   <div class="hd-l">
@@ -1208,6 +1225,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
     <div class="backend-pill" id="backend-status" title="Live backend status"><span class="backend-dot" id="backend-dot"></span><span id="backend-lbl">Live router</span></div>
   </div>
   <div class="hd-r">
+    <button class="icon-btn" id="bg-btn" type="button" aria-label="Change background" title="Change background (next photo)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.08-3.08a2 2 0 00-2.83 0L6 21"/></svg></span></button>
     <div style="position:relative">
       <button class="icon-btn" id="settings-btn" type="button" aria-label="Backend settings" aria-haspopup="true" aria-expanded="false" title="Backend settings"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span></button>
       <div class="settings-pop" id="settings-pop">
@@ -1247,8 +1265,12 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   <div class="sr-only" id="sr-live" aria-live="polite" aria-atomic="true"></div>
   <div class="hero-bottom">
     <div id="route-viz"></div>
-    <div class="composer-card">
-      <div class="ip-bar">
+        <div class="composer-card">
+      <div class="ir">
+        <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
+        <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
+      </div>
+      <div class="composer-controls">
         <div class="brevity-bar" id="brevity-bar" role="group" aria-label="Answer verbosity">
           <button class="brevity-btn active" type="button" data-mode="auto" aria-pressed="true" title="Auto-route verbosity from prompt complexity">Auto</button>
           <button class="brevity-btn" type="button" data-mode="instant" aria-pressed="false" title="Instant: ~2 sentences">Instant</button>
@@ -1259,14 +1281,14 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <div class="ip-count" id="ip-cnt"></div>
         <span class="attach-chip" id="attach-chip" hidden></span>
       </div>
-      <div class="ir">
-        <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
-        <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
-        <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about" aria-label="Attach a file"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
-        <button class="btn-mic" id="mic-btn" type="button" title="Voice input" aria-label="Voice input"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
-        <button class="btn-s" id="sb" type="button">Send</button>
+        <div class="composer-actions">
+                  <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about" aria-label="Attach a file"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
+                  <button class="btn-mic" id="mic-btn" type="button" title="Voice input" aria-label="Voice input"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
+                  <button class="btn-s" id="sb" type="button" aria-label="Send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
       </div>
       <div class="shrink-bar" id="shrink-bar"><div class="shrink-bar-fill" id="shrink-bar-fill"></div></div>
+    </div>
     </div>
     <p class="hint">Enter to send · ask anything</p>
   </div>
@@ -1702,6 +1724,293 @@ if(typeof module!=='undefined'&&module.exports){
   global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, COMPLETE_MS: COMPLETE_MS };
 })(typeof window !== 'undefined' ? window : globalThis);
 
+
+/* ── Photo background (round 16): a vanilla port of the MorphGallery
+   dissolve. One fixed canvas behind the hero; the fbm-noise shader
+   tears the old frame away in drifting tatters while the new one burns
+   through where it is bright. No React, no thumbnails, no arrows: the
+   header button cycles to the next photo. */
+var BG_IMAGES = [
+  /* The 6 demo shots (21st.dev CDN, CORS *). */
+  'https://cdn.21st.dev/assets/mirror/ec/eceae69f56b5b3e29b9372032b5c22e96bd5fc9c167ce072813868aa871d52af.jpg',
+  'https://cdn.21st.dev/assets/mirror/95/95b854c8c5fc73249ba12e729548a432ff171dab87d960e2aaf098f1db941828.jpg',
+  'https://cdn.21st.dev/assets/mirror/15/15a4a367001c723a22cc1f5b480cfdc6abc1e50fdf87e0555ddd324f404fb98a.jpg',
+  'https://cdn.21st.dev/assets/mirror/69/6947b2d1b15fc6614fe30af02282fe6418b3c43556fbfe6ad8e2fa16c72ae700.jpg',
+  'https://cdn.21st.dev/assets/mirror/40/40907f0afb67e9bf2767a5982d24f0d56e6f49dd12b859cf92eb9b3b9771f4a4.jpg',
+  'https://cdn.21st.dev/assets/mirror/ef/ef4b96d0e0de49e89f600b77edbe0a150e1f93f8ba92ae1422d285d267b7bd47.jpg',
+  /* More nature shots (Unsplash, CORS *). */
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80',
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80',
+  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80',
+  'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1600&q=80',
+  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&q=80',
+  'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1600&q=80'
+];
+var BG_VERT = [
+  'attribute vec2 a_position;',
+  'varying vec2 v_uv;',
+  'void main() {',
+  '  v_uv = a_position * 0.5 + 0.5;',
+  '  gl_Position = vec4(a_position, 0.0, 1.0);',
+  '}'
+].join('\n');
+var BG_FRAG = [
+  'precision highp float;',
+  'uniform sampler2D u_from;',
+  'uniform sampler2D u_to;',
+  'uniform float u_progress;',
+  'uniform vec2 u_resolution;',
+  'uniform float u_fromAspect;',
+  'uniform float u_toAspect;',
+  'uniform float u_scale;',
+  'uniform float u_direction;',
+  'uniform float u_edge;',
+  'uniform float u_drift;',
+  'varying vec2 v_uv;',
+  'vec3 permute(vec3 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }',
+  'float snoise(vec2 v) {',
+  '  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);',
+  '  vec2 i  = floor(v + dot(v, C.yy));',
+  '  vec2 x0 = v - i + dot(i, C.xx);',
+  '  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);',
+  '  vec4 x12 = x0.xyxy + C.xxzz;',
+  '  x12.xy -= i1;',
+  '  i = mod(i, 289.0);',
+  '  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));',
+  '  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);',
+  '  m = m * m; m = m * m;',
+  '  vec3 x  = 2.0 * fract(p * C.www) - 1.0;',
+  '  vec3 h  = abs(x) - 0.5;',
+  '  vec3 ox = floor(x + 0.5);',
+  '  vec3 a0 = x - ox;',
+  '  m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);',
+  '  vec3 g;',
+  '  g.x  = a0.x  * x0.x  + h.x  * x0.y;',
+  '  g.yz = a0.yz * x12.xz + h.yz * x12.yw;',
+  '  return 130.0 * dot(m, g);',
+  '}',
+  'float fbm(vec2 v) {',
+  '  float value = 0.0;',
+  '  float amplitude = 0.5;',
+  '  for (int i = 0; i < 5; i++) {',
+  '    value += amplitude * snoise(v);',
+  '    v *= 2.0;',
+  '    amplitude *= 0.5;',
+  '  }',
+  '  return value;',
+  '}',
+  'vec2 mirror(vec2 uv) { return 1.0 - abs(1.0 - mod(uv, 2.0)); }',
+  'vec2 coverUV(vec2 uv, float imgAspect) {',
+  '  float canvasAspect = u_resolution.x / u_resolution.y;',
+  '  vec2 scale = (canvasAspect > imgAspect)',
+  '    ? vec2(1.0, imgAspect / canvasAspect)',
+  '    : vec2(canvasAspect / imgAspect, 1.0);',
+  '  return mirror((uv - 0.5) * scale + 0.5);',
+  '}',
+  'void main() {',
+  '  float adjusted = u_progress * (1.0 + 2.0 * u_edge) - u_edge;',
+  '  float noise = fbm(v_uv * u_scale + vec2(0.0, u_progress * u_direction)) * 0.5 + 0.5;',
+  '  noise = smoothstep(0.0, 2.0, length(texture2D(u_to, coverUV(v_uv, u_toAspect)).rgb) + noise);',
+  '  float mixFactor = 1.0 - smoothstep(adjusted - u_edge, adjusted + u_edge, noise);',
+  '  vec2 fromUV = coverUV(v_uv + vec2(0.0, noise * u_progress * u_drift * u_direction), u_fromAspect);',
+  '  vec2 toUV = coverUV(v_uv + vec2(0.0, noise * (1.0 - u_progress) * -0.5 * u_drift * u_direction), u_toAspect);',
+  '  gl_FragColor = mix(texture2D(u_from, fromUV), texture2D(u_to, toUV), mixFactor);',
+  '}'
+].join('\n');
+
+function bgCompile(gl, type, src) {
+  var shader = gl.createShader(type);
+  if (!shader) throw new Error('could not create shader');
+  gl.shaderSource(shader, src);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    var log = gl.getShaderInfoLog(shader);
+    gl.deleteShader(shader);
+    throw new Error('shader compile failed: ' + log);
+  }
+  return shader;
+}
+function bgLink(gl, vertSrc, fragSrc) {
+  var vert = bgCompile(gl, gl.VERTEX_SHADER, vertSrc);
+  var frag = bgCompile(gl, gl.FRAGMENT_SHADER, fragSrc);
+  var program = gl.createProgram();
+  if (!program) throw new Error('could not create program');
+  gl.attachShader(program, vert);
+  gl.attachShader(program, frag);
+  gl.linkProgram(program);
+  gl.deleteShader(vert);
+  gl.deleteShader(frag);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    var log = gl.getProgramInfoLog(program);
+    gl.deleteProgram(program);
+    throw new Error('program link failed: ' + log);
+  }
+  return program;
+}
+function bgLoadImage(src) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { reject(new Error('could not load ' + src)); };
+    img.src = src;
+  });
+}
+function bgEaseInOutQuint(t) {
+  var x = Math.min(Math.max(t, 0), 1);
+  return x < 0.5 ? 16 * x * x * x * x * x : 1 - Math.pow(-2 * x + 2, 5) / 2;
+}
+
+/* Sets the photo up as a plain body background (cover, centred). Used
+   only when WebGL is unavailable or every image failed CORS. */
+function bgFallbackSet(i) {
+  var url = BG_IMAGES[((i % BG_IMAGES.length) + BG_IMAGES.length) % BG_IMAGES.length];
+  document.body.style.backgroundImage = 'url("' + url + '")';
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundAttachment = 'fixed';
+  document.body.classList.add('bg-photo');
+}
+
+function bgInit() {
+  var canvas = document.getElementById('bg-canvas');
+  var btn = document.getElementById('bg-btn');
+  if (!canvas || BG_IMAGES.length === 0) return;
+  var reduced = false;
+  try {
+    var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    reduced = mq.matches;
+  } catch (e) { reduced = false; }
+
+  var gl = null;
+  try {
+    gl = canvas.getContext('webgl', { alpha: false, antialias: false }) ||
+      canvas.getContext('experimental-webgl');
+  } catch (e) { gl = null; }
+  if (!gl) { bgFallbackSet(0); if (btn) btn.addEventListener('click', function () { bgFallbackSet((bgFallbackSet.i = (bgFallbackSet.i === undefined ? 0 : bgFallbackSet.i) + 1)); }); return; }
+
+  var active = 0;
+  var request = null;
+  var textures = BG_IMAGES.map(function () { return null; });
+  var aspects = BG_IMAGES.map(function () { return 1; });
+  var program = null, buffer = null, uniforms = {}, raf = 0, disposed = false;
+  var from = 0, to = 0, progress = 1, startedAt = 0, direction = 1, ready = false;
+
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.round(canvas.clientWidth * dpr);
+    var h = Math.round(canvas.clientHeight * dpr);
+    if (w === 0 || h === 0 || (canvas.width === w && canvas.height === h)) return;
+    canvas.width = w; canvas.height = h;
+    gl.viewport(0, 0, w, h);
+  }
+  var observer = new ResizeObserver(resize);
+  observer.observe(canvas);
+
+  function pick(i) {
+    return textures[i] || textures.find(function (t) { return t; }) || null;
+  }
+  function draw() {
+    if (disposed) return;
+    var pending = request;
+    if (pending) {
+      request = null;
+      if (pending.from !== pending.to) {
+        from = pending.from; to = pending.to;
+        progress = 0; startedAt = performance.now();
+        direction = pending.to > pending.from ? 1 : -1;
+      }
+    }
+    if (progress < 1) {
+      var span = reduced ? 0 : 1500;
+      var elapsed = performance.now() - startedAt;
+      progress = span === 0 ? 1 : bgEaseInOutQuint(Math.min(elapsed / span, 1));
+    }
+    var fromTex = pick(from), toTex = pick(to);
+    if (!fromTex || !toTex) return;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fromTex);
+    gl.uniform1i(uniforms.from, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, toTex);
+    gl.uniform1i(uniforms.to, 1);
+    gl.uniform1f(uniforms.progress, progress);
+    gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+    gl.uniform1f(uniforms.fromAspect, aspects[from] || 1);
+    gl.uniform1f(uniforms.toAspect, aspects[to] || 1);
+    gl.uniform1f(uniforms.scale, 3.5);
+    gl.uniform1f(uniforms.direction, direction);
+    gl.uniform1f(uniforms.edge, 0.15);
+    gl.uniform1f(uniforms.drift, 0.5);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  function frame() { draw(); raf = requestAnimationFrame(frame); }
+  function goTo(next) {
+    var wrapped = ((next % BG_IMAGES.length) + BG_IMAGES.length) % BG_IMAGES.length;
+    if (wrapped === active) return;
+    request = { from: active, to: wrapped };
+    active = wrapped;
+  }
+
+  function start() {
+    try {
+      program = bgLink(gl, BG_VERT, BG_FRAG);
+      gl.useProgram(program);
+      buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      var loc = gl.getAttribLocation(program, 'a_position');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      ['from', 'to', 'progress', 'resolution', 'fromAspect', 'toAspect', 'scale', 'direction', 'edge', 'drift'].forEach(function (name) {
+        uniforms[name] = gl.getUniformLocation(program, 'u_' + name);
+      });
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      var running = false, refused = 0;
+      BG_IMAGES.forEach(function (src, i) {
+        bgLoadImage(src).then(function (img) {
+          if (disposed) return;
+          var tex = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          textures[i] = tex;
+          aspects[i] = img.naturalWidth / Math.max(img.naturalHeight, 1);
+          if (!running) {
+            running = true;
+            resize();
+            canvas.classList.add('on');
+            document.body.classList.add('bg-photo');
+            ready = true;
+            raf = requestAnimationFrame(frame);
+          }
+        }, function () {
+          refused += 1;
+          if (refused === BG_IMAGES.length && !disposed) {
+            /* Every image failed CORS: fall back to a plain background. */
+            canvas.classList.remove('on');
+            bgFallbackSet(0);
+            bgFallbackSet.i = 0;
+          }
+        });
+      });
+    } catch (e) {
+      canvas.classList.remove('on');
+      bgFallbackSet(0);
+      bgFallbackSet.i = 0;
+    }
+  }
+  if (btn) btn.addEventListener('click', function () {
+    if (ready) { goTo(active + 1); }
+    else if (bgFallbackSet.i !== undefined) { bgFallbackSet.i += 1; bgFallbackSet(bgFallbackSet.i); }
+  });
+  start();
+}
+
 /* ═══════════════════════════════════════════════
    DOM & Live Application
 ═══════════════════════════════════════════════ */
@@ -1710,6 +2019,9 @@ document.addEventListener('DOMContentLoaded',function(){
 
 /* Theme: dark mode only */
 document.documentElement.setAttribute('data-theme','dark');
+
+/* Photo background: the hero's rotating nature shots. */
+bgInit();
 
 /* State: live turns only. Old demo keys are deleted on load; live keys
    migrate from the old greensearch-* names once, never overwriting new keys.

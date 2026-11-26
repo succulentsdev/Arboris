@@ -16,15 +16,18 @@ ROOT = Path(__file__).resolve().parent.parent
 BUILTINS = {
     "AbortController", "Array", "Blob", "Boolean", "CustomEvent", "Date",
     "decodeURIComponent", "encodeURIComponent", "Error", "Event",
-    "File", "FileReader", "FormData", "Headers", "Image", "isFinite",
-    "isNaN", "JSON", "Map", "Math", "MutationObserver", "Number",
-    "Object", "parseFloat", "parseInt", "Promise", "RangeError",
-    "RegExp", "Request", "Response", "Set", "String", "Symbol",
-    "TextDecoder", "TypeError", "Uint8Array", "URL", "URLSearchParams",
-    "alert", "clearInterval", "clearTimeout", "fetch", "queueMicrotask",
-    "requestAnimationFrame", "setInterval", "setTimeout",
-    "structuredClone", "XMLHttpRequest",
+    "File", "FileReader", "Float32Array", "FormData", "Headers", "Image",
+    "isFinite", "isNaN", "JSON", "Map", "Math", "MutationObserver",
+    "Number", "Object", "parseFloat", "parseInt", "Promise", "RangeError",
+    "RegExp", "Request", "ResizeObserver", "Response", "Set", "String",
+    "Symbol", "TextDecoder", "TypeError", "Uint8Array", "URL",
+    "URLSearchParams", "alert", "clearInterval", "clearTimeout", "fetch",
+    "queueMicrotask", "requestAnimationFrame", "reject", "resolve",
+    "setInterval", "setTimeout", "structuredClone", "XMLHttpRequest",
 }
+# Note: "resolve" and "reject" are Promise executor parameters, defined
+# by the Promise constructor in `new Promise(function (resolve, reject)
+# {...})`; they are not calls to missing page functions.
 
 KEYWORDS = {
     "catch", "else", "for", "function", "if", "in", "new", "return",
