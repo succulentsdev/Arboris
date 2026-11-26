@@ -824,8 +824,15 @@ class EntryPointAndSiteTests(unittest.TestCase):
         # simulator was removed 2026-11-25, and the Compress button
         # was removed 2026-11-25 (the server still shrinks every
         # prompt automatically; the button only rewrote the box).
+        # Voice input, the speed dropdown, and the route animation
+        # diagram were added 2026-11-25.
         self.assertIn('id="brevity-bar"', html)
         self.assertNotIn('id="compress-btn"', html)
+        self.assertIn('id="mic-btn"', html)
+        self.assertIn('id="speed-btn"', html)
+        self.assertIn('id="speed-pop"', html)
+        self.assertIn('id="route-viz"', html)
+        self.assertIn('createRouteSession', html)
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)

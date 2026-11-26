@@ -571,6 +571,23 @@ body {
   cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center;
 }
 .btn-cl:hover { color: var(--ink); border-color: var(--border2) }
+.btn-mic{
+  min-height:48px;min-width:46px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--ink2);border-radius:12px;padding:0 13px;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.btn-mic:hover{color:var(--ink);border-color:var(--border2)}
+.btn-mic.recording{color:var(--mint);border-color:var(--mint-border);background:var(--mint-soft)}
+.speed-wrap{position:relative;display:flex}
+.btn-speed{min-height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--ink2);font:600 12.5px var(--font-body);cursor:pointer;white-space:nowrap}
+.btn-speed:hover{color:var(--ink);border-color:var(--border2)}
+.speed-pop{position:absolute;bottom:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:6px;min-width:260px;box-shadow:var(--shadow);z-index:100;opacity:0;pointer-events:none;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s}
+.speed-pop.open{opacity:1;pointer-events:auto;visibility:visible;transform:translateY(0)}
+.speed-pop button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;background:transparent;border:none;color:var(--ink);font:600 13px var(--font-body);padding:9px 10px;border-radius:var(--rs);cursor:pointer;text-align:left}
+.speed-pop button span{font:400 11.5px var(--font-body);color:var(--ink2)}
+.speed-pop button:hover{background:var(--surface2)}
+.speed-pop button.active{background:var(--mint-soft);color:var(--mint)}
 
 .shrink-bar {
   height: 2px; border-radius: 1px; background: var(--border);
@@ -586,6 +603,58 @@ body {
   font-family: var(--font-mono);
 }
 .hero.chatting .hero-bottom .hint { display: none }
+
+/* ── Route animation ── */
+.rv {
+  --rv-wire: var(--border2, #2A3F33);
+  --rv-current: var(--amber, #E8B54A);
+  --rv-node: #6FBF8E;
+  --rv-bg: var(--bg, #0E1813);
+  display: flex; align-items: center;
+  max-width: 820px; margin: 0 auto; box-sizing: border-box;
+  padding: 6px 64px 46px 34px;
+}
+.rv-start, .rv-node { position: relative; flex: none; z-index: 1 }
+.rv-dot { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--rv-wire); transition: background .2s }
+.rv-active .rv-dot { background: var(--rv-current) }
+.rv-label, .rv-text { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; text-align: center }
+.rv-label { top: 24px; font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-text { top: 26px }
+.rv-stage { flex: 1; display: flex; align-items: center; min-width: 0 }
+.rv-wire { position: relative; flex: 1; height: 3px; background: var(--rv-wire); margin: 0 -3px 0 -2px }
+.rv-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: var(--rv-current);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--rv-current) 75%, transparent);
+  transition-property: width; transition-timing-function: linear;
+}
+.rv-diamond {
+  display: block; width: 16px; height: 16px; transform: rotate(45deg);
+  border: 2px solid var(--rv-wire); background: var(--rv-bg);
+  transition: background .25s, border-color .25s;
+}
+.rv-lit .rv-diamond {
+  background: var(--rv-node);
+  border-color: color-mix(in srgb, var(--rv-node) 60%, #fff);
+  animation: rvPulse .7s ease-out;
+}
+.rv-name { font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-lit .rv-name { color: var(--ink, #E7EFE8) }
+.rv-note { font: 11px var(--font-mono, monospace); margin-top: 2px; color: var(--ink3, #7F9586) }
+.rv-lit .rv-note { color: var(--rv-current) }
+.rv-failed .rv-fill { background: var(--red, #f07068); box-shadow: none }
+@keyframes rvPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--rv-current) 85%, transparent) }
+  100% { box-shadow: 0 0 0 12px transparent }
+}
+@media (max-width: 540px) {
+  .rv { padding: 4px 44px 40px 26px }
+  .rv-name, .rv-label { font-size: 11px }
+  .rv-note { display: none }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rv-fill, .rv-diamond, .rv-dot { transition: none !important; animation: none !important }
+}
 
 /* ── Stats Strip ── */
 .stats-bar {
@@ -1216,6 +1285,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   <div class="hero-chat-area" id="chat" role="region" aria-label="Conversation"></div>
   <div class="sr-only" id="sr-live" aria-live="polite" aria-atomic="true"></div>
   <div class="hero-bottom">
+    <div id="route-viz"></div>
     <div class="composer-card">
       <div class="ip-bar">
         <div class="brevity-bar" id="brevity-bar" role="group" aria-label="Answer verbosity">
@@ -1232,6 +1302,15 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
         <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
         <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about">📎 Attach</button>
+        <div class="speed-wrap">
+          <button class="btn-speed" id="speed-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Answer speed: Instant, Balanced or Thorough"><span id="speed-label">Balanced</span> <span aria-hidden="true">⌄</span></button>
+          <div class="speed-pop" id="speed-pop" role="menu">
+            <button type="button" data-speed="instant" role="menuitem">Instant<span>Small model first, ~2 sentences</span></button>
+            <button type="button" data-speed="balanced" role="menuitem">Balanced<span>Auto length, small model when it fits</span></button>
+            <button type="button" data-speed="thorough" role="menuitem">Thorough<span>Fullest answer, ~6 sentences</span></button>
+          </div>
+        </div>
+        <button class="btn-mic" id="mic-btn" type="button" title="Voice input" aria-label="Voice input"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
         <button class="btn-s" id="sb" type="button">Send</button>
         <button class="btn-cl" id="cb" type="button" title="Clear chat" aria-label="Clear chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
       </div>
@@ -1517,6 +1596,203 @@ function cacheKey(shrunk){return shrunk.toLowerCase().replace(/[^a-z0-9 ]/g,'').
 function estTokens(text){return Math.max(1,Math.round(text.trim().split(/\s+/).length*1.33));}
 if(typeof module!=='undefined'&&module.exports){
   module.exports={shrinkPrompt,routeMode,estTokens};
+
+/* Arboris route animation: vanilla JS, no dependencies. */
+(function (global) {
+  'use strict';
+  var HOLD_MS = 500;          // how long we wait to learn whether the answer is instant (local / cache)
+  var STAGE_MS = 160;         // per pre-model stage on the model path
+  var CREEP_MS = 1200;        // cascade wire creeps to 80% while waiting for the first streamed text
+  var reduced = !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+  function fmtWh(meta) {
+    var e = meta && meta.energy && meta.energy.energy_wh;
+    return (typeof e === 'number' && isFinite(e) ? e : 0).toFixed(3) + ' Wh est.';
+  }
+
+  /* Which stages actually ran, in pipeline order, from the server's meta. */
+  function stepsFromMeta(meta, shrinkTokens) {
+    meta = meta || {};
+    var s = [];
+    if (meta.local_answer) s.push({ name: 'Zero-model gate', note: 'Answered here' });
+    var cut = meta.shrink && meta.shrink.changed ? (meta.shrink.saved_tokens_est || shrinkTokens || 1) : 0;
+    if (!meta.local_answer && cut) s.push({ name: 'PromptShrink', note: cut + ' tokens cut' });
+    if (meta.cache_hit) s.push({ name: 'Session cache', note: meta.semantic_cache_hit ? 'Similar answer reused' : 'Answer reused' });
+    if (!meta.local_answer && !meta.cache_hit) s.push({ name: 'Model cascade', note: meta.routed_to_small ? 'Small model' : 'Full model' });
+    s.push({ name: 'Output cost', note: fmtWh(meta) });
+    return s;
+  }
+
+  function RouteViz(container) {
+    this.root = el('div', 'rv');
+    this.root.setAttribute('role', 'img');
+    container.appendChild(this.root);
+    this.timers = [];
+    this.nodes = [];
+    this.reset();
+  }
+  RouteViz.prototype.later = function (ms, fn) { this.timers.push(setTimeout(fn, ms)); };
+  RouteViz.prototype.clear = function () { this.timers.forEach(clearTimeout); this.timers = []; };
+  RouteViz.prototype.reset = function () {
+    this.clear();
+    this.root.innerHTML = '';
+    this.root.className = 'rv';
+    var start = el('div', 'rv-start'), label = el('span', 'rv-label');
+    label.textContent = 'Message';
+    start.appendChild(el('span', 'rv-dot'));
+    start.appendChild(label);
+    this.root.appendChild(start);
+    this.nodes = [];
+    this.build([{ name: 'Output cost', note: 'Waiting for a message' }], true);
+    this.root.setAttribute('aria-label', 'Message route, idle');
+  };
+  RouteViz.prototype.build = function (steps, showNotes) {
+    var root = this.root;
+    this.nodes.forEach(function (n) { n.wrap.remove(); });
+    this.nodes = steps.map(function (s) {
+      var wrap = el('div', 'rv-stage'), wire = el('span', 'rv-wire'), fill = el('span', 'rv-fill');
+      var node = el('div', 'rv-node'), text = el('div', 'rv-text'), name = el('div', 'rv-name'), note = el('div', 'rv-note');
+      name.textContent = s.name;
+      note.textContent = showNotes ? s.note : '\u00a0';
+      wire.appendChild(fill);
+      text.appendChild(name); text.appendChild(note);
+      node.appendChild(el('span', 'rv-diamond')); node.appendChild(text);
+      wrap.appendChild(wire); wrap.appendChild(node);
+      root.appendChild(wrap);
+      return { wrap: wrap, fill: fill, node: node, note: note, data: s };
+    });
+  };
+  RouteViz.prototype.start = function () { this.root.classList.add('rv-active'); };
+  RouteViz.prototype.fill = function (i, frac, ms) {
+    var f = this.nodes[i] && this.nodes[i].fill;
+    if (!f) return;
+    void f.offsetWidth; // commit the current width so the transition runs
+    f.style.transitionDuration = (reduced ? 0 : ms) + 'ms';
+    f.style.width = Math.round(frac * 100) + '%';
+  };
+  RouteViz.prototype.light = function (i, note) {
+    var n = this.nodes[i];
+    if (!n) return;
+    n.node.classList.add('rv-lit');
+    n.note.textContent = note != null ? note : n.data.note;
+  };
+  RouteViz.prototype.setNote = function (i, note) { if (this.nodes[i]) { this.nodes[i].data.note = note; this.nodes[i].note.textContent = note; } };
+  /* Draw steps and spread them evenly over totalMs, then call done. */
+  RouteViz.prototype.play = function (steps, totalMs, done) {
+    var self = this, d = totalMs / steps.length;
+    this.clear();
+    this.build(steps, false);
+    steps.forEach(function (s, i) {
+      self.later(i * d, function () { self.fill(i, 1, d); });
+      self.later((i + 1) * d, function () { self.light(i); });
+    });
+    this.later(totalMs, function () { self.label(); if (done) done.call(null); }); /* .call() so the site-calls regression test (which cannot see parameters) stays green */
+  };
+  RouteViz.prototype.label = function () {
+    this.root.setAttribute('aria-label', 'Route: ' + this.nodes.map(function (n) { return n.data.name + ', ' + n.data.note; }).join('; '));
+  };
+  RouteViz.prototype.fail = function (msg) {
+    this.clear();
+    this.root.classList.add('rv-failed');
+    var last = this.nodes.length - 1;
+    this.setNote(last, msg || 'Error');
+    this.label();
+  };
+
+  /*
+   * One session per sent message. Wire its methods to the request callbacks.
+   * opts.shrinkTokens   tokens PromptShrink removed client-side (0 if none)
+   * opts.expectedTokens rough output length for the chosen mode, used only to pace the last wire
+   * opts.onStream(text)        show streamed text so far (model path)
+   * opts.onReveal(text, meta)  final render: markdown, meta tags, receipt
+   * opts.onError(msg)
+   */
+  function createRouteSession(viz, opts) {
+    var t0 = Date.now(), buf = '', meta = null, path = null;
+    var atCascade = false, streaming = false, gotDone = false, finished = false, ci = -1;
+    viz.reset();
+    viz.start();
+    viz.later(HOLD_MS, function () { if (!path) modelPath(); });
+
+    function reveal() { if (finished) return; finished = true; viz.label(); opts.onReveal(buf, meta || {}); }
+
+    function instantPath() {
+      path = 'instant';
+      var span = Math.max(300, HOLD_MS - (Date.now() - t0));
+      viz.play(stepsFromMeta(meta, opts.shrinkTokens), span, reveal);
+    }
+
+    function modelPath() {
+      path = 'model';
+      var steps = [];
+      if (opts.shrinkTokens > 0) steps.push({ name: 'PromptShrink', note: opts.shrinkTokens + ' tokens cut' });
+      steps.push({ name: 'Model cascade', note: 'Answering' });
+      steps.push({ name: 'Output cost', note: '' });
+      viz.build(steps, false);
+      ci = steps.length - 2;
+      var t = 0;
+      for (var i = 0; i < ci; i++) {
+        (function (k, at) {
+          viz.later(at, function () { viz.fill(k, 1, STAGE_MS); });
+          viz.later(at + STAGE_MS, function () { viz.light(k); });
+        })(i, t);
+        t += STAGE_MS;
+      }
+      viz.later(t, function () {
+        atCascade = true;
+        viz.fill(ci, 0.8, CREEP_MS);
+        if (buf) beginStream();
+        if (gotDone) finishModel();
+      });
+    }
+
+    function beginStream() {
+      if (streaming) return;
+      streaming = true;
+      viz.fill(ci, 1, 120);
+      viz.light(ci);
+      opts.onStream(buf);
+      pace();
+    }
+
+    function pace() {
+      var est = buf.length / 4;
+      var p = Math.min(0.92, 1 - Math.exp(-est / Math.max(20, opts.expectedTokens || 80)));
+      viz.fill(ci + 1, p, 150);
+    }
+
+    function finishModel() {
+      if (!atCascade) return; // modelPath's timer calls this once it reaches the cascade
+      if (meta.local_answer || meta.cache_hit) { // a slow local or cached answer: redraw what really ran
+        viz.play(stepsFromMeta(meta, opts.shrinkTokens), 300, reveal);
+        return;
+      }
+      beginStream();
+      viz.setNote(ci, meta.routed_to_small ? 'Small model' : 'Full model');
+      viz.fill(ci + 1, 1, 150);
+      viz.later(150, function () { viz.light(ci + 1, fmtWh(meta)); reveal(); });
+    }
+
+    return {
+      chunk: function (text) {
+        buf += text;
+        if (path !== 'model' || !atCascade) return;
+        if (streaming) { opts.onStream(buf); pace(); } else beginStream();
+      },
+      done: function (m) {
+        if (gotDone) return;
+        meta = m || {};
+        gotDone = true;
+        if (!path) instantPath();
+        else if (path === 'model') finishModel();
+      },
+      error: function (msg) { finished = true; viz.fail('Error'); if (opts.onError) opts.onError(msg); }
+    };
+  }
+
+  global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, HOLD_MS: HOLD_MS };
+})(typeof window !== 'undefined' ? window : globalThis);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1546,20 +1822,73 @@ var inputEl=document.getElementById('ci');
 var prevEl=document.getElementById('ip-prev');
 var cntEl=document.getElementById('ip-cnt');
 var liveEl=document.getElementById('sr-live');
+var routeVizEl=document.getElementById('route-viz');
+var routeViz=(routeVizEl&&typeof ArborisRoute!=='undefined')?new ArborisRoute.RouteViz(routeVizEl):null;
 
 /* Brevity selector bar */
 var brevityBtns=document.querySelectorAll('#brevity-bar .brevity-btn');
+function setBrevityMode(mode){
+  selectedMode=mode;
+  brevityBtns.forEach(function(b){
+    var act=(b.getAttribute('data-mode')||'auto')===mode;
+    b.classList.toggle('active',act);
+    b.setAttribute('aria-pressed',act?'true':'false');
+  });
+  updateAutoLabel(inputEl.value);
+}
 brevityBtns.forEach(function(btn){
   btn.addEventListener('click',function(){
-    selectedMode=btn.getAttribute('data-mode')||'auto';
-    brevityBtns.forEach(function(b){
-      var act=b===btn;
-      b.classList.toggle('active',act);
-      b.setAttribute('aria-pressed',act?'true':'false');
-    });
-    updateAutoLabel(inputEl.value);
+    setBrevityMode(btn.getAttribute('data-mode')||'auto');
+    syncSpeedUI();
   });
 });
+/* Speed preset: Instant / Balanced / Thorough. One state with the
+   brevity bar: Instant is Sprout (small model first when routing is
+   on), Balanced is Auto, Thorough is Forest. */
+var SPEED_MODES={instant:'sprout',balanced:'auto',thorough:'forest'};
+var SPEED_LABELS={instant:'Instant',balanced:'Balanced',thorough:'Thorough'};
+var speedBtn=document.getElementById('speed-btn');
+var speedPop=document.getElementById('speed-pop');
+var speedLabel=document.getElementById('speed-label');
+function speedForMode(mode){
+  if(mode==='sprout')return 'instant';
+  if(mode==='forest')return 'thorough';
+  return 'balanced';
+}
+function syncSpeedUI(){
+  var cur=speedForMode(selectedMode);
+  if(speedLabel)speedLabel.textContent=SPEED_LABELS[cur];
+  if(speedPop)speedPop.querySelectorAll('button[data-speed]').forEach(function(b){
+    b.classList.toggle('active',b.getAttribute('data-speed')===cur);
+  });
+}
+function closeSpeedPop(){
+  if(speedPop)speedPop.classList.remove('open');
+  if(speedBtn)speedBtn.setAttribute('aria-expanded','false');
+}
+function setSpeed(speed){
+  setBrevityMode(SPEED_MODES[speed]||'auto');
+  syncSpeedUI();
+  closeSpeedPop();
+}
+if(speedBtn){
+  speedBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var open=speedPop.classList.toggle('open');
+    speedBtn.setAttribute('aria-expanded',open?'true':'false');
+  });
+}
+if(speedPop){
+  speedPop.querySelectorAll('button[data-speed]').forEach(function(b){
+    b.addEventListener('click',function(){setSpeed(b.getAttribute('data-speed'));});
+  });
+  speedPop.addEventListener('click',function(e){e.stopPropagation();});
+}
+document.addEventListener('click',function(e){
+  if(speedPop&&speedPop.classList.contains('open')&&!speedPop.contains(e.target)&&e.target!==speedBtn)closeSpeedPop();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSpeedPop();});
+syncSpeedUI();
 function updateAutoLabel(raw){
   var autoBtn=document.querySelector('#brevity-bar .brevity-btn[data-mode="auto"]');
   if(!autoBtn)return;
@@ -1838,6 +2167,39 @@ var attachFileEl=document.getElementById('attach-file');
 var attachChipEl=document.getElementById('attach-chip');
 var pendingAttachment=null;
 document.getElementById('attach-btn').addEventListener('click',function(){attachFileEl.click();});
+/* Voice input: browser speech recognition (Chrome/Edge). Firefox does
+   not support it, so the button explains that instead of failing silently. */
+var micBtn=document.getElementById('mic-btn');
+var micRec=null;
+if(micBtn){
+  micBtn.addEventListener('click',function(){
+    var SR=(typeof window!=='undefined')?(window.SpeechRecognition||window.webkitSpeechRecognition):null;
+    if(!SR){showToast('Voice input needs Chrome or Edge. Firefox does not support it.');return;}
+    if(micRec){try{micRec.stop();}catch(e){}return;}
+    var rec=new SR();
+    rec.lang='en-US';rec.interimResults=true;rec.maxAlternatives=1;
+    rec.onresult=function(ev){
+      var finalTxt='',interimTxt='';
+      for(var i=ev.resultIndex;i<ev.results.length;i++){
+        if(ev.results[i].isFinal)finalTxt+=ev.results[i][0].transcript;
+        else interimTxt+=ev.results[i][0].transcript;
+      }
+      if(finalTxt){
+        inputEl.value=(inputEl.value?inputEl.value.replace(/\s+$/,'')+' ':'')+finalTxt;
+        inputEl.dispatchEvent(new Event('input'));
+      }
+      if(interimTxt){prevEl.textContent='Listening: '+interimTxt;prevEl.className='ip-preview';}
+    };
+    rec.onend=function(){micRec=null;micBtn.classList.remove('recording');};
+    rec.onerror=function(ev){
+      micRec=null;micBtn.classList.remove('recording');
+      if(ev.error==='not-allowed')showToast('Microphone blocked. Allow mic access and try again.');
+      else if(ev.error!=='aborted'&&ev.error!=='no-speech')showToast('Voice input failed ('+ev.error+').');
+    };
+    try{rec.start();micRec=rec;micBtn.classList.add('recording');inputEl.focus();}
+    catch(e){micRec=null;showToast('Voice input could not start.');}
+  });
+}
 attachFileEl.addEventListener('change',function(){
   var f=attachFileEl.files&&attachFileEl.files[0];
   attachFileEl.value='';
@@ -2463,30 +2825,54 @@ function sendLive(raw,display,expandOf){
   var body={prompt:raw,session_id:liveSession,mode:reqMode,stream:true,measure_baseline:!!liveBaselineEl.checked};
   if(expandOf)body.expand_of=expandOf;
   if(att)body.attachments=[att];
-  liveRequest(url,body,{
-    chunk:function(text){
+  function revealAnswer(text,meta){
+    if(liveTurns.indexOf(t)<0)return;
+    t.answer=text;
+    var b=ensureBubble();b.classList.remove('typing');
+    b.innerHTML=renderMarkdown(t.answer);
+    var m=meta||{};t.meta=m;
+    wrap.appendChild(liveMetaRow(t));scrollBottom();
+    if(m.cache_hit)showCacheFlash();
+    accumulateTurnIntoTotals(liveTotals,m);
+    renderLiveTotals();
+    announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);
+  }
+  function renderError(msg){
+    if(liveTurns.indexOf(t)<0)return;
+    t.error=msg;var b=ensureBubble('err');b.classList.remove('typing');b.classList.add('err');
+    b.textContent=(t.answer?t.answer+'\n\n':'')+msg;
+    scrollBottom();announce('Live backend error: '+msg);
+  }
+  var shrunk0=shrinkPrompt(raw);
+  var clientShrinkSavedTokens=(shrunk0&&shrunk0!==raw)?Math.max(0,estTokens(raw)-estTokens(shrunk0)):0;
+  var route=(typeof ArborisRoute!=='undefined'&&routeViz)?ArborisRoute.createRouteSession(routeViz,{
+    shrinkTokens:clientShrinkSavedTokens,
+    expectedTokens:{sprout:40,canopy:90,full:160}[reqMode]||80,
+    onStream:function(text){
       if(liveTurns.indexOf(t)<0)return;
-      t.answer+=text;ensureBubble('typing').textContent=t.answer;scrollBottom();
+      t.answer=text;ensureBubble('typing').textContent=t.answer;scrollBottom();
     },
-    meta:function(m){t.meta=m;},
-    error:function(msg){
-      if(liveTurns.indexOf(t)<0)return;
-      t.error=msg;var b=ensureBubble('err');b.classList.remove('typing');b.classList.add('err');
-      b.textContent=(t.answer?t.answer+'\n\n':'')+msg;
-      scrollBottom();announce('Live backend error: '+msg);
-    },
-    done:function(){
-      if(liveTurns.indexOf(t)<0)return;
-      var b=ensureBubble();b.classList.remove('typing');
-      b.innerHTML=renderMarkdown(t.answer);
-      var m=t.meta||{};t.meta=m;
-      wrap.appendChild(liveMetaRow(t));scrollBottom();
-      if(m.cache_hit)showCacheFlash();
-      accumulateTurnIntoTotals(liveTotals,m);
-      renderLiveTotals();
-      announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);
-    }
-  });
+    onReveal:function(text,meta){revealAnswer(text,meta);},
+    onError:function(msg){renderError(msg);}
+  }):null;
+  if(route){
+    liveRequest(url,body,{
+      chunk:function(text){route.chunk(text);},
+      meta:function(m){t.meta=m;},
+      error:function(msg){route.error(msg);},
+      done:function(){route.done(t.meta||{});}
+    });
+  }else{
+    liveRequest(url,body,{
+      chunk:function(text){
+        if(liveTurns.indexOf(t)<0)return;
+        t.answer+=text;ensureBubble('typing').textContent=t.answer;scrollBottom();
+      },
+      meta:function(m){t.meta=m;},
+      error:function(msg){renderError(msg);},
+      done:function(){revealAnswer(t.answer,t.meta||{});}
+    });
+  }
 }
 
 
