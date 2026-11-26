@@ -841,15 +841,16 @@ body {
   background: linear-gradient(90deg, #cf4a28, #f07068);
   opacity: .78;
 }
-/* Minimalist per-message savings strip: the two bars from the receipt,
-   under each answer. Arboris is solid teal; the baseline is coral with
-   diagonal slots (it is a modeled estimate, so it reads as a hatch).
-   Clicking the strip opens the full receipt drawer. */
-.sv { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 0; padding: 0; background: none; border: none; cursor: pointer; text-align: left; }
-.sv-bars { display: flex; flex-direction: column; gap: 2px; width: 48px; flex: none; }
-.sv-bar { height: 2px; border-radius: 99px; }
-.sv-arb { background: linear-gradient(90deg, #3dd4c0, #22a896); }
-.sv-base { background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 8px), linear-gradient(90deg, #cf4a28, #f07068); opacity: .85; }
+/* Minimalist per-message savings bars: two stubby vertical bars that
+   sit on top of each bot chat box. Arboris (teal) is short, the
+   baseline (coral with diagonal slots, it is a modeled estimate) is
+   full height, so the height difference reads the savings at a
+   glance. Clicking the bars opens the full receipt drawer. */
+.sv { display: inline-flex; align-items: flex-end; gap: 6px; margin: 0 0 4px; padding: 0; background: none; border: none; cursor: pointer; text-align: left; }
+.sv-bars { display: flex; flex-direction: row; align-items: flex-end; gap: 3px; height: 24px; flex: none; }
+.sv-bar { width: 7px; min-height: 3px; border-radius: 2px; }
+.sv-arb { background: linear-gradient(180deg, #3dd4c0, #22a896); }
+.sv-base { background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 8px), linear-gradient(180deg, #cf4a28, #f07068); opacity: .85; }
 .sv-lbl { font-size: 9px; font-family: var(--font-mono); color: var(--ink2); margin-top: 0; white-space: nowrap; }
 .sv:hover .sv-lbl, .sv:focus-visible .sv-lbl { color: var(--ink); }
 .sv:focus-visible { outline: 2px solid #3dd4c0; outline-offset: 2px; border-radius: 4px; }
@@ -2556,7 +2557,7 @@ function liveMetaRow(t){
     stripEl.tabIndex=0;
     stripEl.setAttribute('aria-expanded','false');
     stripEl.title='Energy & carbon receipt (click for detail)';
-    stripEl.innerHTML='<div class="sv-bars"><div class="sv-bar sv-arb" style="width:'+arbWidth2+'%"></div><div class="sv-bar sv-base" style="width:100%"></div></div><div class="sv-lbl">−'+savedPct2+'% vs '+(hasMeasured2?'measured':'modeled')+' verbose</div>';
+    stripEl.innerHTML='<div class="sv-bars"><div class="sv-bar sv-arb" style="height:'+arbWidth2+'%"></div><div class="sv-bar sv-base" style="height:100%"></div></div><div class="sv-lbl">−'+savedPct2+'% vs '+(hasMeasured2?'measured':'modeled')+' verbose</div>';
     drawerEl=buildEcoDrawer(t);
     var toggleStrip=function(){drawerEl.hidden=!drawerEl.hidden;stripEl.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');};
     stripEl.addEventListener('click',toggleStrip);
@@ -2700,7 +2701,10 @@ function sendLive(raw,display,expandOf){
     var b=ensureBubble();b.classList.remove('typing');
     b.innerHTML=renderMarkdown(t.answer);
     var m=meta||{};t.meta=m;
-    wrap.appendChild(liveMetaRow(t));scrollBottom();
+    var metaRow=liveMetaRow(t);
+    var svStrip=metaRow.querySelector('.sv');
+    if(svStrip)wrap.insertBefore(svStrip,b.parentNode);
+    wrap.appendChild(metaRow);scrollBottom();
     if(m.cache_hit)showCacheFlash();
     accumulateTurnIntoTotals(liveTotals,m);
     renderLiveTotals();
