@@ -819,12 +819,19 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn("data:image/jpeg;base64,", html)
         self.assertNotIn("url('hero.jpg')", html)
         self.assertTrue((ROOT / "website" / "hero.jpg").is_file())
-        # Brevity selector bar, compress button, simulator, health status, and valid head structure.
+        # Brevity selector bar, compress button, health status, tabbed
+        # methodology/compare section, and sticky chat; the annual
+        # simulator was removed 2026-11-25.
         self.assertIn('id="brevity-bar"', html)
         self.assertIn('id="compress-btn"', html)
-        self.assertIn('id="sim-qpd"', html)
+        self.assertNotIn('id="sim-qpd"', html)
+        self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)
         self.assertIn('id="methodology"', html)
+        self.assertIn('class="meth-tab active"', html)
+        self.assertIn('id="panel-compare"', html)
+        self.assertIn('mask-image: linear-gradient(to bottom, transparent, black 56px)', html)
+        self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
         self.assertEqual(html.lower().count("<head>"), 1)
         self.assertEqual(html.lower().count("<body>"), 1)
 

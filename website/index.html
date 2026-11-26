@@ -233,6 +233,26 @@ body {
 }
 .settings-pop .sp-check input { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer }
 .settings-pop .sp-note { font-size: 11px; color: var(--ink3); line-height: 1.45 }
+.profile-btn { background: transparent; border: 1px solid transparent; color: var(--ink2); border-radius: var(--rs); padding: 4px 10px 4px 4px; cursor: pointer; font-size: 14px; line-height: 1; min-height: 38px; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); transition: color .18s, background .18s, border-color .18s }
+.profile-btn:hover { color: var(--ink); background: var(--surface2); border-color: var(--border) }
+.profile-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3f8a4e; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700 }
+.profile-btn .lbl { font-size: 12.5px; font-weight: 500; letter-spacing: .01em }
+.profile-pop { position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px 18px; min-width: 280px; box-shadow: var(--shadow); z-index: 100; opacity: 0; pointer-events: none; visibility: hidden; transform: translateY(-4px); transition: opacity .15s, transform .15s, visibility .15s; color: var(--ink) }
+.profile-pop.open { opacity: 1; pointer-events: auto; visibility: visible; transform: translateY(0) }
+.profile-pop .sp-title { font-size: 11px; font-weight: 600; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); margin-bottom: 10px }
+.profile-pop .sp-note { font-size: 11px; color: var(--ink3); line-height: 1.45; margin-bottom: 10px }
+.profile-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--rs); cursor: pointer; font-size: 13.5px }
+.profile-row:hover { background: var(--surface2) }
+.profile-row.active { background: var(--mint-soft); color: var(--mint) }
+.profile-row .profile-avatar { width: 24px; height: 24px; font-size: 11px }
+.profile-row .profile-row-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.profile-del { background: transparent; border: none; color: var(--ink3); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px }
+.profile-del:hover { color: var(--red) }
+.profile-new { display: flex; gap: 8px; margin-top: 10px }
+.profile-new input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--border2); color: var(--ink); border-radius: var(--rs); padding: 8px 10px; font: 12px var(--font-mono); outline: none }
+.profile-new input:focus { border-color: var(--teal) }
+.profile-new button { background: var(--surface2); color: var(--ink); border: 1px solid var(--border); border-radius: var(--rs); padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: var(--font-body) }
+.profile-new button:hover { border-color: var(--mint-border); color: var(--mint) }
 
 /* ── Sleek Architectural Hero & Live Chat Viewport (No Hero Photo) ── */
 .hero {
@@ -340,8 +360,12 @@ body {
   padding: 78px 24px 12px; scroll-behavior: smooth;
   justify-content: flex-end; text-align: left;
   opacity: 0; pointer-events: none; transition: opacity .25s;
+  min-height: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 56px);
+  mask-image: linear-gradient(to bottom, transparent, black 56px);
 }
 .hero.chatting .hero-chat-area { opacity: 1; pointer-events: auto }
+.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }
 .hero-chat-area::-webkit-scrollbar { width: 5px }
 .hero-chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px }
 
@@ -718,58 +742,13 @@ body {
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
-.eco-meter-card, .eco-equiv-card, .sim-card {
+.eco-meter-card, .eco-equiv-card {
   background: rgba(6,13,8,.42);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
 }
-.sim-card {
-  margin-top: 14px;
-}
-.sim-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  margin: 8px 0 12px;
-}
-.sim-slider-wrap {
-  flex: 1;
-  min-width: 200px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.sim-slider-wrap input[type="range"] {
-  flex: 1;
-  accent-color: #3dd4c0;
-  cursor: pointer;
-}
-.sim-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-.sim-kpi {
-  padding: 9px 11px;
-  border-radius: 9px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.06);
-}
-.sim-kpi-v {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--totals-num);
-  display: block;
-}
-.sim-kpi-l {
-  font-size: 11px;
-  color: var(--ink3);
-  margin-top: 2px;
-  display: block;
-}
+
 .eco-card-hd {
   display: flex;
   justify-content: space-between;
@@ -1176,6 +1155,10 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 .cmp thead th{color:var(--ink)}
 .cmp tbody th{white-space:nowrap}
 .cmp-src{font-size:12px;color:var(--ink2);margin-top:8px}
+.meth-tabs { display: flex; gap: 8px; margin-bottom: 16px }
+.meth-tab { background: var(--surface2); color: var(--ink2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body) }
+.meth-tab.active { background: var(--mint-soft); color: var(--mint); border-color: var(--mint-border) }
+.meth-panel[hidden] { display: none }
 </style>
 </head>
 <body>
@@ -1187,10 +1170,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   </div>
   <nav class="hd-nav" aria-label="Page sections">
     <a class="nav-link" href="#totals-live">Eco Telemetry</a>
-    <a class="nav-link" href="#sim-section">Annual Simulator</a>
-    <a class="nav-link" href="#features">Power Levers</a>
-    <a class="nav-link" href="#compare">Compare</a>
-    <a class="nav-link" href="#methodology">Methodology</a>
+    <a class="nav-link" href="#methodology">Methodology &amp; Compare</a>
     <a class="nav-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener">GitHub</a>
   </nav>
   <div class="hd-r">
@@ -1213,6 +1193,15 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
     <button class="icon-btn" id="how-btn" type="button" aria-label="How Arboris works" aria-haspopup="dialog" title="How Arboris works"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><span class="lbl">How it works</span></button>
     <button class="icon-btn" id="export-btn" type="button" aria-label="Export chat as a Markdown file" title="Export chat (.md)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></span><span class="lbl">Export</span></button>
     <button class="icon-btn" id="copy-btn" type="button" aria-label="Copy session stats" title="Copy session stats"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2h-2"/></svg></span></button>
+    <div style="position:relative">
+      <button class="profile-btn" id="profile-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Profiles: each keeps its own chat history in this browser"><span class="profile-avatar" id="profile-avatar">G</span><span class="lbl" id="profile-name">Guest</span></button>
+      <div class="profile-pop" id="profile-pop">
+        <div class="sp-title">Profiles</div>
+        <p class="sp-note">Profiles live in this browser only. Each keeps its own chat history.</p>
+        <div id="profile-list"></div>
+        <div class="profile-new"><input id="profile-new-name" type="text" maxlength="24" placeholder="New profile name" aria-label="New profile name"><button id="profile-new-btn" type="button">Add</button></div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -1335,59 +1324,16 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         </div>
       </div>
     </div>
-    <div class="sim-card" id="sim-section">
-      <div class="eco-card-hd">
-        <span>Annual Power &amp; Carbon Savings Simulator (Arboris vs. Unconstrained 220-tok Replies)</span>
-        <b id="sim-qpd-lbl">50 queries / day</b>
-      </div>
-      <div class="sim-controls">
-        <div class="sim-slider-wrap">
-          <label for="sim-qpd" style="font-size:11.5px;color:var(--ink2);font-family:var(--font-mono)">Daily prompts:</label>
-          <input id="sim-qpd" type="range" min="10" max="1000" step="10" value="50" aria-label="Simulated daily prompts">
-        </div>
-        <span style="font-size:11px;color:var(--ink3);font-family:var(--font-mono)">Assumes ~58% average output reduction + 15% zero-model/cache hit rate</span>
-      </div>
-      <div class="sim-kpis">
-        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-wh">1.63 kWh/yr</span><span class="sim-kpi-l">electricity avoided</span></div>
-        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-co2">653 g CO₂e/yr</span><span class="sim-kpi-l">at 400 g/kWh grid factor</span></div>
-        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-water">326 mL/yr</span><span class="sim-kpi-l">data-centre cooling water</span></div>
-        <div class="sim-kpi"><span class="sim-kpi-v" id="sim-led">181 hrs/yr</span><span class="sim-kpi-l">of a 9W LED bulb</span></div>
-      </div>
-    </div>
   </div>
 </section>
 
-<div class="feat-section" id="features">
-  <h2 class="feat-section-title">Six levers that cut power vs. standard ChatGPT prompts</h2>
-  <p class="feat-section-sub">Because generating an output token uses ~800× more energy than reading an input token, Arboris attacks both prompt bloat and unnecessary output decoding before, during, and after inference.</p>
-  <div class="feat-grid">
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>1. Zero-Model Local Gate</span><span class="feat-badge">−100% Wh</span></div><div class="feat-row-desc">Intercepts pure arithmetic (<code>12 + 7</code>), percentages (<code>15% of 240</code>), unit conversions (<code>100 km to miles</code>, <code>60 mph to km/h</code>, <code>3600 s to hours</code>), base conversions (<code>255 in hex</code>), and colors (<code>#3dd4c0 to rgb</code>) in under 1 ms — 0 GPU calls, 0 tokens, and 0 Wh.</div></div></div>
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H14a4 4 0 010 8h-4a4 4 0 000 8h5.5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>2. Right-Sized Brevity &amp; Fluff Strip</span><span class="feat-badge">−45–70% out-tok</span></div><div class="feat-row-desc">Standard ChatGPT replies add polite preambles (<i>"Certainly! Great question!"</i>) and recaps. Arboris strips AI pleasantries, routes lookups to <b>Sprout</b> (~2 sentences), explanations to <b>Canopy</b> (~4), and deep queries to <b>Forest</b> (~6), with expand-on-demand.</div></div></div>
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/><path d="M9 12h6" stroke-width="2.5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>3. PromptShrink &amp; In-Place Compress</span><span class="feat-badge">−32% in-tok</span></div><div class="feat-row-desc">Strips conversational filler, email sign-offs, and wordy clauses before sending — or click <b>✂ Compress</b> in the composer to shrink your prompt in place — while preserving code fences and instructions.</div></div></div>
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>4. Exact &amp; Semantic Session Caching</span><span class="feat-badge">0 new tokens</span></div><div class="feat-row-desc">Reuses verified high-quality answers across identical or lexically equivalent fact/definition queries in your session — eliminating redundant GPU prefill and decode passes completely.</div></div></div>
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>5. Reasoning Effort &amp; Small-Tier Cascade</span><span class="feat-badge">Capped CoT</span></div><div class="feat-row-desc">Caps hidden chain-of-thought <code>reasoning_effort</code> on trivial queries and routes easy lookups to a smaller model tier first, escalating to the primary model only when confidence or quality score is low.</div></div></div>
-    <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12a4 4 0 004 4M12 8v8M9 9l6 6"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>6. Output-Weighted Carbon Receipts</span><span class="feat-badge">Transparent</span></div><div class="feat-row-desc">Every answer includes an interactive energy, CO₂e, and cooling-water receipt computed from provider-reported tokens (including hidden <code>reasoning_tokens</code>) with published academic anchors.</div></div></div>
+<section class="meth-section" id="methodology" aria-label="Methodology and comparison">
+  <div class="meth-tabs" role="tablist" aria-label="Methodology and comparison">
+    <button class="meth-tab active" type="button" role="tab" aria-selected="true" data-tab="meth">Methodology</button>
+    <button class="meth-tab" type="button" role="tab" aria-selected="false" data-tab="compare">Compare</button>
   </div>
-</div>
-
-<div class="feat-section" id="compare">
-  <h2 class="feat-section-title">How Arboris compares</h2>
-  <p class="feat-section-sub">Same question, different defaults. Arboris publishes its numbers; the others publish theirs where they have them.</p>
-  <div class="cmp-wrap"><table class="cmp">
-    <thead><tr><th></th><th>Arboris</th><th>ChatGPT</th><th>EcoGPT</th></tr></thead>
-    <tbody>
-      <tr><th>Model size</th><td>OpenRouter free-router primary, 2.6B small model first when routing is on</td><td>Not published</td><td>Small open models, about 10x fewer active parameters</td></tr>
-      <tr><th>Where it runs</th><td>us-central1, 88% carbon-free, 432 gCO2eq/kWh</td><td>Not published</td><td>Finland, Hamina, 98% carbon-free (2023)</td></tr>
-      <tr><th>Energy per answer</th><td>0.0006 Wh per output token, estimate from published factors</td><td>About 0.3 Wh for a typical query (Epoch AI, 2025)</td><td>No per-prompt energy figure published</td></tr>
-      <tr><th>Trees</th><td>None yet</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
-      <tr><th>Account and ads</th><td>No account, no ads, the API key never reaches the browser</td><td>Free to start, paid plans from $8 a month</td><td>Free 60/day, 500/day with a free account and ads</td></tr>
-    </tbody>
-  </table></div>
-  <p class="cmp-src">Sources: EcoGPT comparison pages and Google Cloud region carbon data, read October 2026; Epoch AI, February 2025. Energy figures are estimates unless stated otherwise.</p>
-</div>
-
-<section class="meth-section" id="methodology" aria-label="Methodology and carbon transparency">
-  <div class="meth-grid">
+  <div class="meth-panel" id="panel-meth" role="tabpanel">
+<div class="meth-grid">
     <div class="meth-card">
       <h3>Routing &amp; brevity modes</h3>
       <p>In <b>Auto</b> mode, Arboris selects a sentence budget and token cap before calling the model:</p>
@@ -1414,6 +1360,22 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
       <div class="callout"><b>Honest note:</b> the hosted backend runs in <code>us-central1</code>, and OpenRouter does not disclose where upstream model inference runs. Live receipts therefore use the 400 g/kWh illustrative grid factor.</div>
       <p style="font-size:12px"><a href="https://cloud.google.com/sustainability/region-carbon" target="_blank" rel="noopener" style="color:var(--teal)">Google Cloud region carbon data →</a></p>
     </div>
+  </div>
+  </div>
+  <div class="meth-panel" id="panel-compare" role="tabpanel" hidden>
+  <h2 class="feat-section-title">How Arboris compares</h2>
+  <p class="feat-section-sub">Same question, different defaults. Arboris publishes its numbers; the others publish theirs where they have them.</p>
+  <div class="cmp-wrap"><table class="cmp">
+    <thead><tr><th></th><th>Arboris</th><th>ChatGPT</th><th>EcoGPT</th></tr></thead>
+    <tbody>
+      <tr><th>Model size</th><td>OpenRouter free-router primary, 2.6B small model first when routing is on</td><td>Not published</td><td>Small open models, about 10x fewer active parameters</td></tr>
+      <tr><th>Where it runs</th><td>us-central1, 88% carbon-free, 432 gCO2eq/kWh</td><td>Not published</td><td>Finland, Hamina, 98% carbon-free (2023)</td></tr>
+      <tr><th>Energy per answer</th><td>0.0006 Wh per output token, estimate from published factors</td><td>About 0.3 Wh for a typical query (Epoch AI, 2025)</td><td>No per-prompt energy figure published</td></tr>
+      <tr><th>Trees</th><td>None yet</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
+      <tr><th>Account and ads</th><td>No account, no ads, the API key never reaches the browser</td><td>Free to start, paid plans from $8 a month</td><td>Free 60/day, 500/day with a free account and ads</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cmp-src">Sources: EcoGPT comparison pages and Google Cloud region carbon data, read October 2026; Epoch AI, February 2025. Energy figures are estimates unless stated otherwise.</p>
   </div>
 </section>
 
@@ -1454,7 +1416,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
       <li><b>The baseline is assumed unless measured.</b> Turning on <b>Measure baseline</b> in settings makes a second, unconstrained call per message to measure real token savings, which doubles API cost.</li>
     </ul>
     <h3>Privacy</h3>
-    <p>This page loads no outside fonts or third-party scripts and uses no analytics. Your questions go to the backend you configured, and from there to its model provider, whose data-retention policy applies. Your chat is saved only in this browser's localStorage under <code>arboris-live-v1</code>; the ✕ Clear button deletes it.</p>
+    <p>This page loads no outside fonts or third-party scripts and uses no analytics. Your questions go to the backend you configured, and from there to its model provider, whose data-retention policy applies. Your chat is saved only in this browser's localStorage, one history per profile under <code>arboris-live-v1-&lt;profile&gt;</code>; the ✕ Clear button deletes the current profile's chat.</p>
   </div>
 </dialog>
 
@@ -1969,7 +1931,140 @@ howDlg.addEventListener('cancel',function(e){e.preventDefault();closeHow();});
 
 /* ═══ Live mode ═══ */
 var LIVE_URL_KEY='arboris-live-backend-url';
-var LIVE_STATE_KEY='arboris-live-v1';
+/* Local profiles: each profile keeps its own chat history in this
+   browser only. There is no server account and no password; the header
+   button is a profile switcher, not a sign-in. */
+var PROFILE_STORE_KEY='arboris-profiles-v1';
+var PROFILE_COLORS=['#3f8a4e','#0e8e80','#cf4a28','#8a6d3f','#5b7fa6'];
+function profileKey(id){return 'arboris-live-v1-'+id;}
+function profileColorFor(n){return PROFILE_COLORS[n%PROFILE_COLORS.length];}
+function loadProfiles(){
+  try{
+    var s=JSON.parse(localStorage.getItem(PROFILE_STORE_KEY)||'null');
+    if(s&&s.v===1&&Array.isArray(s.profiles)&&s.profiles.length&&typeof s.current==='string')return s;
+  }catch(e){}
+  return null;
+}
+function saveProfiles(store){try{localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(store));}catch(e){}}
+var profileStore=loadProfiles();
+if(!profileStore){
+  profileStore={v:1,current:'guest',profiles:[{id:'guest',name:'Guest',color:PROFILE_COLORS[0]}]};
+  try{
+    var legacy=localStorage.getItem('arboris-live-v1');
+    if(legacy!==null){localStorage.setItem(profileKey('guest'),legacy);localStorage.removeItem('arboris-live-v1');}
+  }catch(e){}
+  saveProfiles(profileStore);
+}
+var LIVE_STATE_KEY=profileKey(profileStore.current);
+function currentProfile(){
+  var p=null;
+  profileStore.profiles.forEach(function(x){if(x.id===profileStore.current)p=x;});
+  return p||profileStore.profiles[0];
+}
+function setCurrentProfile(id){profileStore.current=id;saveProfiles(profileStore);}
+function addProfile(name){
+  name=(name||'').trim().slice(0,24);
+  if(!name)return null;
+  var p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:name,color:profileColorFor(profileStore.profiles.length)};
+  profileStore.profiles.push(p);saveProfiles(profileStore);return p;
+}
+function deleteProfile(id){
+  if(profileStore.profiles.length<=1)return false;
+  profileStore.profiles=profileStore.profiles.filter(function(x){return x.id!==id;});
+  try{localStorage.removeItem(profileKey(id));}catch(e){}
+  if(profileStore.current===id)profileStore.current=profileStore.profiles[0].id;
+  saveProfiles(profileStore);return true;
+}
+function renderProfileButton(){
+  var av=document.getElementById('profile-avatar'),nm=document.getElementById('profile-name');
+  if(!av||!nm)return;
+  var p=currentProfile();
+  av.textContent=(p.name||'?').charAt(0).toUpperCase();
+  av.style.background=p.color||PROFILE_COLORS[0];
+  nm.textContent=p.name;
+}
+function renderProfileList(){
+  var list=document.getElementById('profile-list');
+  if(!list)return;
+  list.innerHTML='';
+  profileStore.profiles.forEach(function(p){
+    var row=document.createElement('div');
+    row.className='profile-row'+(p.id===profileStore.current?' active':'');
+    var av=document.createElement('span');
+    av.className='profile-avatar';av.textContent=(p.name||'?').charAt(0).toUpperCase();av.style.background=p.color||PROFILE_COLORS[0];
+    var nm=document.createElement('span');
+    nm.className='profile-row-name';nm.textContent=p.name;
+    row.appendChild(av);row.appendChild(nm);
+    if(profileStore.profiles.length>1){
+      var del=document.createElement('button');
+      del.className='profile-del';del.type='button';del.textContent='\u00d7';del.title='Delete '+p.name;
+      del.addEventListener('click',function(e){e.stopPropagation();removeProfile(p.id);});
+      row.appendChild(del);
+    }
+    row.addEventListener('click',function(){switchProfile(p.id);closeProfilePop();});
+    list.appendChild(row);
+  });
+}
+function closeProfilePop(){
+  var pop=document.getElementById('profile-pop'),btn=document.getElementById('profile-btn');
+  if(pop)pop.classList.remove('open');
+  if(btn)btn.setAttribute('aria-expanded','false');
+}
+function switchProfile(id){
+  if(id===profileStore.current)return;
+  saveLiveState();
+  setCurrentProfile(id);
+  LIVE_STATE_KEY=profileKey(id);
+  liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
+  liveCtrls=[];epoch++;
+  liveTurns=[];liveTotals=zeroLive();liveSession=newLiveSession();
+  chatEl.innerHTML='';
+  restoreLiveTurns();
+  renderProfileButton();renderProfileList();
+  var heroEl=document.querySelector('.hero');
+  if(heroEl)heroEl.classList.toggle('chatting',liveTurns.length>0);
+}
+function removeProfile(id){
+  var wasCurrent=(id===profileStore.current);
+  if(wasCurrent){
+    liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
+    liveCtrls=[];epoch++;
+    liveTurns=[];liveTotals=zeroLive();liveSession=newLiveSession();
+    chatEl.innerHTML='';
+  }
+  if(!deleteProfile(id))return;
+  LIVE_STATE_KEY=profileKey(profileStore.current);
+  restoreLiveTurns();
+  renderProfileButton();renderProfileList();
+  var heroEl=document.querySelector('.hero');
+  if(heroEl)heroEl.classList.toggle('chatting',liveTurns.length>0);
+}
+function restoreLiveTurns(){
+  var savedLive=loadLiveState();
+  if(!savedLive)return;
+  liveSession=savedLive.session||newLiveSession();
+  liveTotals=Object.assign(zeroLive(),savedLive.totals||{});
+  savedLive.turns.forEach(function(st){
+    var t={live:true,raw:st.raw,seq:++seqCounter,answer:st.answer,meta:st.meta||{},error:null};
+    liveTurns.push(t);
+    var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
+    var urow=document.createElement('div');urow.className='mr user';
+    var ub=document.createElement('div');ub.className='bubble';ub.textContent=st.raw;
+    urow.appendChild(ub);
+    attachUserShrinkDiff(urow,st.raw);
+    wrap.appendChild(urow);
+    var brow=document.createElement('div');brow.className='mr bot';
+    var bb=document.createElement('div');bb.className='bubble';bb.innerHTML=renderMarkdown(st.answer);
+    brow.appendChild(bb);wrap.appendChild(brow);
+    wrap.appendChild(liveMetaRow(t));
+    chatEl.appendChild(wrap);
+  });
+  renderLiveTotals();
+  if(liveTurns.length){
+    chatEl.scrollTop=chatEl.scrollHeight;
+    var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.add('chatting');
+  }
+}
 var LIVE_DEFAULT_URL=(window.location.hostname&&(/\.run\.app$/i.test(window.location.hostname)||/(^|\.)arboris\.chat$/i.test(window.location.hostname)))
   ?window.location.origin+'/api/chat'
   :(/^https?:$/i.test(window.location.protocol)&&!/\.github\.io$/i.test(window.location.hostname||''))
@@ -2055,29 +2150,22 @@ liveUrlEl.addEventListener('change',function(){
 });
 setTimeout(probeBackendHealth,120);
 
-/* Interactive Annual Power & Carbon Savings Simulator */
+/* Methodology / Compare tabs */
 (function(){
-  var qpdEl=document.getElementById('sim-qpd');
-  if(!qpdEl)return;
-  function updateSim(){
-    var qpd=parseInt(qpdEl.value,10)||50;
-    var annualQueries=qpd*365;
-    var stdWhPerQ=420*0.0006+60*(0.0006/800);
-    var arbWhPerQ=135*0.0006+40*(0.0006/800);
-    var savedWhYear=Math.max(0,(stdWhPerQ-arbWhPerQ)*annualQueries);
-    var savedKwh=savedWhYear/1000;
-    var savedCo2G=savedWhYear*0.4;
-    var savedWaterMl=savedWhYear*1.15;
-    var ledHours=savedWhYear/9;
-    function setSim(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
-    setSim('sim-qpd-val',qpd+' queries / day');
-    setSim('sim-wh',savedKwh>=1?savedKwh.toFixed(2)+' kWh':Math.round(savedWhYear)+' Wh');
-    setSim('sim-co2',savedCo2G>=1000?(savedCo2G/1000).toFixed(2)+' kg':Math.round(savedCo2G)+' g');
-    setSim('sim-water',savedWaterMl>=1000?(savedWaterMl/1000).toFixed(2)+' L':Math.round(savedWaterMl)+' mL');
-    setSim('sim-led',ledHours>=10?Math.round(ledHours)+' hrs':ledHours.toFixed(1)+' hrs');
+  var tabs=document.querySelectorAll('.meth-tab');
+  if(!tabs.length)return;
+  function show(which){
+    for(var i=0;i<tabs.length;i++){
+      var b=tabs[i],on=b.getAttribute('data-tab')===which;
+      b.classList.toggle('active',on);
+      b.setAttribute('aria-selected',on?'true':'false');
+    }
+    document.getElementById('panel-meth').hidden=(which!=='meth');
+    document.getElementById('panel-compare').hidden=(which!=='compare');
   }
-  qpdEl.addEventListener('input',updateSim);
-  updateSim();
+  for(var j=0;j<tabs.length;j++){
+    tabs[j].addEventListener('click',function(){show(this.getAttribute('data-tab'));});
+  }
 })();
 /* Settings popover */
 (function(){
@@ -2086,6 +2174,24 @@ setTimeout(probeBackendHealth,120);
   btn.addEventListener('click',function(e){e.stopPropagation();pop.classList.toggle('open');btn.setAttribute('aria-expanded',pop.classList.contains('open'));});
   document.addEventListener('click',function(e){if(!pop.contains(e.target)&&e.target!==btn){pop.classList.remove('open');btn.setAttribute('aria-expanded','false');}});
   pop.addEventListener('click',function(e){e.stopPropagation();});
+})();
+/* Profile popover */
+(function(){
+  var btn=document.getElementById('profile-btn'),pop=document.getElementById('profile-pop');
+  if(!btn||!pop)return;
+  renderProfileButton();renderProfileList();
+  btn.addEventListener('click',function(e){e.stopPropagation();renderProfileList();pop.classList.toggle('open');btn.setAttribute('aria-expanded',pop.classList.contains('open'));});
+  document.addEventListener('click',function(e){if(!pop.contains(e.target)&&e.target!==btn){pop.classList.remove('open');btn.setAttribute('aria-expanded','false');}});
+  pop.addEventListener('click',function(e){e.stopPropagation();});
+  var nameEl=document.getElementById('profile-new-name'),addBtn=document.getElementById('profile-new-btn');
+  function add(){
+    var p=addProfile(nameEl.value);
+    if(!p)return;
+    nameEl.value='';
+    switchProfile(p.id);closeProfilePop();
+  }
+  if(addBtn)addBtn.addEventListener('click',add);
+  if(nameEl)nameEl.addEventListener('keydown',function(e){if(e.key==='Enter')add();});
 })();
 function resetLive(){
   liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
@@ -2462,31 +2568,8 @@ function sendLive(raw,display,expandOf){
 }
 
 /* Restore live turns */
-var savedLive=loadLiveState();
-if(savedLive){
-  liveSession=savedLive.session||newLiveSession();
-  liveTotals=Object.assign(zeroLive(),savedLive.totals||{});
-  savedLive.turns.forEach(function(st){
-    var t={live:true,raw:st.raw,seq:++seqCounter,answer:st.answer,meta:st.meta||{},error:null};
-    liveTurns.push(t);
-    var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
-    var urow=document.createElement('div');urow.className='mr user';
-    var ub=document.createElement('div');ub.className='bubble';ub.textContent=st.raw;
-    urow.appendChild(ub);
-    attachUserShrinkDiff(urow,st.raw);
-    wrap.appendChild(urow);
-    var brow=document.createElement('div');brow.className='mr bot';
-    var bb=document.createElement('div');bb.className='bubble';bb.innerHTML=renderMarkdown(st.answer);
-    brow.appendChild(bb);wrap.appendChild(brow);
-    wrap.appendChild(liveMetaRow(t));
-    chatEl.appendChild(wrap);
-  });
-  renderLiveTotals();
-  if(liveTurns.length){
-    chatEl.scrollTop=chatEl.scrollHeight;
-    var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.add('chatting');
-  }
-}
+restoreLiveTurns();
+
 });
 }
 

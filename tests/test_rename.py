@@ -92,7 +92,13 @@ class TestSiteStorageMigration(unittest.TestCase):
         # migrate from the old greensearch-* names, and old demo keys are
         # deleted on load instead of being migrated.
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        self.assertIn("var LIVE_STATE_KEY='arboris-live-v1';", html)
+        # Live state is per profile now: one history key per profile id.
+        self.assertIn("var LIVE_STATE_KEY=profileKey(profileStore.current);", html)
+        self.assertIn("function profileKey(id){return 'arboris-live-v1-'+id;}", html)
+        self.assertIn("var PROFILE_STORE_KEY='arboris-profiles-v1';", html)
+        # First run migrates the old single-history key into the Guest profile.
+        self.assertIn("localStorage.getItem('arboris-live-v1')", html)
+        self.assertIn("localStorage.setItem(profileKey('guest'),legacy)", html)
         self.assertIn("var LIVE_URL_KEY='arboris-live-backend-url';", html)
         self.assertIn("localStorage.getItem('greensearch-live-v1')", html)
         self.assertIn("localStorage.getItem('greensearch-live-backend-url')", html)
