@@ -837,6 +837,13 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn('id="cb"', html)
         self.assertIn('id="route-viz"', html)
         self.assertIn('createRouteSession', html)
+        # Route animation rework 2026-11-26: the route is determined
+        # from the server's meta first, then the yellow bar sweeps the
+        # benchmarks (one SWEEP_MS per stage) and the answer reveals
+        # when Output cost lights. No provisional route, no creep.
+        self.assertIn('SWEEP_MS', html)
+        self.assertNotIn('CREEP_MS', html)
+        self.assertNotIn('modelPath', html)
         self.assertIn('Eco-friendly AI', html)
         self.assertNotIn('class="pipeline-strip"', html)
         self.assertNotIn('class="hero-sub"', html)

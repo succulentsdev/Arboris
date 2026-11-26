@@ -1563,9 +1563,11 @@ if(typeof module!=='undefined'&&module.exports){
 /* Arboris route animation: vanilla JS, no dependencies. */
 (function (global) {
   'use strict';
-  var HOLD_MS = 500;          // how long we wait to learn whether the answer is instant (local / cache)
-  var STAGE_MS = 160;         // per pre-model stage on the model path
-  var CREEP_MS = 1200;        // cascade wire creeps to 80% while waiting for the first streamed text
+  var SWEEP_MS = 450;         // per stage of the reveal sweep: the bar fills one wire,
+                              // lights its benchmark, then moves on. The route is
+                              // determined from the server's meta first, so the sweep
+                              // always shows what actually ran, and the answer reveals
+                              // only when Output cost lights.
   var reduced = !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
@@ -1664,97 +1666,43 @@ if(typeof module!=='undefined'&&module.exports){
   };
 
   /*
-   * One session per sent message. Wire its methods to the request callbacks.
+   * One session per sent message. The answer text is buffered while
+   * it streams in; nothing is shown until the server's meta arrives
+   * with done. Only then is the route determined (from the real
+   * meta, via stepsFromMeta), the benchmarks are laid out, and the
+   * sweep plays: the yellow bar fills one wire, lights its
+   * benchmark with its true note, and moves on. The answer reveals
+   * only when Output cost lights, with the real Wh figure.
    * opts.shrinkTokens   tokens PromptShrink removed client-side (0 if none)
-   * opts.expectedTokens rough output length for the chosen mode, used only to pace the last wire
-   * opts.onStream(text)        show streamed text so far (model path)
    * opts.onReveal(text, meta)  final render: markdown, meta tags, receipt
    * opts.onError(msg)
    */
   function createRouteSession(viz, opts) {
-    var t0 = Date.now(), buf = '', meta = null, path = null;
-    var atCascade = false, streaming = false, gotDone = false, finished = false, ci = -1;
+    var buf = '', meta = null, gotDone = false, finished = false;
     viz.reset();
     viz.start();
-    viz.later(HOLD_MS, function () { if (!path) modelPath(); });
 
-    function reveal() { if (finished) return; finished = true; viz.label(); opts.onReveal(buf, meta || {}); }
-
-    function instantPath() {
-      path = 'instant';
-      var span = Math.max(300, HOLD_MS - (Date.now() - t0));
-      viz.play(stepsFromMeta(meta, opts.shrinkTokens), span, reveal);
-    }
-
-    function modelPath() {
-      path = 'model';
-      var steps = [];
-      if (opts.shrinkTokens > 0) steps.push({ name: 'PromptShrink', note: opts.shrinkTokens + ' tokens cut' });
-      steps.push({ name: 'Model cascade', note: 'Answering' });
-      steps.push({ name: 'Output cost', note: '' });
-      viz.build(steps, false);
-      ci = steps.length - 2;
-      var t = 0;
-      for (var i = 0; i < ci; i++) {
-        (function (k, at) {
-          viz.later(at, function () { viz.fill(k, 1, STAGE_MS); });
-          viz.later(at + STAGE_MS, function () { viz.light(k); });
-        })(i, t);
-        t += STAGE_MS;
-      }
-      viz.later(t, function () {
-        atCascade = true;
-        viz.fill(ci, 0.8, CREEP_MS);
-        if (buf) beginStream();
-        if (gotDone) finishModel();
-      });
-    }
-
-    function beginStream() {
-      if (streaming) return;
-      streaming = true;
-      viz.fill(ci, 1, 120);
-      viz.light(ci);
-      opts.onStream(buf);
-      pace();
-    }
-
-    function pace() {
-      var est = buf.length / 4;
-      var p = Math.min(0.92, 1 - Math.exp(-est / Math.max(20, opts.expectedTokens || 80)));
-      viz.fill(ci + 1, p, 150);
-    }
-
-    function finishModel() {
-      if (!atCascade) return; // modelPath's timer calls this once it reaches the cascade
-      if (meta.local_answer || meta.cache_hit) { // a slow local or cached answer: redraw what really ran
-        viz.play(stepsFromMeta(meta, opts.shrinkTokens), 300, reveal);
-        return;
-      }
-      beginStream();
-      viz.setNote(ci, meta.routed_to_small ? 'Small model' : 'Full model');
-      viz.fill(ci + 1, 1, 150);
-      viz.later(150, function () { viz.light(ci + 1, fmtWh(meta)); reveal(); });
+    function reveal() {
+      if (finished) return;
+      finished = true;
+      viz.label();
+      opts.onReveal(buf, meta || {});
     }
 
     return {
-      chunk: function (text) {
-        buf += text;
-        if (path !== 'model' || !atCascade) return;
-        if (streaming) { opts.onStream(buf); pace(); } else beginStream();
-      },
+      chunk: function (text) { buf += text; },
       done: function (m) {
         if (gotDone) return;
         meta = m || {};
         gotDone = true;
-        if (!path) instantPath();
-        else if (path === 'model') finishModel();
+        var steps = stepsFromMeta(meta, opts.shrinkTokens);
+        viz.play(steps, steps.length * SWEEP_MS, reveal);
       },
       error: function (msg) { finished = true; viz.fail('Error'); if (opts.onError) opts.onError(msg); }
     };
   }
 
-  global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, HOLD_MS: HOLD_MS };
+  global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, SWEEP_MS: SWEEP_MS };
 })(typeof window !== 'undefined' ? window : globalThis);
 }
 
@@ -2759,11 +2707,6 @@ function sendLive(raw,display,expandOf){
   var clientShrinkSavedTokens=(shrunk0&&shrunk0!==raw)?Math.max(0,estTokens(raw)-estTokens(shrunk0)):0;
   var route=(typeof ArborisRoute!=='undefined'&&routeViz)?ArborisRoute.createRouteSession(routeViz,{
     shrinkTokens:clientShrinkSavedTokens,
-    expectedTokens:{sprout:40,canopy:90,full:160}[reqMode]||80,
-    onStream:function(text){
-      if(liveTurns.indexOf(t)<0)return;
-      t.answer=text;ensureBubble('typing').textContent=t.answer;scrollBottom();
-    },
     onReveal:function(text,meta){revealAnswer(text,meta);},
     onError:function(msg){renderError(msg);}
   }):null;
