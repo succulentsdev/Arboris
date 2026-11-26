@@ -838,21 +838,30 @@ body {
   box-shadow: 0 0 12px rgba(61,212,192,.35);
 }
 .eco-bar-fill.standard {
-  background: linear-gradient(90deg, #cf4a28, #f07068);
+  background: rgba(255,255,255,.38);
   opacity: .78;
 }
-/* Minimalist per-message savings bars: two stubby vertical bars that
-   sit on top of each bot chat box. Arboris (teal) is short, the
-   baseline (coral with diagonal slots, it is a modeled estimate) is
-   full height, so the height difference reads the savings at a
-   glance. Clicking the bars opens the full receipt drawer. */
-.sv { display: inline-flex; align-items: flex-end; gap: 6px; margin: 0 0 4px; padding: 0; background: none; border: none; cursor: pointer; text-align: left; }
-.sv-bars { display: flex; flex-direction: row; align-items: flex-end; gap: 3px; height: 24px; flex: none; }
-.sv-bar { width: 7px; min-height: 3px; border-radius: 2px; }
-.sv-arb { background: linear-gradient(180deg, #3dd4c0, #22a896); }
-.sv-base { background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 8px), linear-gradient(180deg, #cf4a28, #f07068); opacity: .85; }
-.sv-lbl { font-size: 9px; font-family: var(--font-mono); color: var(--ink2); margin-top: 0; white-space: nowrap; }
-.sv:hover .sv-lbl, .sv:focus-visible .sv-lbl { color: var(--ink); }
+/* Per-message savings receipt, under the answer: one comparison bar.
+   The gray track is the full length of a typical chatbot answer; the
+   teal fill is only as far as this reply actually used, so the empty
+   part is the saving and a quick glance tells the story. No red: the
+   baseline is neutral gray and teal is the only color, shown only
+   when there is a real saving. Clicking the receipt opens the full
+   drawer. The fill grows once, 300ms, when the reply finishes. */
+.sv { display: block; width: 100%; margin: 6px 0 0; padding: 0; background: none; border: none; cursor: pointer; text-align: left; }
+.sv-top { display: flex; align-items: center; gap: 8px; }
+.sv-leaf { font-size: 13px; line-height: 1; flex: none; }
+.sv-track { flex: 1; min-width: 0; height: 8px; background: rgba(255,255,255,.16); border-radius: 99px; overflow: hidden; }
+.sv-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #3dd4c0, #22a896); transform-origin: left center; animation: svGrow 300ms ease-out; }
+.sv-fill.sv-same { background: rgba(255,255,255,.4); }
+@keyframes svGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.sv-head { font-size: 13px; font-weight: 600; color: var(--mint); flex: none; }
+.sv-head.sv-same { color: var(--ink2); font-weight: 500; }
+.sv-sub { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--ink2); }
+.sv-sub span { white-space: nowrap; }
+.sv-total { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 0; font-size: 12px; color: var(--ink2); }
+.sv-total .sv-leaf { font-size: 12px; }
+.sv:hover .sv-head, .sv:focus-visible .sv-head { color: var(--ink); }
 .sv:focus-visible { outline: 2px solid #3dd4c0; outline-offset: 2px; border-radius: 4px; }
 .eco-equiv-list {
   display: grid;
@@ -2507,7 +2516,7 @@ function buildEcoDrawer(t){
   if(m.long_input_pruned)levers.push('📄 Long-Input Pruned');
 
   drawer.innerHTML=
-    '<div class="eco-drawer-hd"><span>⚡ Per-Message Energy &amp; Carbon Receipt</span><span>−'+savedPct+'% vs '+(hasMeasured?'measured':'modeled')+' verbose</span></div>'+
+    '<div class="eco-drawer-hd"><span>⚡ Per-Message Energy &amp; Carbon Receipt</span><span>−'+savedPct+'% vs typical chatbot</span></div>'+
     '<div class="eco-drawer-grid">'+
       '<div class="eco-cell"><span class="eco-cell-v">'+fmtWh(outWh)+'</span><span class="eco-cell-k">Decode ('+outTok+' out-tok'+(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0?', '+m.reasoning_tokens+' CoT':'')+')</span></div>'+
       '<div class="eco-cell"><span class="eco-cell-v">'+(inWh>0?(inWh*1e6).toFixed(2)+' µWh':'0 Wh')+'</span><span class="eco-cell-k">Prefill ('+inTok+' in-tok · 1/800 wt)</span></div>'+
@@ -2516,10 +2525,11 @@ function buildEcoDrawer(t){
     '</div>'+
     '<div class="eco-comp-row" style="margin-bottom:8px">'+
       '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>This Arboris reply ('+m.mode+')</span><span>'+outTok+' tok · '+fmtWh(wh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill arboris" style="width:'+arbWidth+'%"></div></div></div>'+
-      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>'+(hasMeasured?'Measured unconstrained baseline':'Modeled verbose baseline ('+mult+'×)')+'</span><span>'+stdOut+' tok · '+fmtWh(stdWh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill standard" style="width:100%"></div></div></div>'+
+      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>'+(hasMeasured?'Typical chatbot (measured)':'Typical chatbot ('+mult+'× modeled)')+'</span><span>'+stdOut+' tok · '+fmtWh(stdWh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill standard" style="width:100%"></div></div></div>'+
     '</div>'+
     '<div class="eco-levers">'+levers.map(function(l){return'<span class="eco-lever-pill">'+escHtml(l)+'</span>';}).join('')+'</div>'+
-    '<div class="eco-drawer-note">'+escHtml(e.note||'Arithmetic estimate from provider-reported tokens (0.0006 Wh/out-tok, 1/800 input ratio, 400 gCO₂e/kWh).')+'</div>';
+    '<div class="eco-drawer-note">'+escHtml(e.note||'Arithmetic estimate from provider-reported tokens (0.0006 Wh/out-tok, 1/800 input ratio, 400 gCO₂e/kWh).')+'</div>'+
+    '<div class="eco-drawer-note">Phone-charge equivalent assumes a 10W charger (1 Wh is about 6 minutes of charging).</div>';
   return drawer;
 }
 
@@ -2535,7 +2545,7 @@ function whyModel(m){
 
 function liveMetaRow(t){
   var m=t.meta,mm=document.createElement('div');mm.className='mm';
-  var drawerEl=null,stripEl=null;
+  var drawerEl=null,stripEl=null,totalEl=null;
   if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){
     var e=m.energy;
     // Same numbers as buildEcoDrawer (mirrored here so the strip and the
@@ -2557,7 +2567,34 @@ function liveMetaRow(t){
     stripEl.tabIndex=0;
     stripEl.setAttribute('aria-expanded','false');
     stripEl.title='Energy & carbon receipt (click for detail)';
-    stripEl.innerHTML='<div class="sv-bars"><div class="sv-bar sv-arb" style="height:'+arbWidth2+'%"></div><div class="sv-bar sv-base" style="height:100%"></div></div><div class="sv-lbl">−'+savedPct2+'% vs '+(hasMeasured2?'measured':'modeled')+' verbose</div>';
+    // Comparison bar: the gray track is the full length of a typical
+    // chatbot answer; the teal fill is only as far as this reply used,
+    // so the empty part is the saving. "About the same" (saved under
+    // 10%) is neutral gray, never red and never a negative bar: the
+    // fill is clamped to the track and the headline says so plainly.
+    var isSame2=savedPct2<10;
+    var whTxt2=wh2>=0.01?'~'+wh2.toFixed(2)+' Wh':wh2>0?'~'+(wh2*1000).toFixed(0)+' mWh':'0 Wh';
+    var stdTxt2=stdWh2>=0.01?'~'+stdWh2.toFixed(2)+' Wh':stdWh2>0?'~'+(stdWh2*1000).toFixed(0)+' mWh':'0 Wh';
+    stripEl.innerHTML='<div class="sv-top"><span class="sv-leaf">🌿</span><div class="sv-track"><div class="sv-fill'+(isSame2?' sv-same':'')+'" style="width:'+arbWidth2+'%"></div></div><span class="sv-head'+(isSame2?' sv-same':'')+'">'+(isSame2?'about the same as a typical chatbot':savedPct2+'% less energy')+'</span></div><div class="sv-sub"><span>This reply · '+whTxt2+'</span><span>Typical chatbot · '+stdTxt2+'</span></div>';
+    // Running total for the chat, in everyday terms. liveTotals already
+    // includes this answer (revealAnswer accumulates before building the
+    // receipt). Phone charge assumes a 10W charger: 1 Wh is 6 minutes.
+    var T=liveTotals;
+    var totStdOut=T.stdOutTok||Math.round((T.outTok||0)*2.4);
+    var totStdWh=totStdOut*0.0006+(T.inTok||0)*(0.0006/800);
+    var totAvoided=Math.max(0,totStdWh-(T.wh||0));
+    var totCalls=T.calls||0;
+    if(totCalls>0&&totStdWh>0){
+      var totWhTxt=totAvoided>=0.1?totAvoided.toFixed(1)+' Wh':totAvoided>0?(totAvoided*1000).toFixed(0)+' mWh':'0 Wh';
+      var phoneMin=Math.round(totAvoided*6);
+      var phoneTxt='';
+      if(phoneMin>=60){var hrs=Math.floor(phoneMin/60),rem=phoneMin%60;phoneTxt='about a phone charge for '+hrs+' hr'+(rem?' '+rem+' min':'');}
+      else if(phoneMin>=1)phoneTxt='about a phone charge for '+phoneMin+' min';
+      else if(totAvoided>0)phoneTxt='a few seconds of phone charging';
+      totalEl=document.createElement('div');
+      totalEl.className='sv-total';
+      totalEl.innerHTML='<span class="sv-leaf">🌿</span><span>This chat: '+totWhTxt+' saved across '+totCalls+' message'+(totCalls!==1?'s':'')+(phoneTxt?', '+phoneTxt:'')+'</span>';
+    }
     drawerEl=buildEcoDrawer(t);
     var toggleStrip=function(){drawerEl.hidden=!drawerEl.hidden;stripEl.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');};
     stripEl.addEventListener('click',toggleStrip);
@@ -2569,6 +2606,7 @@ function liveMetaRow(t){
   var container=document.createElement('div');
   if(stripEl)container.appendChild(stripEl);
   container.appendChild(mm);
+  if(totalEl)container.appendChild(totalEl);
   if(drawerEl)container.appendChild(drawerEl);
   return container;
 }
@@ -2701,12 +2739,9 @@ function sendLive(raw,display,expandOf){
     var b=ensureBubble();b.classList.remove('typing');
     b.innerHTML=renderMarkdown(t.answer);
     var m=meta||{};t.meta=m;
-    var metaRow=liveMetaRow(t);
-    var svStrip=metaRow.querySelector('.sv');
-    if(svStrip)wrap.insertBefore(svStrip,b.parentNode);
-    wrap.appendChild(metaRow);scrollBottom();
-    if(m.cache_hit)showCacheFlash();
     accumulateTurnIntoTotals(liveTotals,m);
+    wrap.appendChild(liveMetaRow(t));scrollBottom();
+    if(m.cache_hit)showCacheFlash();
     renderLiveTotals();
     announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);
   }
