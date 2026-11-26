@@ -88,19 +88,22 @@ class TestLegacyEnv(unittest.TestCase):
 
 class TestSiteStorageMigration(unittest.TestCase):
     def test_site_uses_new_keys_and_migrates_old_ones(self):
-        # Live-only site: there is no demo STORE_KEY any more. Live keys
-        # migrate from the old greensearch-* names, and old demo keys are
-        # deleted on load instead of being migrated.
+        # Chats are not saved: no live-state save/load/restore in the site.
+        # Profiles (names, colors, current) still persist; stored chat
+        # history from earlier versions is purged on load instead of
+        # being restored.
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Live state is per profile now: one history key per profile id.
-        self.assertIn("var LIVE_STATE_KEY=profileKey(profileStore.current);", html)
-        self.assertIn("function profileKey(id){return 'arboris-live-v1-'+id;}", html)
+        self.assertNotIn("saveLiveState", html)
+        self.assertNotIn("loadLiveState", html)
+        self.assertNotIn("clearLiveState", html)
+        self.assertNotIn("restoreLiveTurns", html)
+        self.assertNotIn("LIVE_STATE_KEY", html)
         self.assertIn("var PROFILE_STORE_KEY='arboris-profiles-v1';", html)
-        # First run migrates the old single-history key into the Guest profile.
-        self.assertIn("localStorage.getItem('arboris-live-v1')", html)
-        self.assertIn("localStorage.setItem(profileKey('guest'),legacy)", html)
+        self.assertIn("function profileKey(id){return 'arboris-live-v1-'+id;}", html)
+        self.assertIn("localStorage.removeItem('arboris-live-v1')", html)
+        self.assertIn("localStorage.removeItem('greensearch-live-v1')", html)
+        self.assertIn("Your chat is not saved", html)
         self.assertIn("var LIVE_URL_KEY='arboris-live-backend-url';", html)
-        self.assertIn("localStorage.getItem('greensearch-live-v1')", html)
         self.assertIn("localStorage.getItem('greensearch-live-backend-url')", html)
         self.assertIn("localStorage.removeItem('arboris-demo-v1')", html)
         self.assertIn("localStorage.removeItem('greensearch-demo-v1')", html)

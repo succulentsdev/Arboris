@@ -1197,7 +1197,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
       <button class="profile-btn" id="profile-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Profiles: each keeps its own chat history in this browser"><span class="profile-avatar" id="profile-avatar">G</span><span class="lbl" id="profile-name">Guest</span></button>
       <div class="profile-pop" id="profile-pop">
         <div class="sp-title">Profiles</div>
-        <p class="sp-note">Profiles live in this browser only. Each keeps its own chat history.</p>
+        <p class="sp-note">Profiles live in this browser only. Chats are not saved; reloading starts fresh.</p>
         <div id="profile-list"></div>
         <div class="profile-new"><input id="profile-new-name" type="text" maxlength="24" placeholder="New profile name" aria-label="New profile name"><button id="profile-new-btn" type="button">Add</button></div>
       </div>
@@ -1416,7 +1416,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
       <li><b>The baseline is assumed unless measured.</b> Turning on <b>Measure baseline</b> in settings makes a second, unconstrained call per message to measure real token savings, which doubles API cost.</li>
     </ul>
     <h3>Privacy</h3>
-    <p>This page loads no outside fonts or third-party scripts and uses no analytics. Your questions go to the backend you configured, and from there to its model provider, whose data-retention policy applies. Your chat is saved only in this browser's localStorage, one history per profile under <code>arboris-live-v1-&lt;profile&gt;</code>; the ✕ Clear button deletes the current profile's chat.</p>
+    <p>This page loads no outside fonts or third-party scripts and uses no analytics. Your questions go to the backend you configured, and from there to its model provider, whose data-retention policy applies. Your chat is not saved. Reloading the page starts fresh; the ✕ Clear button clears the current chat.</p>
   </div>
 </dialog>
 
@@ -1543,8 +1543,6 @@ document.documentElement.setAttribute('data-theme','dark');
 (function(){
   try{
     localStorage.removeItem('arboris-demo-v1');localStorage.removeItem('greensearch-demo-v1');
-    var old=localStorage.getItem('greensearch-live-v1');
-    if(old!==null){if(localStorage.getItem('arboris-live-v1')===null)localStorage.setItem('arboris-live-v1',old);localStorage.removeItem('greensearch-live-v1');}
     var oldUrl=localStorage.getItem('greensearch-live-backend-url');
     if(oldUrl!==null){if(localStorage.getItem('arboris-live-backend-url')===null)localStorage.setItem('arboris-live-backend-url',oldUrl);localStorage.removeItem('greensearch-live-backend-url');}
   }catch(e){}
@@ -1889,10 +1887,9 @@ attachChipEl.addEventListener('click',function(){pendingAttachment=null;attachCh
 document.getElementById('cb').addEventListener('click',function(){
   epoch++;
   chatEl.innerHTML='';
-  clearLiveState();
   var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.remove('chatting');
   resetLive();
-  showToast('Chat cleared, saved session deleted.');
+  showToast('Chat cleared.');
 });
 
 /* Export chat as Markdown */
@@ -1931,9 +1928,10 @@ howDlg.addEventListener('cancel',function(e){e.preventDefault();closeHow();});
 
 /* ═══ Live mode ═══ */
 var LIVE_URL_KEY='arboris-live-backend-url';
-/* Local profiles: each profile keeps its own chat history in this
+/* Local profiles: a name and color per profile, kept in this
    browser only. There is no server account and no password; the header
-   button is a profile switcher, not a sign-in. */
+   button is a profile switcher, not a sign-in. Chats are not saved:
+   reloading the page starts fresh. */
 var PROFILE_STORE_KEY='arboris-profiles-v1';
 var PROFILE_COLORS=['#3f8a4e','#0e8e80','#cf4a28','#8a6d3f','#5b7fa6'];
 function profileKey(id){return 'arboris-live-v1-'+id;}
@@ -1949,13 +1947,15 @@ function saveProfiles(store){try{localStorage.setItem(PROFILE_STORE_KEY,JSON.str
 var profileStore=loadProfiles();
 if(!profileStore){
   profileStore={v:1,current:'guest',profiles:[{id:'guest',name:'Guest',color:PROFILE_COLORS[0]}]};
-  try{
-    var legacy=localStorage.getItem('arboris-live-v1');
-    if(legacy!==null){localStorage.setItem(profileKey('guest'),legacy);localStorage.removeItem('arboris-live-v1');}
-  }catch(e){}
   saveProfiles(profileStore);
 }
-var LIVE_STATE_KEY=profileKey(profileStore.current);
+/* Chats are not saved: reloading starts fresh. Purge any chat history
+   stored by earlier versions (legacy single key + per-profile keys). */
+try{
+  localStorage.removeItem('greensearch-live-v1');
+  localStorage.removeItem('arboris-live-v1');
+  profileStore.profiles.forEach(function(p){localStorage.removeItem(profileKey(p.id));});
+}catch(e){}
 function currentProfile(){
   var p=null;
   profileStore.profiles.forEach(function(x){if(x.id===profileStore.current)p=x;});
@@ -2012,14 +2012,11 @@ function closeProfilePop(){
 }
 function switchProfile(id){
   if(id===profileStore.current)return;
-  saveLiveState();
   setCurrentProfile(id);
-  LIVE_STATE_KEY=profileKey(id);
   liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
   liveCtrls=[];epoch++;
   liveTurns=[];liveTotals=zeroLive();liveSession=newLiveSession();
   chatEl.innerHTML='';
-  restoreLiveTurns();
   renderProfileButton();renderProfileList();
   var heroEl=document.querySelector('.hero');
   if(heroEl)heroEl.classList.toggle('chatting',liveTurns.length>0);
@@ -2033,37 +2030,9 @@ function removeProfile(id){
     chatEl.innerHTML='';
   }
   if(!deleteProfile(id))return;
-  LIVE_STATE_KEY=profileKey(profileStore.current);
-  restoreLiveTurns();
   renderProfileButton();renderProfileList();
   var heroEl=document.querySelector('.hero');
   if(heroEl)heroEl.classList.toggle('chatting',liveTurns.length>0);
-}
-function restoreLiveTurns(){
-  var savedLive=loadLiveState();
-  if(!savedLive)return;
-  liveSession=savedLive.session||newLiveSession();
-  liveTotals=Object.assign(zeroLive(),savedLive.totals||{});
-  savedLive.turns.forEach(function(st){
-    var t={live:true,raw:st.raw,seq:++seqCounter,answer:st.answer,meta:st.meta||{},error:null};
-    liveTurns.push(t);
-    var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
-    var urow=document.createElement('div');urow.className='mr user';
-    var ub=document.createElement('div');ub.className='bubble';ub.textContent=st.raw;
-    urow.appendChild(ub);
-    attachUserShrinkDiff(urow,st.raw);
-    wrap.appendChild(urow);
-    var brow=document.createElement('div');brow.className='mr bot';
-    var bb=document.createElement('div');bb.className='bubble';bb.innerHTML=renderMarkdown(st.answer);
-    brow.appendChild(bb);wrap.appendChild(brow);
-    wrap.appendChild(liveMetaRow(t));
-    chatEl.appendChild(wrap);
-  });
-  renderLiveTotals();
-  if(liveTurns.length){
-    chatEl.scrollTop=chatEl.scrollHeight;
-    var heroEl=document.querySelector('.hero');if(heroEl)heroEl.classList.add('chatting');
-  }
 }
 var LIVE_DEFAULT_URL=(window.location.hostname&&(/\.run\.app$/i.test(window.location.hostname)||/(^|\.)arboris\.chat$/i.test(window.location.hostname)))
   ?window.location.origin+'/api/chat'
@@ -2196,26 +2165,8 @@ setTimeout(probeBackendHealth,120);
 function resetLive(){
   liveCtrls.forEach(function(c){try{c.abort();}catch(e){}});
   liveCtrls=[];liveTurns=[];liveTotals=zeroLive();liveSession=newLiveSession();
-  clearLiveState();
   renderLiveTotals();
 }
-function saveLiveState(){
-  try{
-    localStorage.setItem(LIVE_STATE_KEY,JSON.stringify({v:1,savedAt:new Date().toISOString(),
-      turns:liveTurns.filter(function(t){return t.answer&&!t.error;}).map(function(t){
-        return{raw:t.raw,answer:t.answer,meta:t.meta};
-      }),
-      totals:liveTotals,session:liveSession}));
-  }catch(e){}
-}
-function loadLiveState(){
-  var s;
-  try{s=JSON.parse(localStorage.getItem(LIVE_STATE_KEY)||'null');}catch(e){return null;}
-  if(!s||s.v!==1||!Array.isArray(s.turns)||!s.turns.length||!s.totals)return null;
-  var ok=s.turns.every(function(t){return t&&typeof t.raw==='string'&&typeof t.answer==='string';});
-  return ok?s:null;
-}
-function clearLiveState(){try{localStorage.removeItem(LIVE_STATE_KEY);}catch(e){}}
 function renderLiveTotals(){
   var T=liveTotals;
   function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
@@ -2561,14 +2512,11 @@ function sendLive(raw,display,expandOf){
       if(m.cache_hit)showCacheFlash();
       accumulateTurnIntoTotals(liveTotals,m);
       renderLiveTotals();
-      saveLiveState();
       announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);
     }
   });
 }
 
-/* Restore live turns */
-restoreLiveTurns();
 
 });
 }
