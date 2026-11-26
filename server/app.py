@@ -1709,7 +1709,7 @@ def make_handler(backend):
         ".png": "image/png",
         ".svg": "image/svg+xml",
     }
-    STATIC_PAGES = {"index.html", "features.html"}
+    STATIC_PAGES = {"index.html", "features.html", "telemetry.html"}
     STATIC_ASSETS = {"styles.css", "app.js", "bg.jpg", "bg.webp", "hero.jpg", "arboris-logo.webp"}
 
     class Handler(BaseHTTPRequestHandler):

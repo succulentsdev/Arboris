@@ -860,13 +860,50 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)
-        self.assertIn('id="methodology"', html)
-        self.assertIn('class="meth-tab active"', html)
-        self.assertIn('id="panel-compare"', html)
+        # Telemetry split (2026-11-26): the hero page is the chat only.
+        # The carbon/telemetry dashboard and the Methodology/Compare
+        # section moved to telemetry.html; the nav points there, and the
+        # chat persists only the aggregate session totals (not the chats)
+        # so the telemetry page can render them.
+        self.assertNotIn('id="methodology"', html)
+        self.assertNotIn('class="meth-tab active"', html)
+        self.assertNotIn('id="panel-compare"', html)
+        self.assertNotIn('id="totals-live"', html)
+        self.assertIn('href="telemetry.html"', html)
+        self.assertIn('href="telemetry.html#methodology"', html)
+        self.assertIn("arboris-totals-v1", html)
         self.assertIn('mask-image: linear-gradient(to bottom, transparent, black 56px)', html)
         self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
         self.assertEqual(html.lower().count("<head>"), 1)
         self.assertEqual(html.lower().count("<body>"), 1)
+
+    def test_telemetry_page(self):
+        # Telemetry split (2026-11-26): the carbon/telemetry dashboard
+        # and the Methodology/Compare section live on telemetry.html,
+        # which the server serves as a static page. Its script renders
+        # the session totals from localStorage (persisted by the chat
+        # page), wires the tabs, and fetches backend health.
+        tel = (ROOT / "website" / "telemetry.html").read_text(encoding="utf-8")
+        self.assertIn('id="totals-live"', tel)
+        self.assertIn('id="methodology"', tel)
+        self.assertIn('class="meth-tab active"', tel)
+        self.assertIn('id="panel-compare"', tel)
+        self.assertIn('id="lt-wh"', tel)
+        self.assertIn('id="lt-left"', tel)
+        self.assertIn('id="eco-bar-arb"', tel)
+        self.assertIn('id="eq-led"', tel)
+        self.assertIn("arboris-totals-v1", tel)
+        self.assertIn('href="index.html"', tel)
+        self.assertIn('/api/health', tel)
+        self.assertEqual(tel.lower().count("<head>"), 1)
+        self.assertEqual(tel.lower().count("<body>"), 1)
+        # The server must serve it as a static page (STATIC_PAGES lives
+        # inside make_handler, so check the source allowlist here; a
+        # live HTTP smoke test verifies the route end to end).
+        app_src = (ROOT / "server" / "app.py").read_text(encoding="utf-8")
+        pages = re.search(r'STATIC_PAGES = \{([^}]*)\}', app_src)
+        self.assertIsNotNone(pages)
+        self.assertIn('"telemetry.html"', pages.group(1))
 
     def test_route_animation_loads_without_module(self):
         # Regression guard (2026-11-26): the whole ArborisRoute IIFE
