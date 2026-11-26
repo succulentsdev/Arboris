@@ -1,0 +1,99 @@
+# Deploy Arboris to Cloud Run on every push to main.
+#
+# How it works: the test job runs the same suite and site conformance
+# check used locally; if they pass, the deploy job builds the container
+# image with Docker, pushes it to Artifact Registry, and deploys it to
+# the existing `arboris` service in us-central1. The deploy uses no
+# --set-env-vars / --set-secrets flags, so the service keeps its current
+# environment and the OpenRouter secret untouched. A health check at the
+# end fails the run if the new revision does not answer.
+#
+# Setup (one time, by the repo owner). No downloadable keys: the project
+# blocks service-account key creation (org policy
+# iam.disableServiceAccountKeyCreation), so GitHub authenticates with
+# Workload Identity Federation instead, and no secret is stored.
+#   1. The deployer service account already exists (arboris-deployer)
+#      with roles run.admin, iam.serviceAccountUser, artifactregistry.writer.
+#      If any of those bindings is missing, re-run the add-iam-policy-binding
+#      command for it.
+#   2. Create the workload identity pool and the GitHub OIDC provider:
+#        gcloud iam workload-identity-pools create github-pool \
+#          --location="global" --display-name="GitHub Actions" --project arboris-513009
+#        gcloud iam workload-identity-pools providers create-oidc github-provider \
+#          --location="global" --workload-identity-pool="github-pool" \
+#          --display-name="GitHub" \
+#          --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+#          --attribute-condition="assertion.repository == 'succulentsdev/Arboris'" \
+#          --issuer-uri="https://token.actions.githubusercontent.com" --project arboris-513009
+#        (The --attribute-condition is required: without it the provider
+#        create fails with "The attribute condition must reference one
+#        of the provider's claims". It also restricts the provider to
+#        this repo's tokens only.)
+#   3. Let the Arboris repo impersonate the deployer service account:
+#        gcloud iam service-accounts add-iam-policy-binding \
+#          arboris-deployer@arboris-513009.iam.gserviceaccount.com \
+#          --role="roles/iam.workloadIdentityUser" \
+#          --member="principalSet://iam.googleapis.com/projects/1037861813679/locations/global/workloadIdentityPools/github-pool/attribute.repository/succulentsdev/Arboris" \
+#          --project arboris-513009
+#   4. Put this file at .github/workflows/deploy.yml in the repo and
+#      push it. The push that adds it runs the first deploy.
+#
+# Note: snapshot pushes cannot add .github/workflows/* files (GitHub
+# returns 403), so this file goes in from a real git checkout.
+
+name: Deploy to Cloud Run
+
+"on":
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run tests
+        run: python3 -m unittest discover -s tests
+      - name: Site conformance
+        run: node tests/site_conformance.js website/index.html
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_ID: arboris-513009
+      REGION: us-central1
+      SERVICE: arboris
+      IMAGE: us-central1-docker.pkg.dev/arboris-513009/arboris/arboris:latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1037861813679/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: arboris-deployer@arboris-513009.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build and push image
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --project "$PROJECT_ID" \
+            --allow-unauthenticated
+      - name: Health check
+        run: curl -fsS https://arboris-1037861813679.us-central1.run.app/api/health
