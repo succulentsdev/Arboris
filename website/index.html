@@ -439,6 +439,7 @@ body {
   background: var(--glass-bot); border: 1px solid var(--glass-bot-border);
   border-radius: var(--r) var(--r) var(--r) 4px; padding: 14px 18px;
   display: inline-flex; gap: 5px; align-items: center;
+  width: 224px; justify-content: center;
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); animation: dotpulse 1.2s infinite ease-in-out }
 .dot:nth-child(2) { animation-delay: .2s }
@@ -497,14 +498,13 @@ body {
 }
 .composer-card {
   background: var(--surface);
-  border: 1px solid var(--border2);
+  border: none;
   border-radius: 20px;
   padding: 18px 20px 15px;
-  box-shadow: var(--shadow), 0 0 0 1px rgba(61,212,192,.04);
-  transition: border-color .2s, box-shadow .2s;
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s;
 }
 .composer-card:focus-within {
-  border-color: rgba(61,212,192,.45);
   box-shadow: var(--shadow), 0 0 24px rgba(61,212,192,.1);
 }
 .ip-bar {
@@ -589,6 +589,7 @@ body {
 .hero.chatting .hero-bottom .hint { display: none }
 
 /* ── Route animation ── */
+#route-viz.rv-in-chat .rv { margin-left: 0; margin-right: 0; }
 .rv {
   --rv-wire: var(--border2, #2A3F33);
   --rv-current: var(--amber, #E8B54A);
@@ -1251,7 +1252,6 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 
 <section class="hero">
   <div class="hero-landing">
-    <div class="hero-kicker"><span class="hero-kicker-dot" aria-hidden="true"></span>OUTPUT-AWARE GREEN INFERENCE ROUTER</div>
     <h1 class="hero-title"><em>Eco-friendly AI</em></h1>
   </div>
   <div class="hero-chat-area" id="chat" role="region" aria-label="Conversation"></div>
@@ -1279,7 +1279,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
       </div>
       <div class="shrink-bar" id="shrink-bar"><div class="shrink-bar-fill" id="shrink-bar-fill"></div></div>
     </div>
-    <p class="hint">Enter to send · try math, units, hex/RGB, or any question</p>
+    <p class="hint">Enter to send · ask anything</p>
   </div>
 </section>
 
@@ -1582,7 +1582,6 @@ if(typeof module!=='undefined'&&module.exports){
     var timers = [];
     function later(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
-    var startedAt = Date.now();
 
     // The pipeline as it will run: whether PromptShrink trimmed anything
     // is known now (the client shrank the prompt); the rest are
@@ -1600,29 +1599,28 @@ if(typeof module!=='undefined'&&module.exports){
     viz.build(steps, true);
 
     // Live phase: the pre-final stages fill one at a time, in order,
-    // each at its own randomized speed. The last pre-final stage fills
-    // to 85% and then creeps slowly, so a slow response never leaves
-    // the strip dead; it only lights once the meta arrives. The final
-    // stage (Output cost) never starts during the wait: it fills as
-    // the answer reveals, in complete().
+    // each at its own randomized speed, and light when done. The final
+    // stage (Output cost) is the one that throttles: once the pre-final
+    // stages are lit it starts filling slowly, creeping toward 85% and
+    // then 95%, and only completes once the meta arrives.
     var pre = steps.length - 1;
     function fillSeq(i) {
       if (gotDone || finished || i >= pre) return;
       var dur = 400 + Math.random() * 500;
-      if (i === pre - 1) {
-        viz.fill(i, CREEP_CAP, dur);
-        later(dur, function () {
-          if (gotDone || finished) return;
-          viz.fill(i, 0.95, 9000);
-        });
-      } else {
-        viz.fill(i, 1, dur);
-        later(dur, function () {
-          if (gotDone || finished) return;
-          viz.light(i); lit[i] = true;
+      viz.fill(i, 1, dur);
+      later(dur, function () {
+        if (gotDone || finished) return;
+        viz.light(i); lit[i] = true;
+        if (i === pre - 1) {
+          viz.fill(pre, CREEP_CAP, 6000 + Math.random() * 4000);
+          later(6000 + Math.random() * 4000, function () {
+            if (gotDone || finished) return;
+            viz.fill(pre, 0.95, 9000);
+          });
+        } else {
           fillSeq(i + 1);
-        });
-      }
+        }
+      });
     }
     fillSeq(0);
 
@@ -1635,14 +1633,13 @@ if(typeof module!=='undefined'&&module.exports){
 
     function complete() {
       // Finish the stages still unlit, in order, then reveal. The final
-      // stage (Output cost) fills as the answer reveals; its duration
-      // grows with the response time, so a slow answer gets a slower,
-      // more deliberate reveal (throttled, capped at 1200ms).
+      // stage (Output cost) fills as the answer reveals, over a fixed
+      // 400ms; the throttle was its slow creep during the wait, not
+      // this finish.
       var rest = [];
       for (var i = 0; i < steps.length; i++) if (!lit[i]) rest.push(i);
       if (!rest.length) { reveal(); return; }
-      var elapsed = Date.now() - startedAt;
-      var finalMs = Math.min(1200, 400 + Math.round(elapsed * 0.05));
+      var finalMs = 400;
       var finalIdx = rest[rest.length - 1];
       var before = rest.slice(0, -1);
       var shares = before.length ? splitTotal(Math.max(200, COMPLETE_MS - finalMs), before.length) : [];
@@ -1715,6 +1712,22 @@ var cntEl=document.getElementById('ip-cnt');
 var liveEl=document.getElementById('sr-live');
 var routeVizEl=document.getElementById('route-viz');
 var routeViz=(routeVizEl&&typeof ArborisRoute!=='undefined')?new ArborisRoute.RouteViz(routeVizEl):null;
+var heroBottomEl=routeVizEl?routeVizEl.parentNode:null;
+/* The strip lives in .hero-bottom, but while a turn is waiting it
+   floats into the chat flow, right under the typing indicator, and
+   docks back home once the answer reveals or errors. */
+function dockRouteViz(){
+  if(routeVizEl&&heroBottomEl&&routeVizEl.parentNode!==heroBottomEl){
+    heroBottomEl.insertBefore(routeVizEl,heroBottomEl.firstChild);
+    routeVizEl.classList.remove('rv-in-chat');
+  }
+}
+function floatRouteViz(wrap,afterEl){
+  if(routeVizEl&&wrap&&afterEl){
+    wrap.insertBefore(routeVizEl,afterEl.nextSibling);
+    routeVizEl.classList.add('rv-in-chat');
+  }
+}
 
 /* Brevity selector bar: Auto / Instant / Balanced / Thorough.
    The button names differ from the server modes: Instant is Sprout,
@@ -2671,6 +2684,7 @@ function sendLive(raw,display,expandOf){
   if(att)body.attachments=[att];
   function revealAnswer(text,meta){
     if(liveTurns.indexOf(t)<0)return;
+    dockRouteViz();
     t.answer=text;
     var b=ensureBubble();b.classList.remove('typing');
     b.innerHTML=renderMarkdown(t.answer);
@@ -2683,6 +2697,7 @@ function sendLive(raw,display,expandOf){
   }
   function renderError(msg){
     if(liveTurns.indexOf(t)<0)return;
+    dockRouteViz();
     t.error=msg;var b=ensureBubble('err');b.classList.remove('typing');b.classList.add('err');
     b.textContent=(t.answer?t.answer+'\n\n':'')+msg;
     scrollBottom();announce('Live backend error: '+msg);
@@ -2694,6 +2709,7 @@ function sendLive(raw,display,expandOf){
     onReveal:function(text,meta){revealAnswer(text,meta);},
     onError:function(msg){renderError(msg);}
   }):null;
+  if(route)floatRouteViz(wrap,ind);
   if(route){
     liveRequest(url,body,{
       chunk:function(text){route.chunk(text);},
