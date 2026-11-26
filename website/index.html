@@ -354,7 +354,7 @@ body {
 .hero-chat-area {
   flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;
   overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
-  padding: 78px 24px 12px; scroll-behavior: smooth;
+  padding: 78px 24px 12vh; scroll-behavior: smooth;
   justify-content: flex-end; text-align: left;
   opacity: 0; pointer-events: none; transition: opacity .25s;
   min-height: 0;
@@ -858,7 +858,7 @@ body {
 @keyframes svGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .sv-head { font-size: 13px; font-weight: 600; color: var(--mint); flex: none; }
 .sv-head.sv-same { color: var(--ink2); font-weight: 500; }
-.sv-sub { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--ink2); }
+.sv-sub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; margin-top: 4px; font-size: 11px; color: var(--ink2); }
 .sv-sub span { white-space: nowrap; }
 .sv-total { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 0; font-size: 12px; color: var(--ink2); }
 .sv-total .sv-leaf { font-size: 12px; }
@@ -1777,7 +1777,9 @@ var heroBottomEl=routeVizEl?routeVizEl.parentNode:null;
    docks back home once the answer reveals or errors. After the answer
    appears it falls away: it lingers a second, then fades out and
    drifts down over 1.25s, like it is falling out of existence, and
-   is hidden until the next turn. */
+   is hidden until the next turn. It is hidden with visibility, not
+   display, so .hero-bottom keeps its height and the answer box does
+   not move when the strip falls away. */
 var routeVizLeaveTimer=null,routeVizHideTimer=null;
 function cancelRouteVizLeave(){
   if(routeVizLeaveTimer){clearTimeout(routeVizLeaveTimer);routeVizLeaveTimer=null;}
@@ -1796,7 +1798,7 @@ function dockRouteViz(){
     routeVizEl.classList.add('rv-leaving');
     routeVizHideTimer=setTimeout(function(){
       if(!routeVizEl)return;
-      routeVizEl.style.display='none';
+      routeVizEl.style.visibility='hidden';
       routeVizEl.classList.remove('rv-leaving');
     },1250);
   },1000);
@@ -1808,6 +1810,7 @@ function floatRouteViz(wrap,afterEl){
     routeVizEl.classList.add('rv-in-chat');
     routeVizEl.classList.remove('rv-settled');
     routeVizEl.style.display='block';
+    routeVizEl.style.visibility='visible';
   }
 }
 
@@ -2761,7 +2764,20 @@ function sendLive(raw,display,expandOf){
     b.innerHTML=renderMarkdown(t.answer);
     var m=meta||{};t.meta=m;
     accumulateTurnIntoTotals(liveTotals,m);
-    wrap.appendChild(liveMetaRow(t));scrollBottom();
+    var metaRow=liveMetaRow(t);
+    wrap.appendChild(metaRow);
+    // Scale the efficiency graphic with the answer box: as wide as the
+    // bubble, but no wider than a third of the chat box, with a 180px
+    // floor so it stays usable on a short answer.
+    var svEl=metaRow.querySelector('.sv');
+    if(svEl){
+      var chatW=chatEl.clientWidth||0;
+      var cap=Math.round(chatW/3);
+      var bw=b.offsetWidth||0;
+      var w=Math.min(Math.max(bw,180),cap);
+      if(w>0)svEl.style.width=w+'px';
+    }
+    scrollBottom();
     if(m.cache_hit)showCacheFlash();
     renderLiveTotals();
     announce('Live answer ('+liveMetaLine(m)+'): '+t.answer);

@@ -195,11 +195,14 @@ class TestRouteVizFadeAway(unittest.TestCase):
         self.assertIn("translateY(", leaving)
         self.assertIn("1.25s", leaving)
         # Docking schedules the fade: a 1s linger, then leave, then
-        # hide after the 1.25s transition.
+        # hide after the 1.25s transition. The strip is hidden with
+        # visibility, not display, so .hero-bottom keeps its height
+        # and the answer box does not move when the strip falls away.
         dock = re.search(r"function dockRouteViz\(\)\{[\s\S]*?\n\}", html).group(0)
         self.assertIn("cancelRouteVizLeave()", dock)
         self.assertIn("routeVizEl.classList.add('rv-leaving')", dock)
-        self.assertIn("routeVizEl.style.display='none'", dock)
+        self.assertIn("routeVizEl.style.visibility='hidden'", dock)
+        self.assertNotIn("routeVizEl.style.display='none'", dock)
         self.assertIn("},1250)", dock)
         self.assertIn("},1000)", dock)
         # A new turn cancels the pending fade and shows the strip again.
@@ -207,6 +210,35 @@ class TestRouteVizFadeAway(unittest.TestCase):
         flt = re.search(r"function floatRouteViz\(wrap,afterEl\)\{[\s\S]*?\n\}", html).group(0)
         self.assertIn("cancelRouteVizLeave()", flt)
         self.assertIn("routeVizEl.style.display='block'", flt)
+        self.assertIn("routeVizEl.style.visibility='visible'", flt)
+
+
+class TestReceiptScaleAndChatPosition(unittest.TestCase):
+    """The receipt scales with the answer, and the chat sits higher.
+
+    The efficiency graphic is as wide as the answer bubble, capped at
+    a third of the chat box, with a floor so it stays usable on a short
+    answer. The chat area has room below the last message, so the
+    conversation sits about the 2/3 mark instead of hugging the
+    bottom.
+    """
+
+    def test_receipt_scales_with_the_answer_box(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The receipt width is the bubble's width, capped at a third of
+        # the chat box, with a 180px floor.
+        self.assertIn("var cap=Math.round(chatW/3)", html)
+        self.assertIn("var bw=b.offsetWidth||0", html)
+        self.assertIn("var w=Math.min(Math.max(bw,180),cap)", html)
+        self.assertIn("svEl.style.width=w+'px'", html)
+        # The Wh lines wrap instead of overflowing when it is narrow.
+        sub = re.search(r"\.sv-sub \{[^}]*\}", html).group(0)
+        self.assertIn("flex-wrap: wrap", sub)
+
+    def test_chat_sits_higher_than_the_bottom(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        area = re.search(r"\.hero-chat-area \{[^}]*\}", html).group(0)
+        self.assertIn("padding: 78px 24px 12vh", area)
 
 
 class TestSavingsReceipt(unittest.TestCase):
