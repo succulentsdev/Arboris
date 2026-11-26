@@ -586,7 +586,8 @@ body {
 .hero.chatting .hero-bottom .hint { display: none }
 
 /* ── Route animation ── */
-#route-viz { display: none; }
+#route-viz { display: none; transition: opacity 1.2s ease, transform 1.2s ease; transform-origin: left center; }
+#route-viz.rv-settled { opacity: 0.75; transform: scale(0.9); }
 #route-viz.rv-in-chat .rv { margin-left: 4px; margin-right: 0; }
 .rv {
   --rv-wire: var(--border2, #2A3F33);
@@ -1593,8 +1594,16 @@ if(typeof module!=='undefined'&&module.exports){
     steps.push({ name: 'Output cost', note: '' });
     var lit = steps.map(function () { return false; });
     viz.reset();
-    viz.start();
     viz.build(steps, true);
+    // Start empty: nothing is filled and the start dot is grey until
+    // the strip is visible. The start dot turns yellow first, then the
+    // yellow spreads right as the wires fill one at a time. The delays
+    // give the strip (shown by floatRouteViz right after this session
+    // is created) a beat to appear before anything lights; if done
+    // arrives first the timers are cleared and complete() lights the
+    // start dot itself.
+    later(60, function () { if (gotDone || finished) return; viz.start(); });
+    later(260, function () { if (gotDone || finished) return; fillSeq(0); });
 
     // Live phase: the pre-final stages fill one at a time, in order,
     // each at its own randomized speed, and light when done. The final
@@ -1620,7 +1629,6 @@ if(typeof module!=='undefined'&&module.exports){
         }
       });
     }
-    fillSeq(0);
 
     function reveal() {
       if (finished) return;
@@ -1630,6 +1638,7 @@ if(typeof module!=='undefined'&&module.exports){
     }
 
     function complete() {
+      viz.start();
       // Finish the stages still unlit, in order, then reveal. The final
       // stage (Output cost) fills as the answer reveals, over a fixed
       // 400ms; the throttle was its slow creep during the wait, not
@@ -1719,12 +1728,13 @@ function dockRouteViz(){
     heroBottomEl.insertBefore(routeVizEl,heroBottomEl.firstChild);
     routeVizEl.classList.remove('rv-in-chat');
   }
-  if(routeVizEl)routeVizEl.style.display='none';
+  if(routeVizEl)routeVizEl.classList.add('rv-settled');
 }
 function floatRouteViz(wrap,afterEl){
   if(routeVizEl&&wrap&&afterEl){
     wrap.insertBefore(routeVizEl,afterEl.nextSibling);
     routeVizEl.classList.add('rv-in-chat');
+    routeVizEl.classList.remove('rv-settled');
     routeVizEl.style.display='block';
   }
 }
@@ -2401,34 +2411,10 @@ function renderLiveTotals(){
 function isNum(v){return typeof v==='number'&&isFinite(v);}
 function liveMetaLine(m){
   var p=[];
-  p.push('mode: '+m.mode);
-  if(m.cache_hit)p.push('cache hit (0 new tokens'+(m.cached_from_model?', answer from '+m.cached_from_model:'')+')');
-  else if(m.local_answer)p.push('answered locally (no model call)');
-  else p.push('model: '+m.model,m.escalated?'escalated':'not escalated');
-  if(m.provider_model&&m.provider_model!==m.model)p.push('provider reported: '+m.provider_model);
   if(m.truncated)p.push('truncated at the token cap');
-  if(isNum(m.input_tokens)&&isNum(m.output_tokens)){
-    var tokStr='tokens in '+m.input_tokens+' / out '+m.output_tokens;
-    if(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0)tokStr+=' ('+m.reasoning_tokens+' reasoning)';
-    p.push(tokStr);
-  } else p.push('tokens not reported by provider');
   if(m.expansion)p.push('expanded (more detail on an earlier question)');
-  if(m.semantic_cache_hit)p.push('semantic cache hit'+(isNum(m.semantic_similarity)?' (similarity '+m.semantic_similarity+')':''));
-  if(m.cache_fallback)p.push('cache fallback ('+(m.cache_bypass_reason||'fresh call failed')+')');
-  if(m.task_type&&m.routed_by==='task'){var tt2=m.difficulty_tier||m.task_tier;p.push('task: '+m.task_type+(tt2?' · '+tt2+' tier':''));}
-  if(isNum(m.answer_score))p.push('score: '+m.answer_score);
-  if(isNum(m.token_budget))p.push('budget: '+m.token_budget+' tok');
-  if(m.reasoning_effort)p.push('reasoning effort: '+m.reasoning_effort);
-  if(m.long_input_pruned&&isNum(m.pruned_sentences))p.push('pruned '+m.pruned_sentences+' sentence'+(m.pruned_sentences!==1?'s':''));
   if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){var e2=m.energy,et2='energy (est.): '+fmtWh(e2.energy_wh)+', '+fmtCO2(e2.co2e_g)+' CO₂e';if(isNum(e2.water_ml_low)&&isNum(e2.water_ml_high))et2+=', '+e2.water_ml_low+'–'+e2.water_ml_high+' mL water';p.push(et2);}
-  if(isNum(m.latency_ms))p.push(m.latency_ms+' ms');
-  if(m.baseline){
-    if(m.baseline.error)p.push('baseline: '+m.baseline.error);
-    else if(isNum(m.baseline.saved_total_tokens))p.push('measured saving: '+m.baseline.saved_total_tokens+' tokens vs unconstrained baseline');
-    else p.push('baseline: '+(m.baseline.note||'not measured'));
-  }
-  var why=whyModel(m);
-  if(why)p.push('why: '+why);
+  if(!p.length)p.push('answered');
   return p.join(' · ');
 }
 function modeTag(mode,cacheHit,title){
@@ -2507,20 +2493,6 @@ function whyModel(m){
 
 function liveMetaRow(t){
   var m=t.meta,mm=document.createElement('div');mm.className='mm';
-  mm.appendChild(infoTag('LIVE','Answered by your backend','tg-live'));
-  mm.appendChild(modeTag(m.mode,!!m.cache_hit,m.mode_source==='explicit'?'Mode chosen explicitly':'Mode picked by the backend router'));
-  if(!m.cache_hit&&!m.local_answer){
-    mm.appendChild(infoTag(String(m.model),'Model that produced this answer'));
-    if(m.model_tier==='small')mm.appendChild(infoTag('Small model','Answered by the small model tier: '+(m.small_model||m.model)));
-    if(m.provider_model&&m.provider_model!==m.model)mm.appendChild(infoTag('via '+m.provider_model,'Model the provider says answered (its own claim, e.g. the model a router picked)'));
-    if(m.escalated)mm.appendChild(infoTag('↑ escalated',m.escalation_reason||''));
-    var why=whyModel(m);
-    if(why)mm.appendChild(infoTag(why,'Why this model answered: tier, task type, and local quality score from the answer meta'));
-  } else if(m.cached_from_model){
-    mm.appendChild(infoTag('from '+m.cached_from_model+(m.cached_answer_was_escalated?' (escalated)':''),'Cached answer: no model was called for this message'));
-  }
-  var tokLabel=isNum(m.input_tokens)&&isNum(m.output_tokens)?(m.input_tokens+' in / '+m.output_tokens+' out'+(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0?' ('+m.reasoning_tokens+' reasoning)':'')):'tokens not reported';
-  mm.appendChild(infoTag(tokLabel,'Provider-reported tokens for this message'));
   var drawerEl=null;
   if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){
     var e=m.energy,etxt='⚡ '+fmtWh(e.energy_wh)+' · '+fmtCO2(e.co2e_g)+' CO₂e';
@@ -2538,23 +2510,9 @@ function liveMetaRow(t){
     });
     mm.appendChild(rBtn);
   }
-  if(m.local_answer)mm.appendChild(infoTag('answered locally','No model was called: pure arithmetic, percentage, or unit conversion answered on the backend, 0 tokens','ts'));
-  if(m.semantic_cache_hit)mm.appendChild(infoTag('semantic cache hit'+(isNum(m.semantic_similarity)?' ('+m.semantic_similarity+')':''),'Cached answer reused: a similar prompt in this session, with identical numbers'));
-  if(m.cache_fallback)mm.appendChild(infoTag('cache fallback',m.cache_bypass_reason||'Fresh model call failed; returned cached answer as fallback','tg-warn'));
-  if(m.task_type&&m.routed_by==='task'){var tt=m.difficulty_tier||m.task_tier;mm.appendChild(infoTag('task: '+m.task_type+(tt?' · '+tt+' tier':''),'Task routing: model tier picked by task type'+(m.difficulty_score!==undefined?' (difficulty '+m.difficulty_score+')':'')));}
-  if(isNum(m.answer_score))mm.appendChild(infoTag('score '+m.answer_score,'Local FrugalGPT-style answer quality score (0–1)'));
-  if(isNum(m.token_budget))mm.appendChild(infoTag('budget ≤'+m.token_budget+' tok','L3 explicit token budget instruction sent in system prompt'));
-  if(m.reasoning_effort)mm.appendChild(infoTag('effort: '+m.reasoning_effort,'L2 reasoning_effort cap sent to provider'));
-  if(m.long_input_pruned&&isNum(m.pruned_sentences))mm.appendChild(infoTag('pruned '+m.pruned_sentences+' sent.','Long-input extractive pruning dropped '+m.pruned_sentences+' low-signal sentences'));
-  if(isNum(m.latency_ms))mm.appendChild(infoTag(m.latency_ms+' ms','Backend latency'));
   if(m.truncated)mm.appendChild(infoTag('truncated','The answer hit the token cap: a cut-off last sentence was dropped or marked with …','tg-warn'));
-  if(m.baseline){
-    var b=m.baseline;
-    mm.appendChild(infoTag(b.error?'baseline failed':(isNum(b.saved_total_tokens)?'saved '+b.saved_total_tokens+' (measured)':'baseline: no counts'),b.error||b.note||''));
-  }
   mm.appendChild(actBtn('⧉ Copy','Copy live answer to: '+short(t.raw),function(){copyText(t.answer,'Answer copied!');}));
-  if(m.expansion)mm.appendChild(infoTag('expanded','This answer was requested as more detail on an earlier question'));
-  else mm.appendChild(actBtn('More detail','Ask for a longer answer to this question (a second, primary-model call)',function(){sendLive('Explain in more detail: '+t.raw,'More detail: '+short(t.raw),t.raw);}));
+  if(!m.expansion)mm.appendChild(actBtn('More detail','Ask for a longer answer to this question (a second, primary-model call)',function(){sendLive('Explain in more detail: '+t.raw,'More detail: '+short(t.raw),t.raw);}));
   var container=document.createElement('div');
   container.appendChild(mm);
   if(drawerEl)container.appendChild(drawerEl);
