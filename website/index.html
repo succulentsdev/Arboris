@@ -63,11 +63,11 @@
     radial-gradient(ellipse 55% 45% at 82% 18%, rgba(207,74,40,.12), transparent 60%),
     radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,168,150,.08), transparent 65%);
   --grid-dot: rgba(255,255,255,.06);
-  --glass-bot: rgba(15,24,19,.88);
-  --glass-bot-border: rgba(255,255,255,.1);
+  --glass-bot: rgba(27,84,52,.92);
+  --glass-bot-border: rgba(255,255,255,.12);
   --glass-bot-ink: #eef4f1;
-  --glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));
-  --glass-user-border: rgba(207,74,40,.42);
+  --glass-user: rgba(9,45,38,.92);
+  --glass-user-border: rgba(61,212,192,.30);
   --glass-user-ink: #ffffff;
   --glass-input: rgba(12,19,16,.88);
   --glass-input-border: rgba(255,255,255,.13);
@@ -353,7 +353,7 @@ body.bg-photo .hero::before { display: none }
 .hero-chat-area {
   flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;
   overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
-  padding: 78px 24px 12vh; scroll-behavior: smooth;
+  padding: 78px 24px 16px; scroll-behavior: smooth;
   justify-content: flex-end; text-align: left;
   opacity: 0; pointer-events: none; transition: opacity .25s;
   min-height: 0;
@@ -361,7 +361,7 @@ body.bg-photo .hero::before { display: none }
   mask-image: linear-gradient(to bottom, transparent, black 56px);
 }
 .hero.chatting .hero-chat-area { opacity: 1; pointer-events: auto }
-.hero.chatting { height: 100vh; height: 100svh; min-height: 0; padding-bottom: 33vh }
+.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }
 .hero-chat-area::-webkit-scrollbar { width: 5px }
 .hero-chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px }
 
@@ -493,8 +493,10 @@ body.bg-photo .hero::before { display: none }
   padding: 8px 24px 28px; flex-shrink: 0;
 }
 .composer-card {
-  background: var(--surface);
-  border: none;
+  background: rgba(44,47,49,.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.10);
   border-radius: 20px;
   padding: 18px 20px 15px;
   box-shadow: var(--shadow);

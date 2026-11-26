@@ -214,13 +214,13 @@ class TestRouteVizFadeAway(unittest.TestCase):
 
 
 class TestReceiptScaleAndChatPosition(unittest.TestCase):
-    """The receipt scales with the answer, and the chat sits higher.
+    """The receipt scales with the answer, and the composer is at the
+    bottom.
 
     The efficiency graphic is as wide as the answer bubble, capped at
     a third of the chat box, with a floor so it stays usable on a short
-    answer. The chat area has room below the last message, so the
-    conversation sits about the 2/3 mark instead of hugging the
-    bottom.
+    answer. The composer sits at the bottom of the page (round 17
+    removed the 33vh lift), and the last message sits just above it.
     """
 
     def test_receipt_scales_with_the_answer_box(self):
@@ -232,19 +232,46 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
         self.assertIn("var w=Math.min(Math.max(bw,180),cap)", html)
         self.assertIn("svEl.style.width=w+'px'", html)
 
-    def test_chat_sits_higher_than_the_bottom(self):
+    def test_last_message_sits_just_above_the_composer(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         area = re.search(r"\.hero-chat-area \{[^}]*\}", html).group(0)
-        self.assertIn("padding: 78px 24px 12vh", area)
+        self.assertIn("padding: 78px 24px 16px", area)
 
-    def test_composer_sits_a_third_up_the_screen(self):
+    def test_composer_sits_at_the_bottom_of_the_page(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # When chatting the hero keeps the composer about a third of
-        # the way up: bottom padding inside the 100svh height, so the
-        # chat and the composer live in the top two thirds.
+        # When chatting the hero is 100svh with no bottom padding, so
+        # the composer (the last flex child) sits at the viewport
+        # bottom instead of a third up the screen.
         chatting = re.search(r"\.hero\.chatting \{[^}]*\}", html).group(0)
         self.assertIn("height: 100svh", chatting)
-        self.assertIn("padding-bottom: 33vh", chatting)
+        self.assertNotIn("padding-bottom: 33vh", chatting)
+
+
+class TestComposerGrayAndBubbleGreens(unittest.TestCase):
+    """Round 17 (2026-11-26): the composer is gray and slightly
+    translucent like the screenshot, and the bubbles are clean greens.
+
+    The user bubble is a mostly opaque dark green on the darker/bluer
+    side (deep teal-green); the bot bubble is a contrasting clean
+    emerald, greener and lighter. The mucky dark green and the coral
+    user bubble are gone.
+    """
+
+    def test_composer_gray_translucent_and_bubbles_clean_greens(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # Composer: gray, slightly translucent, frosted.
+        self.assertIn("background: rgba(44,47,49,.72);", html)
+        self.assertIn("backdrop-filter: blur(16px);", html)
+        self.assertIn("border: 1px solid rgba(255,255,255,.10);", html)
+        # User bubble: mostly opaque dark teal-green.
+        self.assertIn("--glass-user: rgba(9,45,38,.92);", html)
+        self.assertIn("--glass-user-border: rgba(61,212,192,.30);", html)
+        # Bot bubble: contrasting clean emerald.
+        self.assertIn("--glass-bot: rgba(27,84,52,.92);", html)
+        # The mucky green and the coral user bubble are gone.
+        self.assertNotIn("rgba(15,24,19,.88)", html)
+        self.assertNotIn("rgba(207,74,40,.24)", html)
+        self.assertNotIn("rgba(207,74,40,.42)", html)
 
 
 class TestSavingsReceipt(unittest.TestCase):
