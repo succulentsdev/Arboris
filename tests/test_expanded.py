@@ -247,29 +247,34 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
         self.assertNotIn("padding-bottom: 33vh", chatting)
 
 
-class TestComposerGrayAndBubbleGreens(unittest.TestCase):
-    """Round 17 (2026-11-26): the composer is gray and slightly
-    translucent like the screenshot, and the bubbles are clean greens.
+class TestComposerRevertAndBubbleGreens(unittest.TestCase):
+    """Round 18 (2026-11-26): the composer is back to its original
+    design, the user bubble keeps its teal, and the response bubble
+    is a dark green again.
 
-    The user bubble is a mostly opaque dark green on the darker/bluer
-    side (deep teal-green); the bot bubble is a contrasting clean
-    emerald, greener and lighter. The mucky dark green and the coral
-    user bubble are gone.
+    The composer card is the solid dark surface again (round 17's
+    gray translucent frosted card is reverted), while it stays at the
+    bottom of the page. The user bubble is the deep teal-green from
+    round 17. The bot bubble is a dark green again, but a clean one,
+    not the mucky rgba(15,24,19,.88) Grant disliked.
     """
 
-    def test_composer_gray_translucent_and_bubbles_clean_greens(self):
+    def test_composer_original_design_and_bubbles(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Composer: gray, slightly translucent, frosted.
-        self.assertIn("background: rgba(44,47,49,.72);", html)
-        self.assertIn("backdrop-filter: blur(16px);", html)
-        self.assertIn("border: 1px solid rgba(255,255,255,.10);", html)
-        # User bubble: mostly opaque dark teal-green.
+        # Composer: back to the original solid dark surface.
+        card = re.search(r"\.composer-card \{[^}]*\}", html).group(0)
+        self.assertIn("background: var(--surface);", card)
+        self.assertIn("border: none;", card)
+        self.assertNotIn("backdrop-filter", card)
+        self.assertNotIn("rgba(44,47,49,.72)", card)
+        # User bubble: the teal from round 17 is kept.
         self.assertIn("--glass-user: rgba(9,45,38,.92);", html)
         self.assertIn("--glass-user-border: rgba(61,212,192,.30);", html)
-        # Bot bubble: contrasting clean emerald.
-        self.assertIn("--glass-bot: rgba(27,84,52,.92);", html)
-        # The mucky green and the coral user bubble are gone.
+        # Bot bubble: a dark green again, clean, not the mucky one.
+        self.assertIn("--glass-bot: rgba(10,40,20,.92);", html)
+        # The mucky green, the emerald, and the coral are all gone.
         self.assertNotIn("rgba(15,24,19,.88)", html)
+        self.assertNotIn("rgba(27,84,52,.92)", html)
         self.assertNotIn("rgba(207,74,40,.24)", html)
         self.assertNotIn("rgba(207,74,40,.42)", html)
 
@@ -369,12 +374,16 @@ class TestComposerScreenshotLayout(unittest.TestCase):
 
 
 class TestPhotoBackground(unittest.TestCase):
-    """Round 16 (2026-11-26): the hero background is a photo gallery.
+    """Round 19 (2026-11-26): the hero background is Grant's two
+    photos, served from the repo.
 
     A vanilla port of the MorphGallery fbm-noise dissolve, as a fixed
-    canvas behind the hero. 12 photos: the 6 demo shots plus 6 Unsplash
-    nature shots, all CORS-enabled. One header button cycles to the next
-    photo. No autoplay, no arrows, no thumbnails.
+    canvas behind the hero. The 12 stock shots are gone (Grant: low
+    rez and shitty); the gallery is now just his two photos, a
+    mountain lake and a forest creek, served by the Arboris server
+    itself (same origin, so no CORS needed for the WebGL textures).
+    One header button cycles to the next photo. No autoplay, no
+    arrows, no thumbnails.
     """
 
     def test_photo_background(self):
@@ -382,9 +391,17 @@ class TestPhotoBackground(unittest.TestCase):
         self.assertIn('id="bg-canvas"', html)
         self.assertIn('id="bg-overlay"', html)
         self.assertIn('id="bg-btn"', html)
-        # 12 photos: 6 demo shots + 6 Unsplash.
-        self.assertEqual(html.count('cdn.21st.dev/assets/mirror/'), 6)
-        self.assertEqual(html.count('images.unsplash.com/photo-'), 6)
+        # Grant's two photos, local relative URLs, no stock shots.
+        self.assertIn("'bg-lake.jpg'", html)
+        self.assertIn("'bg-creek.jpg'", html)
+        self.assertNotIn('cdn.21st.dev/assets/mirror/', html)
+        self.assertNotIn('images.unsplash.com/photo-', html)
+        # The photos exist in the repo and the server serves them.
+        self.assertTrue((ROOT / "website" / "bg-lake.jpg").is_file())
+        self.assertTrue((ROOT / "website" / "bg-creek.jpg").is_file())
+        app = (ROOT / "server" / "app.py").read_text(encoding="utf-8")
+        self.assertIn('"bg-lake.jpg"', app)
+        self.assertIn('"bg-creek.jpg"', app)
         # The hero is transparent so the photo shows through, and the
         # dot-grid texture hides while a photo is showing.
         self.assertIn('background: transparent;', html)

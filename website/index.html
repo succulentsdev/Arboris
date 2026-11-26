@@ -63,7 +63,7 @@
     radial-gradient(ellipse 55% 45% at 82% 18%, rgba(207,74,40,.12), transparent 60%),
     radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,168,150,.08), transparent 65%);
   --grid-dot: rgba(255,255,255,.06);
-  --glass-bot: rgba(27,84,52,.92);
+  --glass-bot: rgba(10,40,20,.92);
   --glass-bot-border: rgba(255,255,255,.12);
   --glass-bot-ink: #eef4f1;
   --glass-user: rgba(9,45,38,.92);
@@ -493,10 +493,8 @@ body.bg-photo .hero::before { display: none }
   padding: 8px 24px 28px; flex-shrink: 0;
 }
 .composer-card {
-  background: rgba(44,47,49,.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--surface);
+  border: none;
   border-radius: 20px;
   padding: 18px 20px 15px;
   box-shadow: var(--shadow);
@@ -1733,20 +1731,9 @@ if(typeof module!=='undefined'&&module.exports){
    through where it is bright. No React, no thumbnails, no arrows: the
    header button cycles to the next photo. */
 var BG_IMAGES = [
-  /* The 6 demo shots (21st.dev CDN, CORS *). */
-  'https://cdn.21st.dev/assets/mirror/ec/eceae69f56b5b3e29b9372032b5c22e96bd5fc9c167ce072813868aa871d52af.jpg',
-  'https://cdn.21st.dev/assets/mirror/95/95b854c8c5fc73249ba12e729548a432ff171dab87d960e2aaf098f1db941828.jpg',
-  'https://cdn.21st.dev/assets/mirror/15/15a4a367001c723a22cc1f5b480cfdc6abc1e50fdf87e0555ddd324f404fb98a.jpg',
-  'https://cdn.21st.dev/assets/mirror/69/6947b2d1b15fc6614fe30af02282fe6418b3c43556fbfe6ad8e2fa16c72ae700.jpg',
-  'https://cdn.21st.dev/assets/mirror/40/40907f0afb67e9bf2767a5982d24f0d56e6f49dd12b859cf92eb9b3b9771f4a4.jpg',
-  'https://cdn.21st.dev/assets/mirror/ef/ef4b96d0e0de49e89f600b77edbe0a150e1f93f8ba92ae1422d285d267b7bd47.jpg',
-  /* More nature shots (Unsplash, CORS *). */
-  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80',
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80',
-  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80',
-  'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1600&q=80',
-  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&q=80',
-  'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1600&q=80'
+  /* Grant's own photos, served from the repo (same origin, no CORS). */
+  'bg-lake.jpg',
+  'bg-creek.jpg'
 ];
 var BG_VERT = [
   'attribute vec2 a_position;',

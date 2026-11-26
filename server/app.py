@@ -1710,7 +1710,7 @@ def make_handler(backend):
         ".svg": "image/svg+xml",
     }
     STATIC_PAGES = {"index.html", "methodology.html"}
-    STATIC_ASSETS = {"styles.css", "app.js", "bg.jpg", "bg.webp", "hero.jpg", "arboris-logo.webp"}
+    STATIC_ASSETS = {"styles.css", "app.js", "bg.jpg", "bg.webp", "hero.jpg", "arboris-logo.webp", "bg-lake.jpg", "bg-creek.jpg"}
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "Arboris"
