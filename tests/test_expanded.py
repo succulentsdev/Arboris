@@ -178,6 +178,37 @@ console.log(JSON.stringify(Object.keys(exports).sort()));
                          ["estTokens", "routeMode", "shrinkPrompt"])
 
 
+class TestRouteVizFadeAway(unittest.TestCase):
+    """After an answer appears, the route strip falls away.
+
+    It lingers a second, then fades out and drifts down over 1.25s,
+    like it is falling out of existence, and is hidden until the next
+    turn. A new turn cancels the fade so the strip is there for it.
+    """
+
+    def test_route_strip_fades_away_after_the_answer(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # Leaving state: fully transparent, translated down, 1.25s.
+        self.assertIn("#route-viz.rv-leaving", html)
+        leaving = re.search(r"#route-viz\.rv-leaving \{[^}]*\}", html).group(0)
+        self.assertIn("opacity: 0", leaving)
+        self.assertIn("translateY(", leaving)
+        self.assertIn("1.25s", leaving)
+        # Docking schedules the fade: a 1s linger, then leave, then
+        # hide after the 1.25s transition.
+        dock = re.search(r"function dockRouteViz\(\)\{[\s\S]*?\n\}", html).group(0)
+        self.assertIn("cancelRouteVizLeave()", dock)
+        self.assertIn("routeVizEl.classList.add('rv-leaving')", dock)
+        self.assertIn("routeVizEl.style.display='none'", dock)
+        self.assertIn("},1250)", dock)
+        self.assertIn("},1000)", dock)
+        # A new turn cancels the pending fade and shows the strip again.
+        self.assertIn("function cancelRouteVizLeave()", html)
+        flt = re.search(r"function floatRouteViz\(wrap,afterEl\)\{[\s\S]*?\n\}", html).group(0)
+        self.assertIn("cancelRouteVizLeave()", flt)
+        self.assertIn("routeVizEl.style.display='block'", flt)
+
+
 class TestSavingsReceipt(unittest.TestCase):
     """The per-message receipt: one comparison bar under the answer.
 

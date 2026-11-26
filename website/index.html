@@ -588,6 +588,7 @@ body {
 /* ── Route animation ── */
 #route-viz { display: none; transition: opacity 1.2s ease, transform 1.2s ease; transform-origin: left center; }
 #route-viz.rv-settled { opacity: 0.75; transform: scale(0.9); }
+#route-viz.rv-leaving { opacity: 0; transform: translateY(20px) scale(0.9); transition: opacity 1.25s ease, transform 1.25s ease; }
 #route-viz.rv-in-chat .rv { margin-left: 4px; margin-right: 0; }
 .rv {
   --rv-wire: var(--border2, #2A3F33);
@@ -1773,15 +1774,35 @@ var routeViz=(routeVizEl&&typeof ArborisRoute!=='undefined')?new ArborisRoute.Ro
 var heroBottomEl=routeVizEl?routeVizEl.parentNode:null;
 /* The strip lives in .hero-bottom, but while a turn is waiting it
    floats into the chat flow, right under the typing indicator, and
-   docks back home once the answer reveals or errors. */
+   docks back home once the answer reveals or errors. After the answer
+   appears it falls away: it lingers a second, then fades out and
+   drifts down over 1.25s, like it is falling out of existence, and
+   is hidden until the next turn. */
+var routeVizLeaveTimer=null,routeVizHideTimer=null;
+function cancelRouteVizLeave(){
+  if(routeVizLeaveTimer){clearTimeout(routeVizLeaveTimer);routeVizLeaveTimer=null;}
+  if(routeVizHideTimer){clearTimeout(routeVizHideTimer);routeVizHideTimer=null;}
+  if(routeVizEl)routeVizEl.classList.remove('rv-leaving');
+}
 function dockRouteViz(){
   if(routeVizEl&&heroBottomEl&&routeVizEl.parentNode!==heroBottomEl){
     heroBottomEl.insertBefore(routeVizEl,heroBottomEl.firstChild);
     routeVizEl.classList.remove('rv-in-chat');
   }
   if(routeVizEl)routeVizEl.classList.add('rv-settled');
+  cancelRouteVizLeave();
+  routeVizLeaveTimer=setTimeout(function(){
+    if(!routeVizEl)return;
+    routeVizEl.classList.add('rv-leaving');
+    routeVizHideTimer=setTimeout(function(){
+      if(!routeVizEl)return;
+      routeVizEl.style.display='none';
+      routeVizEl.classList.remove('rv-leaving');
+    },1250);
+  },1000);
 }
 function floatRouteViz(wrap,afterEl){
+  cancelRouteVizLeave();
   if(routeVizEl&&wrap&&afterEl){
     wrap.insertBefore(routeVizEl,afterEl.nextSibling);
     routeVizEl.classList.add('rv-in-chat');
