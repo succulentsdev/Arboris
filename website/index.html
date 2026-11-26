@@ -841,6 +841,18 @@ body {
   background: linear-gradient(90deg, #cf4a28, #f07068);
   opacity: .78;
 }
+/* Minimalist per-message savings strip: the two bars from the receipt,
+   under each answer. Arboris is solid teal; the baseline is coral with
+   diagonal slots (it is a modeled estimate, so it reads as a hatch).
+   Clicking the strip opens the full receipt drawer. */
+.sv { display: block; width: 100%; max-width: 86%; margin: 2px 0 0; padding: 0; background: none; border: none; cursor: pointer; text-align: left; }
+.sv-bars { display: flex; flex-direction: column; gap: 3px; }
+.sv-bar { height: 5px; border-radius: 99px; }
+.sv-arb { background: linear-gradient(90deg, #3dd4c0, #22a896); }
+.sv-base { background: repeating-linear-gradient(45deg, rgba(0,0,0,.28) 0 2px, transparent 2px 8px), linear-gradient(90deg, #cf4a28, #f07068); opacity: .85; }
+.sv-lbl { font-size: 11px; font-family: var(--font-mono); color: var(--ink2); margin-top: 4px; }
+.sv:hover .sv-lbl, .sv:focus-visible .sv-lbl { color: var(--ink); }
+.sv:focus-visible { outline: 2px solid #3dd4c0; outline-offset: 2px; border-radius: 4px; }
 .eco-equiv-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1672,9 +1684,25 @@ if(typeof module!=='undefined'&&module.exports){
         var real = stepsFromMeta(meta, opts.shrinkTokens);
         var same = real.length === steps.length && real.every(function (s, i) { return s.name === steps[i].name; });
         if (!same) {
+          // Keep the run continuous: a rebuild used to reset every wire
+          // to empty, so the animation replayed from the start as the
+          // answer completed. Carry the state over by stage name, so
+          // stages already lit stay lit and partially filled wires keep
+          // their width; complete() then only finishes what is left.
+          var oldState = viz.nodes.map(function (n) {
+            return { name: n.data.name, lit: n.node.classList.contains('rv-lit'), width: n.fill.style.width || '0%' };
+          });
           viz.build(real, true);
           steps = real;
           lit = steps.map(function () { return false; });
+          real.forEach(function (s, i) {
+            var old = null;
+            for (var j = 0; j < oldState.length; j++) if (oldState[j].name === s.name) { old = oldState[j]; break; }
+            if (old) {
+              if (old.lit) { viz.fill(i, 1, 0); viz.light(i); lit[i] = true; }
+              else if (old.width && old.width !== '0%') { viz.fill(i, parseFloat(old.width) / 100, 0); }
+            }
+          });
         } else {
           real.forEach(function (s, i) { viz.setNote(i, s.note); });
         }
@@ -2493,27 +2521,39 @@ function whyModel(m){
 
 function liveMetaRow(t){
   var m=t.meta,mm=document.createElement('div');mm.className='mm';
-  var drawerEl=null;
+  var drawerEl=null,stripEl=null;
   if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){
-    var e=m.energy,etxt='⚡ '+fmtWh(e.energy_wh)+' · '+fmtCO2(e.co2e_g)+' CO₂e';
-    if(isNum(e.water_ml_low)&&isNum(e.water_ml_high))etxt+=' · '+e.water_ml_low+'–'+e.water_ml_high+' mL water';
-    var rBtn=document.createElement('button');
-    rBtn.type='button';
-    rBtn.className='tag tg-receipt tg-receipt-btn';
-    rBtn.textContent=etxt+' (est.) ▾';
-    rBtn.title='Click to toggle visual Energy & Carbon Receipt breakdown';
-    rBtn.setAttribute('aria-expanded','false');
+    var e=m.energy;
+    // Same numbers as buildEcoDrawer (mirrored here so the strip and the
+    // drawer never disagree): 0.0006 Wh/out-tok, 1/800 input ratio,
+    // MODE_MULT for the modeled baseline, measured baseline when present,
+    // 45-tok baseline for local/cache answers.
+    var inTok2=isNum(m.input_tokens)?m.input_tokens:0;
+    var outTok2=isNum(m.output_tokens)?m.output_tokens:0;
+    var wh2=isNum(e.energy_wh)?e.energy_wh:(outTok2*0.0006+inTok2*(0.0006/800));
+    var mult2=MODE_MULT[m.mode]||2.6;
+    var hasMeasured2=m.baseline&&isNum(m.baseline.baseline_output_tokens);
+    var stdOut2=hasMeasured2?m.baseline.baseline_output_tokens:(m.local_answer||m.cache_hit?45:Math.max(outTok2,Math.round(outTok2*mult2)));
+    var stdWh2=stdOut2*0.0006+inTok2*(0.0006/800);
+    var savedPct2=stdWh2>0?Math.max(0,Math.round((1-(wh2/stdWh2))*100)):0;
+    var arbWidth2=stdWh2>0?Math.max(4,Math.min(100,Math.round((wh2/stdWh2)*100))):0;
+    stripEl=document.createElement('div');
+    stripEl.className='sv';
+    stripEl.setAttribute('role','button');
+    stripEl.tabIndex=0;
+    stripEl.setAttribute('aria-expanded','false');
+    stripEl.title='Energy & carbon receipt (click for detail)';
+    stripEl.innerHTML='<div class="sv-bars"><div class="sv-bar sv-arb" style="width:'+arbWidth2+'%"></div><div class="sv-bar sv-base" style="width:100%"></div></div><div class="sv-lbl">'+fmtWh(wh2)+' · −'+savedPct2+'% vs '+(hasMeasured2?'measured':'modeled')+' verbose</div>';
     drawerEl=buildEcoDrawer(t);
-    rBtn.addEventListener('click',function(){
-      drawerEl.hidden=!drawerEl.hidden;
-      rBtn.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');
-    });
-    mm.appendChild(rBtn);
+    var toggleStrip=function(){drawerEl.hidden=!drawerEl.hidden;stripEl.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');};
+    stripEl.addEventListener('click',toggleStrip);
+    stripEl.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggleStrip();}});
   }
   if(m.truncated)mm.appendChild(infoTag('truncated','The answer hit the token cap: a cut-off last sentence was dropped or marked with …','tg-warn'));
   mm.appendChild(actBtn('⧉ Copy','Copy live answer to: '+short(t.raw),function(){copyText(t.answer,'Answer copied!');}));
   if(!m.expansion)mm.appendChild(actBtn('More detail','Ask for a longer answer to this question (a second, primary-model call)',function(){sendLive('Explain in more detail: '+t.raw,'More detail: '+short(t.raw),t.raw);}));
   var container=document.createElement('div');
+  if(stripEl)container.appendChild(stripEl);
   container.appendChild(mm);
   if(drawerEl)container.appendChild(drawerEl);
   return container;
