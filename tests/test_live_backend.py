@@ -825,14 +825,28 @@ class EntryPointAndSiteTests(unittest.TestCase):
         # was removed 2026-11-25 (the server still shrinks every
         # prompt automatically; the button only rewrote the box).
         # Voice input, the speed dropdown, and the route animation
-        # diagram were added 2026-11-25.
+        # diagram were added 2026-11-25. The minimalism round of
+        # 2026-11-25 then removed the speed dropdown and the Clear
+        # button, renamed the brevity buttons to Auto / Instant /
+        # Balanced / Thorough, and retitled the page Eco-friendly AI.
         self.assertIn('id="brevity-bar"', html)
         self.assertNotIn('id="compress-btn"', html)
         self.assertIn('id="mic-btn"', html)
-        self.assertIn('id="speed-btn"', html)
-        self.assertIn('id="speed-pop"', html)
+        self.assertNotIn('id="speed-btn"', html)
+        self.assertNotIn('id="speed-pop"', html)
+        self.assertNotIn('id="cb"', html)
         self.assertIn('id="route-viz"', html)
         self.assertIn('createRouteSession', html)
+        self.assertIn('Eco-friendly AI', html)
+        self.assertNotIn('class="pipeline-strip"', html)
+        self.assertNotIn('class="hero-sub"', html)
+        self.assertIn('data-mode="instant"', html)
+        self.assertIn('data-mode="balanced"', html)
+        self.assertIn('data-mode="thorough"', html)
+        self.assertNotIn('data-mode="sprout"', html)
+        self.assertNotIn('data-mode="forest"', html)
+        self.assertNotIn('\U0001f4ce Attach', html)
+        self.assertIn('min-height: 70svh', html)
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)
