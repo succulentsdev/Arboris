@@ -819,11 +819,13 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn("data:image/jpeg;base64,", html)
         self.assertNotIn("url('hero.jpg')", html)
         self.assertTrue((ROOT / "website" / "hero.jpg").is_file())
-        # Brevity selector bar, compress button, health status, tabbed
+        # Brevity selector bar, health status, tabbed
         # methodology/compare section, and sticky chat; the annual
-        # simulator was removed 2026-11-25.
+        # simulator was removed 2026-11-25, and the Compress button
+        # was removed 2026-11-25 (the server still shrinks every
+        # prompt automatically; the button only rewrote the box).
         self.assertIn('id="brevity-bar"', html)
-        self.assertIn('id="compress-btn"', html)
+        self.assertNotIn('id="compress-btn"', html)
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)

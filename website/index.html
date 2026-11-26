@@ -545,14 +545,6 @@ body {
 }
 .ir input::placeholder { color: var(--ink3) }
 .ir input:focus { border-color: var(--mint) }
-.btn-compress {
-  min-height: 48px; padding: 0 13px; border-radius: 12px;
-  border: 1px solid var(--mint-border);
-  background: var(--mint-soft); color: var(--mint);
-  font: 600 12px var(--font-mono); cursor: pointer;
-  white-space: nowrap; transition: filter .18s, transform .1s;
-}
-.btn-compress:hover { filter: brightness(1.15) }
 .btn-attach {
   min-height: 48px; padding: 0 13px; border-radius: 12px;
   border: 1px solid var(--border);
@@ -563,7 +555,6 @@ body {
 .btn-attach:hover { color: var(--ink); border-color: var(--border2) }
 .btn-attach:active { transform: scale(.98) }
 .attach-chip { font-size: 12px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px }
-.btn-compress:active { transform: scale(.98) }
 .btn-s {
   min-height: 48px; padding: 12px 24px; border-radius: 12px; border: none;
   background: var(--send-bg); color: var(--send-ink);
@@ -1241,7 +1232,6 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
         <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
         <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about">📎 Attach</button>
-        <button class="btn-compress" id="compress-btn" type="button" title="Apply PromptShrink compression directly to your input text">✂ Compress</button>
         <button class="btn-s" id="sb" type="button">Send</button>
         <button class="btn-cl" id="cb" type="button" title="Clear chat" aria-label="Clear chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
       </div>
@@ -1784,22 +1774,7 @@ function isZeroModelQuery(raw){
   return false;
 }
 
-/* Live input preview & in-place Compress button */
-var compressBtn=document.getElementById('compress-btn');
-if(compressBtn){
-  compressBtn.addEventListener('click',function(){
-    var raw=inputEl.value;
-    var shrunk=shrinkPrompt(raw);
-    if(shrunk&&shrunk!==raw){
-      var saved=Math.max(1,estTokens(raw)-estTokens(shrunk));
-      inputEl.value=shrunk;
-      compressBtn.hidden=true;
-      inputEl.dispatchEvent(new Event('input'));
-      inputEl.focus();
-      showToast('Prompt compressed (−'+saved+' tok)');
-    }
-  });
-}
+/* Live input preview */
 var _previewDebounce;
 inputEl.addEventListener('input',function(){
   clearTimeout(_previewDebounce);
@@ -1810,11 +1785,9 @@ inputEl.addEventListener('input',function(){
     cntEl.textContent=wc?wc+' word'+(wc!==1?'s':''):'';
     if(!raw.trim()){
       prevEl.innerHTML='';prevEl.className='ip-preview';
-      if(compressBtn)compressBtn.hidden=true;
       var be=document.getElementById('shrink-bar');if(be)be.classList.remove('active');return;
     }
     var shrunk=shrinkPrompt(raw);
-    if(compressBtn)compressBtn.hidden=!(shrunk&&shrunk!==raw);
     if(isZeroModelQuery(shrunk||raw)){
       prevEl.textContent='⚡ Zero-Model Gate: deterministic query — 0 GPU tokens · 0 Wh on send';
       prevEl.className='ip-preview zero-gate';
@@ -1854,7 +1827,6 @@ document.getElementById('sb').addEventListener('click',doSend);
 function doSend(){
   var v=inputEl.value;inputEl.value='';
   prevEl.innerHTML='';prevEl.className='ip-preview';cntEl.textContent='';
-  if(compressBtn)compressBtn.hidden=true;
   var barEl=document.getElementById('shrink-bar');if(barEl)barEl.classList.remove('active');
   updateAutoLabel('');
   ask(v);
