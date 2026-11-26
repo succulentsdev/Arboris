@@ -838,10 +838,13 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertIn('id="route-viz"', html)
         self.assertIn('createRouteSession', html)
         # Route animation rework 2026-11-26: the route is determined
-        # from the server's meta first, then the yellow bar sweeps the
-        # benchmarks (one SWEEP_MS per stage) and the answer reveals
-        # when Output cost lights. No provisional route, no creep.
-        self.assertIn('SWEEP_MS', html)
+        # from the server's meta first, then the benchmarks light with
+        # their true notes and the answer reveals when Output cost
+        # lights. The live sweep (2026-11-26) starts on send: PromptShrink
+        # fills and lights first, the other wires creep toward 85% while
+        # the model works, and the stages still unlit complete after done
+        # sharing the COMPLETE_MS budget at randomized speeds.
+        self.assertIn('COMPLETE_MS', html)
         self.assertNotIn('CREEP_MS', html)
         self.assertNotIn('modelPath', html)
         self.assertIn('Eco-friendly AI', html)
@@ -877,7 +880,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         )
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn('"arborisRoute":"object"', out.stdout)
-        self.assertIn('"sweepMs":600', out.stdout)
+        self.assertIn('"completeMs":1200', out.stdout)
         self.assertIn('"modelSteps":["PromptShrink","Model cascade","Quality check","Output cost"]', out.stdout)
         self.assertIn('"localSteps":["PromptShrink","Zero-model gate","Output cost"]', out.stdout)
 

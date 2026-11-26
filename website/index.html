@@ -1564,17 +1564,27 @@ if(typeof module!=='undefined'&&module.exports){
 /* Arboris route animation: vanilla JS, no dependencies. */
 (function (global) {
   'use strict';
-  var SWEEP_MS = 600;         // per stage of the reveal sweep: the bar fills one wire,
-                              // lights its benchmark, then moves on. The route is
-                              // determined from the server's meta first, so the sweep
-                              // always shows what actually ran, and the answer reveals
-                              // only when Output cost lights.
+  var COMPLETE_MS = 1200;     // post-done completion budget: the stages still
+                              // unlit share this at randomized speeds, so the
+                              // answer reveals on schedule after the meta arrives.
+  var CREEP_CAP = 0.85;       // a wire creeps to 85% while its stage is still
+                              // running, and only completes once its note is known.
   var reduced = !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
   function fmtWh(meta) {
     var e = meta && meta.energy && meta.energy.energy_wh;
     return (typeof e === 'number' && isFinite(e) ? e : 0).toFixed(3) + ' Wh est.';
+  }
+
+  /* Split totalMs into n random shares that sum to totalMs, so each bar
+     fills at its own speed while the whole sweep still finishes on time. */
+  function splitTotal(totalMs, n) {
+    var weights = [], sum = 0, i, out = [], used = 0;
+    for (i = 0; i < n; i++) { var w = 0.5 + Math.random(); weights.push(w); sum += w; }
+    for (i = 0; i < n - 1; i++) { var d = Math.max(60, Math.round(totalMs * weights[i] / sum)); out.push(d); used += d; }
+    out.push(Math.max(60, totalMs - used));
+    return out;
   }
 
   /* Which stages actually ran, in pipeline order, from the server's meta. */
@@ -1626,7 +1636,7 @@ if(typeof module!=='undefined'&&module.exports){
       var wrap = el('div', 'rv-stage'), wire = el('span', 'rv-wire'), fill = el('span', 'rv-fill');
       var node = el('div', 'rv-node'), text = el('div', 'rv-text'), name = el('div', 'rv-name'), note = el('div', 'rv-note');
       name.textContent = s.name;
-      note.textContent = showNotes ? s.note : '\u00a0';
+      note.textContent = (showNotes && s.note) ? s.note : '\u00a0';
       wire.appendChild(fill);
       text.appendChild(name); text.appendChild(note);
       node.appendChild(el('span', 'rv-diamond')); node.appendChild(text);
@@ -1650,17 +1660,6 @@ if(typeof module!=='undefined'&&module.exports){
     n.note.textContent = note != null ? note : n.data.note;
   };
   RouteViz.prototype.setNote = function (i, note) { if (this.nodes[i]) { this.nodes[i].data.note = note; this.nodes[i].note.textContent = note; } };
-  /* Draw steps and spread them evenly over totalMs, then call done. */
-  RouteViz.prototype.play = function (steps, totalMs, done) {
-    var self = this, d = totalMs / steps.length;
-    this.clear();
-    this.build(steps, false);
-    steps.forEach(function (s, i) {
-      self.later(i * d, function () { self.fill(i, 1, d); });
-      self.later((i + 1) * d, function () { self.light(i); });
-    });
-    this.later(totalMs, function () { self.label(); if (done) done.call(null); }); /* .call() so the site-calls regression test (which cannot see parameters) stays green */
-  };
   RouteViz.prototype.label = function () {
     this.root.setAttribute('aria-label', 'Route: ' + this.nodes.map(function (n) { return n.data.name + ', ' + n.data.note; }).join('; '));
   };
@@ -1673,21 +1672,54 @@ if(typeof module!=='undefined'&&module.exports){
   };
 
   /*
-   * One session per sent message. The answer text is buffered while
-   * it streams in; nothing is shown until the server's meta arrives
-   * with done. Only then is the route determined (from the real
-   * meta, via stepsFromMeta), the benchmarks are laid out, and the
-   * sweep plays: the yellow bar fills one wire, lights its
-   * benchmark with its true note, and moves on. The answer reveals
-   * only when Output cost lights, with the real Wh figure.
+   * One session per sent message. The sweep is live from the moment
+   * you send: PromptShrink fills and lights first (its note comes
+   * from the client's own shrink, known immediately), and the other
+   * wires creep toward 85% on staggered starts, each at its own
+   * pace, so the strip looks busy during the wait. Nothing lights
+   * until its note is known. The model choice is revealed at the
+   * back: Model cascade only lights once the server's meta arrives.
+   * On done the real route is determined (via stepsFromMeta), the
+   * notes are filled in, and the stages still unlit complete in
+   * order, sharing the COMPLETE_MS budget at randomized speeds, so
+   * the whole thing finishes on schedule. The Output cost wire is
+   * the energy bar: it creeps during the wait and completes exactly
+   * as the answer reveals. A local or cached answer rebuilds the
+   * strip to its real route on done, before anything else lights.
    * opts.shrinkTokens   tokens PromptShrink removed client-side (0 if none)
    * opts.onReveal(text, meta)  final render: markdown, meta tags, receipt
    * opts.onError(msg)
    */
   function createRouteSession(viz, opts) {
     var buf = '', meta = null, gotDone = false, finished = false;
+    var lit = [false, false, false, false];
+    var timers = [];
+    function later(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+    // The pipeline as it will run: PromptShrink is known now (the
+    // client shrank the prompt); the rest are placeholders whose
+    // notes arrive with the meta.
+    var steps = [
+      { name: 'PromptShrink', note: opts.shrinkTokens ? opts.shrinkTokens + ' tokens cut' : 'Already short' },
+      { name: 'Model cascade', note: '' },
+      { name: 'Quality check', note: '' },
+      { name: 'Output cost', note: '' },
+    ];
     viz.reset();
     viz.start();
+    viz.build(steps, true);
+
+    // Live phase: PromptShrink fills at its own speed and lights;
+    // the other wires creep toward 85% while the model works.
+    var d0 = 400 + Math.random() * 500;
+    viz.fill(0, 1, d0);
+    later(d0, function () { viz.light(0); lit[0] = true; });
+    [1, 2, 3].forEach(function (i) {
+      later(d0 + 200 + Math.random() * 500, function () {
+        viz.fill(i, CREEP_CAP, 6000 + Math.random() * 4000);
+      });
+    });
 
     function reveal() {
       if (finished) return;
@@ -1696,20 +1728,46 @@ if(typeof module!=='undefined'&&module.exports){
       opts.onReveal(buf, meta || {});
     }
 
+    function complete() {
+      // Finish the stages still unlit, in order, sharing COMPLETE_MS
+      // between them at randomized speeds, then reveal.
+      var rest = [];
+      for (var i = 0; i < steps.length; i++) if (!lit[i]) rest.push(i);
+      if (!rest.length) { reveal(); return; }
+      var shares = splitTotal(COMPLETE_MS, rest.length);
+      var at = 0;
+      rest.forEach(function (idx, k) {
+        var dur = shares[k];
+        later(at, function () { viz.fill(idx, 1, dur); });
+        later(at + dur, function () { viz.light(idx); lit[idx] = true; });
+        at += dur;
+      });
+      later(at, reveal);
+    }
+
     return {
       chunk: function (text) { buf += text; },
       done: function (m) {
         if (gotDone) return;
         meta = m || {};
         gotDone = true;
-        var steps = stepsFromMeta(meta, opts.shrinkTokens);
-        viz.play(steps, steps.length * SWEEP_MS, reveal);
+        clearTimers();
+        var real = stepsFromMeta(meta, opts.shrinkTokens);
+        var same = real.length === steps.length && real.every(function (s, i) { return s.name === steps[i].name; });
+        if (!same) {
+          viz.build(real, true);
+          steps = real;
+          lit = steps.map(function () { return false; });
+        } else {
+          real.forEach(function (s, i) { viz.setNote(i, s.note); });
+        }
+        complete();
       },
-      error: function (msg) { finished = true; viz.fail('Error'); if (opts.onError) opts.onError(msg); }
+      error: function (msg) { finished = true; clearTimers(); viz.fail('Error'); if (opts.onError) opts.onError(msg); }
     };
   }
 
-  global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, SWEEP_MS: SWEEP_MS };
+  global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, COMPLETE_MS: COMPLETE_MS };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /* ═══════════════════════════════════════════════
