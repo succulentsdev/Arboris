@@ -865,6 +865,19 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertEqual(html.lower().count("<head>"), 1)
         self.assertEqual(html.lower().count("<body>"), 1)
 
+    def test_route_animation_loads_without_module(self):
+        # Regression guard (2026-11-26): the whole ArborisRoute IIFE
+        # sat inside the `if(typeof module...)` block, so in a real
+        # browser (no `module` global) the strip never built, while
+        # every vm-based check passed because its vm defines `module`.
+        # This runs the inline script the way a browser does.
+        out = subprocess.run(
+            ["node", str(ROOT / "tests" / "site_browser_globals.js")],
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn('"arborisRoute":"object"', out.stdout)
+        self.assertIn('"sweepMs":450', out.stdout)
 
     def test_env_example_has_no_real_key(self):
         text = (ROOT / ".env.example").read_text(encoding="utf-8")

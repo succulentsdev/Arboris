@@ -1559,6 +1559,7 @@ function cacheKey(shrunk){return shrunk.toLowerCase().replace(/[^a-z0-9 ]/g,'').
 function estTokens(text){return Math.max(1,Math.round(text.trim().split(/\s+/).length*1.33));}
 if(typeof module!=='undefined'&&module.exports){
   module.exports={shrinkPrompt,routeMode,estTokens};
+}
 
 /* Arboris route animation: vanilla JS, no dependencies. */
 (function (global) {
@@ -1704,7 +1705,6 @@ if(typeof module!=='undefined'&&module.exports){
 
   global.ArborisRoute = { RouteViz: RouteViz, createRouteSession: createRouteSession, stepsFromMeta: stepsFromMeta, SWEEP_MS: SWEEP_MS };
 })(typeof window !== 'undefined' ? window : globalThis);
-}
 
 /* ═══════════════════════════════════════════════
    DOM & Live Application
