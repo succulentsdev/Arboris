@@ -595,17 +595,17 @@ body {
   --rv-node: #6FBF8E;
   --rv-bg: var(--bg, #0E1813);
   display: flex; align-items: center;
-  max-width: 1200px; margin: 0 auto; box-sizing: border-box;
-  padding: 6px 64px 46px 34px;
+  max-width: 600px; margin: 0 auto; box-sizing: border-box;
+  padding: 4px 32px 36px 20px;
 }
 .rv-start, .rv-node { position: relative; flex: none; z-index: 1 }
-.rv-dot { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--rv-wire); transition: background .2s }
+.rv-dot { display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--rv-wire); transition: background .2s }
 .rv-active .rv-dot { background: var(--rv-current) }
 .rv-label, .rv-text { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; text-align: center }
-.rv-label { top: 24px; font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
-.rv-text { top: 26px }
+.rv-label { top: 20px; font: 700 11px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-text { top: 22px }
 .rv-stage { flex: 1; display: flex; align-items: center; min-width: 0 }
-.rv-wire { position: relative; flex: 1; height: 3px; background: var(--rv-wire); margin: 0 -3px 0 -2px }
+.rv-wire { position: relative; flex: 1; height: 2px; background: var(--rv-wire); margin: 0 -3px 0 -2px }
 .rv-fill {
   position: absolute; left: 0; top: 0; bottom: 0; width: 0;
   background: var(--rv-current);
@@ -613,7 +613,7 @@ body {
   transition-property: width; transition-timing-function: linear;
 }
 .rv-diamond {
-  display: block; width: 16px; height: 16px; transform: rotate(45deg);
+  display: block; width: 14px; height: 14px; transform: rotate(45deg);
   border: 2px solid var(--rv-wire); background: var(--rv-bg);
   transition: background .25s, border-color .25s;
 }
@@ -622,9 +622,9 @@ body {
   border-color: color-mix(in srgb, var(--rv-node) 60%, #fff);
   animation: rvPulse .7s ease-out;
 }
-.rv-name { font: 700 13px var(--font-body, inherit); color: var(--ink3, #7F9586) }
+.rv-name { font: 700 11px var(--font-body, inherit); color: var(--ink3, #7F9586) }
 .rv-lit .rv-name { color: var(--ink, #E7EFE8) }
-.rv-note { font: 11px var(--font-mono, monospace); margin-top: 3px; color: var(--ink3, #7F9586) }
+.rv-note { font: 10px var(--font-mono, monospace); margin-top: 3px; color: var(--ink3, #7F9586) }
 .rv-lit .rv-note { color: var(--rv-current) }
 .rv-failed .rv-fill { background: var(--red, #f07068); box-shadow: none }
 @keyframes rvPulse {
@@ -632,7 +632,7 @@ body {
   100% { box-shadow: 0 0 0 12px transparent }
 }
 @media (max-width: 540px) {
-  .rv { padding: 4px 44px 40px 26px }
+  .rv { padding: 4px 24px 32px 16px }
   .rv-name, .rv-label { font-size: 11px }
   .rv-note { display: none }
 }
@@ -1459,21 +1459,36 @@ if(typeof module!=='undefined'&&module.exports){
     return out;
   }
 
-  /* Which stages actually ran, in pipeline order, from the server's meta. */
+  /* Short display name for a model id: last path segment, without :free. */
+  function shortModel(id) {
+    if (!id) return '';
+    return String(id).split('/').pop().replace(/:free$/, '') || String(id);
+  }
+
+  /* Which stages actually ran, in pipeline order, from the server's meta.
+     Only stages that did something earn a checkpoint: PromptShrink only
+     when it cut tokens, the one path the query actually took (local,
+     cache, or model), and the quality check only on fresh model answers.
+     Names say what happened, not which component ran, so each query's
+     strip tells its own story. Minimum is the start plus two checkpoints
+     (a local or cached answer with nothing trimmed); maximum is the start
+     plus four (a model answer with tokens trimmed). */
   function stepsFromMeta(meta, shrinkTokens) {
     meta = meta || {};
     var s = [];
-    // PromptShrink runs on every prompt, before anything else, so it is
-    // always a checkpoint; when nothing was cut the note says so.
-    if (meta.shrink) {
-      var cut = meta.shrink.changed ? (meta.shrink.saved_tokens_est || shrinkTokens || 1) : 0;
-      s.push({ name: 'PromptShrink', note: cut ? cut + ' tokens cut' : 'Already short' });
+    if (meta.shrink && meta.shrink.changed) {
+      var cut = meta.shrink.saved_tokens_est || shrinkTokens || 1;
+      s.push({ name: 'Trimmed', note: cut + ' tokens cut' });
     }
-    if (meta.local_answer) s.push({ name: 'Zero-model gate', note: 'Answered here' });
-    if (meta.cache_hit) s.push({ name: 'Session cache', note: meta.semantic_cache_hit ? 'Similar answer reused' : 'Answer reused' });
-    if (!meta.local_answer && !meta.cache_hit) s.push({ name: 'Model cascade', note: meta.routed_to_small ? 'Small model' : 'Full model' });
+    if (meta.local_answer) s.push({ name: 'Answered here', note: 'No model call' });
+    if (meta.cache_hit) s.push({ name: 'Cached', note: meta.semantic_cache_hit ? 'Similar answer reused' : 'Answer reused' });
+    if (!meta.local_answer && !meta.cache_hit) {
+      if (meta.escalated) s.push({ name: 'Escalated', note: 'Small model \u2192 full model' });
+      else if (meta.routed_to_small) s.push({ name: 'Small model', note: shortModel(meta.small_model || meta.model) });
+      else s.push({ name: 'Full model', note: shortModel(meta.provider_model || meta.model) });
+    }
     // Fresh model answers are scored by the transparent scorer before the receipt.
-    if (!meta.local_answer && !meta.cache_hit && typeof meta.answer_score === 'number' && isFinite(meta.answer_score)) s.push({ name: 'Quality check', note: 'Score ' + meta.answer_score.toFixed(2) });
+    if (!meta.local_answer && !meta.cache_hit && typeof meta.answer_score === 'number' && isFinite(meta.answer_score)) s.push({ name: 'Checked', note: 'Score ' + meta.answer_score.toFixed(2) });
     s.push({ name: 'Output cost', note: fmtWh(meta) });
     return s;
   }
@@ -1564,34 +1579,52 @@ if(typeof module!=='undefined'&&module.exports){
    */
   function createRouteSession(viz, opts) {
     var buf = '', meta = null, gotDone = false, finished = false;
-    var lit = [false, false, false, false];
     var timers = [];
     function later(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    var startedAt = Date.now();
 
-    // The pipeline as it will run: PromptShrink is known now (the
-    // client shrank the prompt); the rest are placeholders whose
-    // notes arrive with the meta.
-    var steps = [
-      { name: 'PromptShrink', note: opts.shrinkTokens ? opts.shrinkTokens + ' tokens cut' : 'Already short' },
-      { name: 'Model cascade', note: '' },
-      { name: 'Quality check', note: '' },
-      { name: 'Output cost', note: '' },
-    ];
+    // The pipeline as it will run: whether PromptShrink trimmed anything
+    // is known now (the client shrank the prompt); the rest are
+    // placeholders whose notes arrive with the meta. The most common
+    // path is a full-model answer, so that is the prediction; on done
+    // the strip rebuilds if the query actually took another path.
+    var steps = [];
+    if (opts.shrinkTokens) steps.push({ name: 'Trimmed', note: opts.shrinkTokens + ' tokens cut' });
+    steps.push({ name: 'Full model', note: '' });
+    steps.push({ name: 'Checked', note: '' });
+    steps.push({ name: 'Output cost', note: '' });
+    var lit = steps.map(function () { return false; });
     viz.reset();
     viz.start();
     viz.build(steps, true);
 
-    // Live phase: PromptShrink fills at its own speed and lights;
-    // the other wires creep toward 85% while the model works.
-    var d0 = 400 + Math.random() * 500;
-    viz.fill(0, 1, d0);
-    later(d0, function () { viz.light(0); lit[0] = true; });
-    [1, 2, 3].forEach(function (i) {
-      later(d0 + 200 + Math.random() * 500, function () {
-        viz.fill(i, CREEP_CAP, 6000 + Math.random() * 4000);
-      });
-    });
+    // Live phase: the pre-final stages fill one at a time, in order,
+    // each at its own randomized speed. The last pre-final stage fills
+    // to 85% and then creeps slowly, so a slow response never leaves
+    // the strip dead; it only lights once the meta arrives. The final
+    // stage (Output cost) never starts during the wait: it fills as
+    // the answer reveals, in complete().
+    var pre = steps.length - 1;
+    function fillSeq(i) {
+      if (gotDone || finished || i >= pre) return;
+      var dur = 400 + Math.random() * 500;
+      if (i === pre - 1) {
+        viz.fill(i, CREEP_CAP, dur);
+        later(dur, function () {
+          if (gotDone || finished) return;
+          viz.fill(i, 0.95, 9000);
+        });
+      } else {
+        viz.fill(i, 1, dur);
+        later(dur, function () {
+          if (gotDone || finished) return;
+          viz.light(i); lit[i] = true;
+          fillSeq(i + 1);
+        });
+      }
+    }
+    fillSeq(0);
 
     function reveal() {
       if (finished) return;
@@ -1601,20 +1634,28 @@ if(typeof module!=='undefined'&&module.exports){
     }
 
     function complete() {
-      // Finish the stages still unlit, in order, sharing COMPLETE_MS
-      // between them at randomized speeds, then reveal.
+      // Finish the stages still unlit, in order, then reveal. The final
+      // stage (Output cost) fills as the answer reveals; its duration
+      // grows with the response time, so a slow answer gets a slower,
+      // more deliberate reveal (throttled, capped at 1200ms).
       var rest = [];
       for (var i = 0; i < steps.length; i++) if (!lit[i]) rest.push(i);
       if (!rest.length) { reveal(); return; }
-      var shares = splitTotal(COMPLETE_MS, rest.length);
+      var elapsed = Date.now() - startedAt;
+      var finalMs = Math.min(1200, 400 + Math.round(elapsed * 0.05));
+      var finalIdx = rest[rest.length - 1];
+      var before = rest.slice(0, -1);
+      var shares = before.length ? splitTotal(Math.max(200, COMPLETE_MS - finalMs), before.length) : [];
       var at = 0;
-      rest.forEach(function (idx, k) {
+      before.forEach(function (idx, k) {
         var dur = shares[k];
         later(at, function () { viz.fill(idx, 1, dur); });
         later(at + dur, function () { viz.light(idx); lit[idx] = true; });
         at += dur;
       });
-      later(at, reveal);
+      later(at, function () { viz.fill(finalIdx, 1, finalMs); });
+      later(at + finalMs, function () { viz.light(finalIdx); lit[finalIdx] = true; });
+      later(at + finalMs, reveal);
     }
 
     return {

@@ -918,8 +918,8 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn('"arborisRoute":"object"', out.stdout)
         self.assertIn('"completeMs":1200', out.stdout)
-        self.assertIn('"modelSteps":["PromptShrink","Model cascade","Quality check","Output cost"]', out.stdout)
-        self.assertIn('"localSteps":["PromptShrink","Zero-model gate","Output cost"]', out.stdout)
+        self.assertIn('"modelSteps":["Trimmed","Small model","Checked","Output cost"]', out.stdout)
+        self.assertIn('"localSteps":["Answered here","Output cost"]', out.stdout)
 
     def test_env_example_has_no_real_key(self):
         text = (ROOT / ".env.example").read_text(encoding="utf-8")
