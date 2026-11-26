@@ -619,6 +619,21 @@ class RateLimiter:
                     del self._hits[key]
             return True
 
+    def remaining(self, client):
+        """Requests left for this client in the current window.
+
+        Prunes expired hits first, so the count matches allow(). None when
+        the limiter is disabled (limit <= 0).
+        """
+        if self.limit <= 0:
+            return None
+        now = self.clock()
+        with self._lock:
+            hits = self._hits.setdefault(client, collections.deque())
+            while hits and now - hits[0] >= self.window:
+                hits.popleft()
+            return max(0, self.limit - len(hits))
+
 
 class SessionStore:
     """session id -> SessionCache, least recently used evicted first."""
@@ -1021,6 +1036,17 @@ class Backend:
         if not self.global_limiter.allow("global"):
             return False, 86400
         return True, 0
+
+    def remaining_for(self, client):
+        """Requests left for this client: {"hour": ..., "day": ...}.
+
+        Counts down the same per-IP limiters allow_request() checks, after
+        that call recorded this request. None when the limiter is disabled.
+        """
+        return {
+            "hour": self.rate_limiter.remaining(client),
+            "day": self.daily_limiter.remaining(client),
+        }
 
     def _default_provider(self, model):
         return OpenAICompatibleProvider(
@@ -1826,6 +1852,7 @@ def make_handler(backend):
                 return self._send_error(500, MSG_INTERNAL)
 
             meta = result["meta"]
+            meta["rate_limit_remaining"] = backend.remaining_for(self._client_ip())
             try:
                 if req.stream:
                     meta["delivery"] = "sse"

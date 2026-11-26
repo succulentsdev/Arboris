@@ -529,6 +529,16 @@ body {
   white-space: nowrap; transition: filter .18s, transform .1s;
 }
 .btn-compress:hover { filter: brightness(1.15) }
+.btn-attach {
+  min-height: 48px; padding: 0 13px; border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface2); color: var(--ink2);
+  font: 600 12px var(--font-body); cursor: pointer;
+  white-space: nowrap; transition: filter .18s, transform .1s;
+}
+.btn-attach:hover { color: var(--ink); border-color: var(--border2) }
+.btn-attach:active { transform: scale(.98) }
+.attach-chip { font-size: 12px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px }
 .btn-compress:active { transform: scale(.98) }
 .btn-s {
   min-height: 48px; padding: 12px 24px; border-radius: 12px; border: none;
@@ -1160,6 +1170,12 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important }
 }
+.cmp-wrap{overflow-x:auto}
+table.cmp{width:100%;border-collapse:collapse;font-size:14px}
+.cmp th,.cmp td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+.cmp thead th{color:var(--ink)}
+.cmp tbody th{white-space:nowrap}
+.cmp-src{font-size:12px;color:var(--ink2);margin-top:8px}
 </style>
 </head>
 <body>
@@ -1173,6 +1189,7 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
     <a class="nav-link" href="#totals-live">Eco Telemetry</a>
     <a class="nav-link" href="#sim-section">Annual Simulator</a>
     <a class="nav-link" href="#features">Power Levers</a>
+    <a class="nav-link" href="#compare">Compare</a>
     <a class="nav-link" href="#methodology">Methodology</a>
     <a class="nav-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener">GitHub</a>
   </nav>
@@ -1229,9 +1246,12 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
         </div>
         <div class="ip-preview" id="ip-prev"></div>
         <div class="ip-count" id="ip-cnt"></div>
+        <span class="attach-chip" id="attach-chip" hidden></span>
       </div>
       <div class="ir">
         <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
+        <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
+        <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about">📎 Attach</button>
         <button class="btn-compress" id="compress-btn" type="button" title="Apply PromptShrink compression directly to your input text">✂ Compress</button>
         <button class="btn-s" id="sb" type="button">Send</button>
         <button class="btn-cl" id="cb" type="button" title="Clear chat" aria-label="Clear chat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
@@ -1270,6 +1290,7 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
       <div class="ti"><span class="tn" id="lt-co2">0 g</span><span class="tl">CO₂e (est.)</span><span class="te" id="lt-finland">0 g at 30 g/kWh (FI)</span></div>
       <div class="ti"><span class="tn" id="lt-hits">0</span><span class="tl">cache hits</span><span class="te">0 Wh reuse</span></div>
       <div class="ti"><span class="tn" id="lt-esc">0</span><span class="tl">escalations</span><span class="te">cascade checks</span></div>
+      <div class="ti"><span class="tn" id="lt-left">—</span><span class="tl">chats left today</span><span class="te" id="lt-left-sub">shown after your first answer</span></div>
       <div class="ti"><span class="tn" id="lt-saved">—</span><span class="tl" id="lt-saved-lbl">saved vs baseline (measured)</span><span class="te" id="lt-est-saved">enable Measure baseline to test</span></div>
     </div>
     <div class="eco-flair-grid">
@@ -1347,6 +1368,22 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
     <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>5. Reasoning Effort &amp; Small-Tier Cascade</span><span class="feat-badge">Capped CoT</span></div><div class="feat-row-desc">Caps hidden chain-of-thought <code>reasoning_effort</code> on trivial queries and routes easy lookups to a smaller model tier first, escalating to the primary model only when confidence or quality score is low.</div></div></div>
     <div class="feat-row"><div class="feat-row-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12a4 4 0 004 4M12 8v8M9 9l6 6"/></svg></div><div class="feat-row-body"><div class="feat-row-title"><span>6. Output-Weighted Carbon Receipts</span><span class="feat-badge">Transparent</span></div><div class="feat-row-desc">Every answer includes an interactive energy, CO₂e, and cooling-water receipt computed from provider-reported tokens (including hidden <code>reasoning_tokens</code>) with published academic anchors.</div></div></div>
   </div>
+</div>
+
+<div class="feat-section" id="compare">
+  <h2 class="feat-section-title">How Arboris compares</h2>
+  <p class="feat-section-sub">Same question, different defaults. Arboris publishes its numbers; the others publish theirs where they have them.</p>
+  <div class="cmp-wrap"><table class="cmp">
+    <thead><tr><th></th><th>Arboris</th><th>ChatGPT</th><th>EcoGPT</th></tr></thead>
+    <tbody>
+      <tr><th>Model size</th><td>OpenRouter free-router primary, 2.6B small model first when routing is on</td><td>Not published</td><td>Small open models, about 10x fewer active parameters</td></tr>
+      <tr><th>Where it runs</th><td>us-central1, 88% carbon-free, 432 gCO2eq/kWh</td><td>Not published</td><td>Finland, Hamina, 98% carbon-free (2023)</td></tr>
+      <tr><th>Energy per answer</th><td>0.0006 Wh per output token, estimate from published factors</td><td>About 0.3 Wh for a typical query (Epoch AI, 2025)</td><td>No per-prompt energy figure published</td></tr>
+      <tr><th>Trees</th><td>None yet</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
+      <tr><th>Account and ads</th><td>No account, no ads, the API key never reaches the browser</td><td>Free to start, paid plans from $8 a month</td><td>Free 60/day, 500/day with a free account and ads</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cmp-src">Sources: EcoGPT comparison pages and Google Cloud region carbon data, read October 2026; Epoch AI, February 2025. Energy figures are estimates unless stated otherwise.</p>
 </div>
 
 <section class="meth-section" id="methodology" aria-label="Methodology and carbon transparency">
@@ -1757,6 +1794,7 @@ document.getElementById('copy-btn').addEventListener('click',function(){
     'Output tokens: '+liveTotals.outTok+'\n'+
     'Estimated energy: '+fmtWh(liveTotals.wh||0)+'\n'+
     'Estimated CO2e: '+fmtCO2(liveTotals.co2g||0)+'\n'+
+    'Chats left today: '+(liveQuota?liveQuota.day:'—')+'\n'+
     'Cache hits: '+liveTotals.hits+'\n'+
     'Escalations: '+liveTotals.esc+'\n'+
     '(provider-reported tokens, live answers only)\n'+
@@ -1863,6 +1901,28 @@ function doSend(){
 }
 function ask(raw){sendLive(raw);}
 
+/* Attach a .txt/.md file: read client-side, sent as a text attachment */
+var attachFileEl=document.getElementById('attach-file');
+var attachChipEl=document.getElementById('attach-chip');
+var pendingAttachment=null;
+document.getElementById('attach-btn').addEventListener('click',function(){attachFileEl.click();});
+attachFileEl.addEventListener('change',function(){
+  var f=attachFileEl.files&&attachFileEl.files[0];
+  attachFileEl.value='';
+  if(!f)return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var text=String(reader.result||'');
+    if(text.length>200000){showToast('File too large: 200,000 characters max.');return;}
+    pendingAttachment={name:f.name,type:'text/plain',text:text};
+    attachChipEl.hidden=false;
+    attachChipEl.textContent='📎 '+f.name+' ×';
+  };
+  reader.onerror=function(){showToast('Could not read that file.');};
+  reader.readAsText(f);
+});
+attachChipEl.addEventListener('click',function(){pendingAttachment=null;attachChipEl.hidden=true;});
+
 /* Clear */
 document.getElementById('cb').addEventListener('click',function(){
   epoch++;
@@ -1916,7 +1976,7 @@ var LIVE_DEFAULT_URL=(window.location.hostname&&(/\.run\.app$/i.test(window.loca
     ?window.location.origin+'/api/chat'
     :'http://localhost:8000/api/chat';
 var MODE_MULT={sprout:3.4,canopy:2.6,forest:1.9,full:1.9};
-var liveTurns=[],liveTotals=zeroLive(),liveCtrls=[];
+var liveTurns=[],liveTotals=zeroLive(),liveCtrls=[],liveQuota=null;
 var liveSession=newLiveSession();
 var liveUrlEl=document.getElementById('live-url');
 var liveBaselineEl=document.getElementById('live-baseline');
@@ -2064,6 +2124,8 @@ function renderLiveTotals(){
   set('lt-co2',fmtCO2(co2));
   set('lt-finland',fmtCO2(co2*(30/400))+' at 30 g/kWh (FI)');
   set('lt-hits',T.hits);set('lt-esc',T.esc);
+  set('lt-left',liveQuota?liveQuota.day:'—');
+  set('lt-left-sub',liveQuota?'server count, resets daily':'shown after your first answer');
   set('lt-unrep',T.unreported?('+'+T.unreported+' not reported'):'');
   set('lt-saved',T.measured?T.saved:'—');
   set('lt-saved-lbl',T.measured?('saved vs baseline (measured, '+T.measured+' msg'+(T.measured!==1?'s':'')+')'):'saved vs baseline (measured)');
@@ -2118,6 +2180,8 @@ function liveMetaLine(m){
     else if(isNum(m.baseline.saved_total_tokens))p.push('measured saving: '+m.baseline.saved_total_tokens+' tokens vs unconstrained baseline');
     else p.push('baseline: '+(m.baseline.note||'not measured'));
   }
+  var why=whyModel(m);
+  if(why)p.push('why: '+why);
   return p.join(' · ');
 }
 function modeTag(mode,cacheHit,title){
@@ -2183,14 +2247,27 @@ function buildEcoDrawer(t){
   return drawer;
 }
 
+function whyModel(m){
+  if(m.local_answer||m.cache_hit)return null;
+  var bits=[];
+  if(m.model_tier==='small')bits.push('small model first');
+  else bits.push(m.escalated?'primary model (escalated from small)':'primary model');
+  if(m.task_type)bits.push(m.task_type+' question');
+  if(isNum(m.answer_score))bits.push('score '+m.answer_score);
+  return bits.join(' · ');
+}
+
 function liveMetaRow(t){
   var m=t.meta,mm=document.createElement('div');mm.className='mm';
   mm.appendChild(infoTag('LIVE','Answered by your backend','tg-live'));
   mm.appendChild(modeTag(m.mode,!!m.cache_hit,m.mode_source==='explicit'?'Mode chosen explicitly':'Mode picked by the backend router'));
   if(!m.cache_hit&&!m.local_answer){
     mm.appendChild(infoTag(String(m.model),'Model that produced this answer'));
+    if(m.model_tier==='small')mm.appendChild(infoTag('Small model','Answered by the small model tier: '+(m.small_model||m.model)));
     if(m.provider_model&&m.provider_model!==m.model)mm.appendChild(infoTag('via '+m.provider_model,'Model the provider says answered (its own claim, e.g. the model a router picked)'));
     if(m.escalated)mm.appendChild(infoTag('↑ escalated',m.escalation_reason||''));
+    var why=whyModel(m);
+    if(why)mm.appendChild(infoTag(why,'Why this model answered: tier, task type, and local quality score from the answer meta'));
   } else if(m.cached_from_model){
     mm.appendChild(infoTag('from '+m.cached_from_model+(m.cached_answer_was_escalated?' (escalated)':''),'Cached answer: no model was called for this message'));
   }
@@ -2302,6 +2379,7 @@ function liveRequest(url,body,on){
   });
 }
 function accumulateTurnIntoTotals(T,m){
+  if(m.rate_limit_remaining)liveQuota=m.rate_limit_remaining;
   T.calls++;
   if(m.cache_hit)T.hits++;
   if(m.local_answer)T.local=(T.local||0)+1;
@@ -2323,13 +2401,17 @@ function accumulateTurnIntoTotals(T,m){
   if(m.baseline&&isNum(m.baseline.saved_total_tokens)){T.measured++;T.saved+=m.baseline.saved_total_tokens;}
 }
 function sendLive(raw,display,expandOf){
-  if(!raw.trim())return;
+  if(!raw.trim()&&!pendingAttachment)return;
+  var att=pendingAttachment;pendingAttachment=null;attachChipEl.hidden=true;
   var url=liveUrlEl.value.trim()||LIVE_DEFAULT_URL;
   var t={live:true,raw:raw,seq:++seqCounter,answer:'',meta:null,error:null};
   liveTurns.push(t);
   var wrap=document.createElement('div');wrap.className='turn';t.el=wrap;
   var urow=document.createElement('div');urow.className='mr user';
-  var ub=document.createElement('div');ub.className='bubble';ub.textContent=display||raw;
+  var ub=document.createElement('div');ub.className='bubble';
+  var disp=display||raw;
+  if(att)disp=disp?disp+'\n[Attached: '+att.name+']':'[Attached: '+att.name+']';
+  ub.textContent=disp;
   urow.appendChild(ub);
   if(!expandOf)attachUserShrinkDiff(urow,raw);
   wrap.appendChild(urow);chatEl.appendChild(wrap);
@@ -2351,6 +2433,7 @@ function sendLive(raw,display,expandOf){
   var reqMode=expandOf?'full':(selectedMode||'auto');
   var body={prompt:raw,session_id:liveSession,mode:reqMode,stream:true,measure_baseline:!!liveBaselineEl.checked};
   if(expandOf)body.expand_of=expandOf;
+  if(att)body.attachments=[att];
   liveRequest(url,body,{
     chunk:function(text){
       if(liveTurns.indexOf(t)<0)return;

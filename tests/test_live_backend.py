@@ -518,6 +518,20 @@ class RateLimiterTests(unittest.TestCase):
         limiter = RateLimiter(0)
         self.assertTrue(all(limiter.allow("ip") for _ in range(500)))
 
+    def test_remaining_counts_down_and_prunes(self):
+        now = [1000.0]
+        limiter = RateLimiter(3, window_seconds=3600, clock=lambda: now[0])
+        self.assertEqual(limiter.remaining("1.2.3.4"), 3)
+        limiter.allow("1.2.3.4")
+        limiter.allow("1.2.3.4")
+        self.assertEqual(limiter.remaining("1.2.3.4"), 1)
+        self.assertEqual(limiter.remaining("5.6.7.8"), 3)  # per client
+        now[0] += 3600
+        self.assertEqual(limiter.remaining("1.2.3.4"), 3)
+
+    def test_remaining_none_when_disabled(self):
+        self.assertIsNone(RateLimiter(0).remaining("ip"))
+
 
 class SSEFormatTests(unittest.TestCase):
     def test_build_and_parse_sample_stream(self):
@@ -585,6 +599,7 @@ class HTTPTests(unittest.TestCase):
                   "output_tokens", "latency_ms"):
             self.assertIn(k, meta)
         self.assertEqual(meta["delivery"], "sse")
+        self.assertEqual(meta["rate_limit_remaining"], {"hour": 29, "day": 99})
         self.assertFalse(meta["provider_streaming"])
         self.assertNotIn(SENTINEL_KEY, data)
 
