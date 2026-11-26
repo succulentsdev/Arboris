@@ -256,9 +256,11 @@ class TestSavingsReceipt(unittest.TestCase):
     "typical chatbot"); one little fun fact right under the graphic,
     the chat's total saving in everyday terms, rotating so the user
     does not always see the same one; no Wh numbers and no running
-    total wording on the surface (the drawer keeps the numbers); a
-    300ms grow, once, when the reply finishes; and a neutral "about
-    the same" for a reply that saves little or nothing.
+    total wording on the surface (the methodology page keeps the
+    numbers); a 300ms grow, once, when the reply finishes; and a
+    neutral "about the same" for a reply that saves little or nothing.
+    The receipt is a plain display, not a button: it does not open a
+    detail view, and there is no drawer on the main page.
     """
 
     def test_receipt_is_a_comparison_bar_under_the_answer(self):
@@ -288,18 +290,22 @@ class TestSavingsReceipt(unittest.TestCase):
         self.assertIn("of a phone battery", html)
         self.assertIn("Google search", html)
         self.assertIn("of reading on an e-reader", html)
-        self.assertIn("Phone-charge equivalent assumes a 10W charger", html)
         # Edge case: a reply that saves little says so in neutral gray.
         self.assertIn("about the same as a typical chatbot", html)
         self.assertIn(".sv-fill.sv-same", html)
         # Grow animation: once, 300ms, on the fill only.
         self.assertIn("@keyframes svGrow", html)
         self.assertIn("animation: svGrow 300ms ease-out", html)
-        # No red in the receipt: the drawer's baseline bar is gray too.
-        std = re.search(r"\.eco-bar-fill\.standard \{[^}]*\}", html).group(0)
-        self.assertIn("rgba(255,255,255", std)
-        self.assertNotIn("#cf4a28", std)
-        self.assertNotIn("#f07068", std)
+        # The receipt is a plain display, not a button: no drawer, no
+        # toggle, no role/tabIndex/title/aria-expanded on the strip, and
+        # the full numbers live on methodology.html.
+        self.assertNotIn("buildEcoDrawer", html)
+        self.assertNotIn("drawerEl", html)
+        self.assertNotIn("click for detail", html)
+        self.assertNotIn("stripEl.setAttribute('role','button')", html)
+        self.assertNotIn("stripEl.tabIndex", html)
+        self.assertNotIn("stripEl.title=", html)
+        self.assertNotIn("stripEl.setAttribute('aria-expanded'", html)
 
 
 if __name__ == "__main__":

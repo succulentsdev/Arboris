@@ -160,22 +160,6 @@ body {
 .backend-dot.offline {
   background: var(--amber);
 }
-.hd-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-left: auto;
-  margin-right: 16px;
-}
-.nav-link {
-  color: var(--ink2);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: .2px;
-  transition: color .2s;
-}
-.nav-link:hover { color: var(--ink) }
 .hd-r { display: flex; gap: 4px; align-items: center }
 .icon-btn {
   background: transparent;
@@ -1143,12 +1127,6 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
   display: flex; justify-content: center; align-items: center;
   gap: 16px; flex-wrap: wrap;
 }
-.footer-link {
-  color: var(--ink2); text-decoration: none; transition: color .2s;
-  display: inline-flex; align-items: center; gap: 5px;
-}
-.footer-link:hover { color: var(--teal) }
-.footer-link svg { width: 15px; height: 15px }
 .footer-sep { color: var(--ink3); opacity: .4 }
 
 /* ── Flash + Toast ── */
@@ -1172,9 +1150,6 @@ dialog.how::backdrop { background: rgba(0,8,18,.7); backdrop-filter: blur(6px) }
 @media (max-width: 780px) {
   .eco-flair-grid { grid-template-columns: 1fr }
   .pipeline-strip { display: none }
-}
-@media (max-width: 680px) {
-  .hd-nav { display: none }
 }
 @media (max-width: 600px) {
   .stats-bar { gap: 18px; padding: 28px 16px; margin: 16px 12px }
@@ -1232,11 +1207,6 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
     <div class="logo"><div class="logo-icon" aria-hidden="true"><img src="arboris-logo.webp" alt="" width="28" height="28"></div>Arboris</div>
     <div class="backend-pill" id="backend-status" title="Live backend status"><span class="backend-dot" id="backend-dot"></span><span id="backend-lbl">Live router</span></div>
   </div>
-  <nav class="hd-nav" aria-label="Page sections">
-    <a class="nav-link" href="telemetry.html">Eco Telemetry</a>
-    <a class="nav-link" href="telemetry.html#methodology">Methodology &amp; Compare</a>
-    <a class="nav-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener">GitHub</a>
-  </nav>
   <div class="hd-r">
     <div style="position:relative">
       <button class="icon-btn" id="settings-btn" type="button" aria-label="Backend settings" aria-haspopup="true" aria-expanded="false" title="Backend settings"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span></button>
@@ -1307,10 +1277,6 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
     <span id="ft-note">Arboris. Live answers from a real model.</span>
     <span class="footer-sep">·</span>
     <span>Grant O'Brien</span>
-    <span class="footer-sep">·</span>
-    <a class="footer-link" href="https://github.com/succulentsdev/greensearch" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> Source</a>
-    <span class="footer-sep">·</span>
-    <a class="footer-link" href="https://github.com/succulentsdev" target="_blank" rel="noopener"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
   </div>
 </footer>
 
@@ -2503,57 +2469,6 @@ function infoTag(text,title,cls){
 }
 
 /* Interactive per-answer Energy & Carbon Receipt Drawer */
-function buildEcoDrawer(t){
-  var m=t.meta||{},e=m.energy||{};
-  var drawer=document.createElement('div');
-  drawer.className='eco-drawer';
-  drawer.hidden=true;
-  var inTok=isNum(m.input_tokens)?m.input_tokens:0;
-  var outTok=isNum(m.output_tokens)?m.output_tokens:0;
-  var wh=isNum(e.energy_wh)?e.energy_wh:(outTok*0.0006+inTok*(0.0006/800));
-  var co2=isNum(e.co2e_g)?e.co2e_g:(wh*0.4);
-  var outWh=outTok*0.0006;
-  var inWh=inTok*(0.0006/800);
-  var mult=MODE_MULT[m.mode]||2.6;
-  var hasMeasured=m.baseline&&isNum(m.baseline.baseline_output_tokens);
-  var stdOut=hasMeasured?m.baseline.baseline_output_tokens:(m.local_answer||m.cache_hit?45:Math.max(outTok,Math.round(outTok*mult)));
-  var stdWh=stdOut*0.0006+inTok*(0.0006/800);
-  var savedPct=stdWh>0?Math.max(0,Math.round((1-(wh/stdWh))*100)):0;
-  var arbWidth=stdWh>0?Math.max(4,Math.min(100,Math.round((wh/stdWh)*100))):0;
-  var waterTxt=(isNum(e.water_ml_low)&&isNum(e.water_ml_high))?(e.water_ml_low+'–'+e.water_ml_high+' mL'):'0 mL';
-  var ledMs=((wh*3600)/9)*1000;
-
-  var levers=[];
-  if(m.local_answer)levers.push('⚡ Zero-Model Local Gate (0 Wh)');
-  if(m.cache_hit)levers.push(m.semantic_cache_hit?'♻ Semantic Cache Hit (0 Wh)':'♻ Exact Session Cache (0 Wh)');
-  if(m.shrink&&m.shrink.changed)levers.push('✂ PromptShrink (−'+(m.shrink.saved_tokens_est||1)+' in-tok)');
-  if(m.mode==='sprout')levers.push('🌱 Instant Cap (~2 sentences)');
-  else if(m.mode==='canopy')levers.push('🌿 Balanced Cap (~4 sentences)');
-  else levers.push('🌲 Thorough Budget (~6 sentences)');
-  if(m.task_type&&m.routed_by==='task')levers.push('🎯 Task Route: '+m.task_type);
-  if(m.routed_to_small)levers.push('🪶 Small-Model Tier');
-  if(m.reasoning_effort)levers.push('🧠 Reasoning Effort: '+m.reasoning_effort);
-  if(isNum(m.token_budget))levers.push('📏 Token Budget ≤'+m.token_budget);
-  if(m.long_input_pruned)levers.push('📄 Long-Input Pruned');
-
-  drawer.innerHTML=
-    '<div class="eco-drawer-hd"><span>⚡ Per-Message Energy &amp; Carbon Receipt</span><span>−'+savedPct+'% vs typical chatbot</span></div>'+
-    '<div class="eco-drawer-grid">'+
-      '<div class="eco-cell"><span class="eco-cell-v">'+fmtWh(outWh)+'</span><span class="eco-cell-k">Decode ('+outTok+' out-tok'+(isNum(m.reasoning_tokens)&&m.reasoning_tokens>0?', '+m.reasoning_tokens+' CoT':'')+')</span></div>'+
-      '<div class="eco-cell"><span class="eco-cell-v">'+(inWh>0?(inWh*1e6).toFixed(2)+' µWh':'0 Wh')+'</span><span class="eco-cell-k">Prefill ('+inTok+' in-tok · 1/800 wt)</span></div>'+
-      '<div class="eco-cell"><span class="eco-cell-v">'+fmtCO2(co2)+'</span><span class="eco-cell-k">CO₂e at 400 g/kWh ('+fmtCO2(co2*(30/400))+' in FI)</span></div>'+
-      '<div class="eco-cell"><span class="eco-cell-v">'+waterTxt+'</span><span class="eco-cell-k">Cooling water · '+(ledMs>=1000?(ledMs/1000).toFixed(1)+'s':ledMs.toFixed(0)+'ms')+' 9W LED</span></div>'+
-    '</div>'+
-    '<div class="eco-comp-row" style="margin-bottom:8px">'+
-      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>This Arboris reply ('+m.mode+')</span><span>'+outTok+' tok · '+fmtWh(wh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill arboris" style="width:'+arbWidth+'%"></div></div></div>'+
-      '<div class="eco-bar-wrap"><div class="eco-bar-lbl"><span>'+(hasMeasured?'Typical chatbot (measured)':'Typical chatbot ('+mult+'× modeled)')+'</span><span>'+stdOut+' tok · '+fmtWh(stdWh)+'</span></div><div class="eco-bar-track"><div class="eco-bar-fill standard" style="width:100%"></div></div></div>'+
-    '</div>'+
-    '<div class="eco-levers">'+levers.map(function(l){return'<span class="eco-lever-pill">'+escHtml(l)+'</span>';}).join('')+'</div>'+
-    '<div class="eco-drawer-note">'+escHtml(e.note||'Arithmetic estimate from provider-reported tokens (0.0006 Wh/out-tok, 1/800 input ratio, 400 gCO₂e/kWh).')+'</div>'+
-    '<div class="eco-drawer-note">Phone-charge equivalent assumes a 10W charger (1 Wh is about 6 minutes of charging).</div>';
-  return drawer;
-}
-
 function whyModel(m){
   if(m.local_answer||m.cache_hit)return null;
   var bits=[];
@@ -2566,11 +2481,11 @@ function whyModel(m){
 
 function liveMetaRow(t){
   var m=t.meta,mm=document.createElement('div');mm.className='mm';
-  var drawerEl=null,stripEl=null;
+  var stripEl=null;
   if(m.energy&&m.energy.status==='estimate'&&isNum(m.energy.energy_wh)){
     var e=m.energy;
-    // Same numbers as buildEcoDrawer (mirrored here so the strip and the
-    // drawer never disagree): 0.0006 Wh/out-tok, 1/800 input ratio,
+    // Same numbers as the methodology page (mirrored here so the receipt
+    // and the methodology never disagree): 0.0006 Wh/out-tok, 1/800 input ratio,
     // MODE_MULT for the modeled baseline, measured baseline when present,
     // 45-tok baseline for local/cache answers.
     var inTok2=isNum(m.input_tokens)?m.input_tokens:0;
@@ -2584,10 +2499,6 @@ function liveMetaRow(t){
     var arbWidth2=stdWh2>0?Math.max(4,Math.min(100,Math.round((wh2/stdWh2)*100))):0;
     stripEl=document.createElement('div');
     stripEl.className='sv';
-    stripEl.setAttribute('role','button');
-    stripEl.tabIndex=0;
-    stripEl.setAttribute('aria-expanded','false');
-    stripEl.title='Energy & carbon receipt (click for detail)';
     // Comparison bar: the gray track is the full length of a typical
     // chatbot answer; the teal fill is only as far as this reply used,
     // so the empty part is the saving. "About the same" (saved under
@@ -2636,10 +2547,6 @@ function liveMetaRow(t){
       }
     }
     stripEl.innerHTML='<div class="sv-top"><span class="sv-leaf">🌿</span><div class="sv-track"><div class="sv-fill'+(isSame2?' sv-same':'')+'" style="width:'+arbWidth2+'%"></div></div><span class="sv-head'+(isSame2?' sv-same':'')+'">'+(isSame2?'about the same as a typical chatbot':savedPct2+'% less energy')+'</span></div>'+(funTxt?'<div class="sv-fun">'+funTxt+'</div>':'');
-    drawerEl=buildEcoDrawer(t);
-    var toggleStrip=function(){drawerEl.hidden=!drawerEl.hidden;stripEl.setAttribute('aria-expanded',drawerEl.hidden?'false':'true');};
-    stripEl.addEventListener('click',toggleStrip);
-    stripEl.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggleStrip();}});
   }
   if(m.truncated)mm.appendChild(infoTag('truncated','The answer hit the token cap: a cut-off last sentence was dropped or marked with …','tg-warn'));
   mm.appendChild(actBtn('⧉ Copy','Copy live answer to: '+short(t.raw),function(){copyText(t.answer,'Answer copied!');}));
@@ -2647,7 +2554,6 @@ function liveMetaRow(t){
   var container=document.createElement('div');
   if(stripEl)container.appendChild(stripEl);
   container.appendChild(mm);
-  if(drawerEl)container.appendChild(drawerEl);
   return container;
 }
 /* Minimal SSE block parser: "event: x" + "data: <json>" lines. */

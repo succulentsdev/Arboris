@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodology - Arboris</title>
+<meta name="description" content="How Arboris works, how the energy numbers are estimated, and how it compares.">
+<link rel="icon" href="arboris-logo.webp">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="doc">
+<div class="main">
+<header class="doc-top"><a href="index.html">Arboris</a></header>
+
+<main class="doc-page">
+  <h1>Methodology</h1>
+  <p class="lede">How Arboris answers, and how the energy numbers are worked out. Everything here is an estimate from provider-reported tokens, never a physical data-centre measurement.</p>
+
+  <h2>How Arboris works</h2>
+  <p>Every message runs through three steps before it is answered.</p>
+  <h3>1. PromptShrink</h3>
+  <p>Removes filler words from your question before it reaches the model.</p>
+  <h3>2. Session cache</h3>
+  <p>Repeats a previous answer when you ask the same thing twice in a session. No model call, no new tokens.</p>
+  <h3>3. Right-sized answers</h3>
+  <p>Picks the shortest sufficient answer length by question length: Instant (12 words or fewer, ~2 sentences, 120 max tokens), Balanced (13–34 words, ~4 sentences, 240 max tokens), or Thorough (35+ words, a complexity phrase, or 2+ questions, ~6 sentences, 400 max tokens). Need a fuller explanation? Click <b>More detail</b> under any live answer to request an expanded Thorough response.</p>
+
+  <hr class="rule">
+
+  <h2>How the numbers work</h2>
+  <p>Generating tokens uses far more compute than reading prompt tokens.</p>
+  <ul>
+    <li><b>Energy:</b> <code>output × 0.0006 Wh + input × 0.0006 / 800 Wh</code> (Epoch AI 2025; Ruf &amp; Detyniecki HotCarbon ’26)</li>
+    <li><b>Carbon:</b> <code>Wh / 1000 × 400 gCO₂e/kWh</code> (0.00024 g per output token)</li>
+    <li><b>Cooling water:</b> <code>Wh × 0.1–0.3 mL</code> (closed-loop data-centre WUE; generation water excluded)</li>
+  </ul>
+  <p>The "typical chatbot" baseline is the same reply at a modeled verbose length: about 2.4× the output tokens for an unconstrained answer (2.6× for Canopy, 1.9× for Forest/Full, 3.4× for Sprout), or a measured baseline when you enable "Measure baseline" in settings. A local or cached answer has a 45-token baseline. When a reply saves less than 10%, the receipt says "about the same as a typical chatbot" instead of a percent.</p>
+
+  <h2>The receipt</h2>
+  <p>Under each answer, the bar is that reply's share of a typical chatbot answer: the grey track is the full length of a typical answer, the teal fill is how far this reply went, and the empty part is the saving. Under the bar, one line puts the whole chat's saving so far into everyday terms, rotating by message: a phone charge (10W charger, 1 Wh is about 6 minutes), streaming video on a phone (~3W), a phone battery (~15 Wh for a full charge), Google searches (~0.3 Wh each), or reading on an e-reader (~1W). Phone-charge equivalent assumes a 10W charger (1 Wh is about 6 minutes of charging).</p>
+
+  <h2>Finland reference &amp; limits</h2>
+  <p>Clean-energy reference: <b>Google Cloud Finland (<code>europe-north1</code>): ~98% carbon-free energy, 30 gCO₂eq/kWh.</b></p>
+  <p><b>Honest note:</b> the hosted backend runs in <code>us-central1</code>, and OpenRouter does not disclose where upstream model inference runs. Live receipts therefore use the 400 g/kWh illustrative grid factor. A backend in Finland would not put model inference in Finland.</p>
+  <p style="font-size:12px"><a href="https://cloud.google.com/sustainability/region-carbon" target="_blank" rel="noopener" style="color:var(--teal)">Google Cloud region carbon data →</a></p>
+
+  <hr class="rule">
+
+  <h2>How Arboris compares</h2>
+  <p class="feat-section-sub">Same question, different defaults. Arboris publishes its numbers; the others publish theirs where they have them.</p>
+  <div class="cmp-wrap"><table class="cmp">
+    <thead><tr><th></th><th>Arboris</th><th>ChatGPT</th><th>EcoGPT</th></tr></thead>
+    <tbody>
+      <tr><th>Model size</th><td>OpenRouter free-router primary, 2.6B small model first when routing is on</td><td>Not published</td><td>Small open models, about 10x fewer active parameters</td></tr>
+      <tr><th>Where it runs</th><td>us-central1, 88% carbon-free, 432 gCO2eq/kWh</td><td>Not published</td><td>Finland, Hamina, 98% carbon-free (2023)</td></tr>
+      <tr><th>Energy per answer</th><td>0.0006 Wh per output token, estimate from published factors</td><td>About 0.3 Wh for a typical query (Epoch AI, 2025)</td><td>No per-prompt energy figure published</td></tr>
+      <tr><th>Trees</th><td>None yet</td><td>None</td><td>1 per 100 chats free, 1 per 50 Pro, Trees for the Future</td></tr>
+      <tr><th>Account and ads</th><td>No account, no ads, the API key never reaches the browser</td><td>Free to start, paid plans from $8 a month</td><td>Free 60/day, 500/day with a free account and ads</td></tr>
+    </tbody>
+  </table></div>
+  <p class="cmp-src">Sources: EcoGPT comparison pages and Google Cloud region carbon data, read October 2026; Epoch AI, February 2025. Energy figures are estimates unless stated otherwise.</p>
+
+  <hr class="rule">
+
+  <h2>This session</h2>
+  <p id="sess-note">Totals for this browser session. Chats are never saved; totals reset when you reload the chat page.</p>
+  <ul id="sess-totals">
+    <li>Messages: <span id="st-calls">0</span></li>
+    <li>Energy used: <span id="st-wh">0 Wh</span></li>
+    <li>Energy saved vs a typical chatbot: <span id="st-saved">0 Wh</span></li>
+    <li>Carbon: <span id="st-co2">0 g</span></li>
+  </ul>
+
+  <p class="foot">Arboris is open source. <a href="https://github.com/succulentsdev/Arboris" target="_blank" rel="noopener">Read the code</a>. · <a href="index.html">Back to chat</a></p>
+</main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  function fmtWh(v){return v>=0.01?v.toFixed(3)+' Wh':v>0?(v*1000).toFixed(3)+' mWh':'0 Wh';}
+  function fmtCO2(v){
+    if(v>=1)return v.toFixed(2)+' g';
+    if(v>=0.001)return (v*1000).toFixed(v>=0.01?1:2)+' mg';
+    return v>0?(v*1e6).toFixed(0)+' µg':'0 g';
+  }
+  var stored=null;
+  try{stored=JSON.parse(localStorage.getItem('arboris-totals-v1')||'null');}catch(e){stored=null;}
+  var T=(stored&&stored.totals)||{calls:0,inTok:0,outTok:0,wh:0,co2g:0,stdOutTok:0};
+  var wh=T.wh||0,co2=T.co2g||0;
+  var stdOut=T.stdOutTok||Math.round((T.outTok||0)*2.4);
+  var stdWh=stdOut*0.0006+(T.inTok||0)*(0.0006/800);
+  var avoidedWh=Math.max(0,stdWh-wh);
+  set('st-calls',T.calls||0);
+  set('st-wh',fmtWh(wh));
+  set('st-saved',fmtWh(avoidedWh));
+  set('st-co2',fmtCO2(co2));
+})();
+</script>
+</body>
+</html>
