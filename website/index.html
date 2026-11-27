@@ -2251,7 +2251,9 @@ var HV_SOLARIS = HV_HEAD + [
 
 /* Topographic Pulse: an fbm elevation field drawn as crisp 1px
    contour lines (every fifth an index line), drifting slowly. The
-   lines run from slate into sage and teal. It does not react to
+   lines run from slate into sage and teal at one even brightness
+   across the whole screen: no centre dimming, so there is no
+   circular edge where the lines fade out. It does not react to
    the cursor: just a moving shader in the background. */
 var HV_TOPO_BODY = [
   'void main(){',
@@ -2272,8 +2274,7 @@ var HV_TOPO_BODY = [
   '  vec3 sage=u_pal[1];',
   '  vec3 teal=u_pal[2];',
   '  vec3 lc=mix(sage,teal,smoothstep(-0.6,0.6,p.x+0.3*sin(p.y*2.0+t*0.05)));',
-  '  float calm=mix(0.45,1.0,smoothstep(0.08,0.55,heroDist()));',
-  '  float glow=(0.16+0.08*major)*calm;',
+  '  float glow=0.16+0.08*major;',
   '  vec3 col=bg+lc*line*glow;',
   '  gl_FragColor=vec4(col,1.0);',
   '}'

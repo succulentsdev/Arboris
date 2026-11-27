@@ -642,6 +642,14 @@ class TestTopoNoReactivity(unittest.TestCase):
         self.assertNotIn('u_mouseOn', topo)
         self.assertNotIn('near', topo)
         self.assertNotIn('ripple', topo)
+        # Round 28: no centre dimming either. The old calm factor
+        # dimmed the lines to 45% inside a circle around the hero
+        # stack, which read as a circular artifact where the lines
+        # faded out. The lines are one even brightness now; the
+        # scrim behind the hero stack handles legibility.
+        self.assertNotIn('calm', topo)
+        self.assertNotIn('heroDist', topo)
+        self.assertIn('float glow=0.16+0.08*major;', topo)
         # The field still drifts with time and the contours are
         # still drawn from the palette colours.
         self.assertIn("float t=u_time;'", topo)
