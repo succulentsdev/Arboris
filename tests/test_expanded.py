@@ -26,6 +26,27 @@ from arboris.providers import DemoProvider
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = json.loads((ROOT / "spec" / "templates.json").read_text())
+
+
+def _jpeg_width(data):
+    """Return a JPEG's pixel width by reading its start-of-frame
+    marker (SOF0/SOF2). Pure stdlib: the CI runner has no Pillow."""
+    if data[:2] != b"\xff\xd8":
+        raise ValueError("not a JPEG (missing SOI marker)")
+    i = 2
+    while i + 9 < len(data):
+        if data[i] != 0xFF:
+            i += 1
+            continue
+        marker = data[i + 1]
+        if marker in (0xC0, 0xC2):  # SOF0, SOF2: precision, height, width
+            return (data[i + 7] << 8) | data[i + 8]
+        if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
+            i += 2  # standalone markers, no length field
+            continue
+        seg_len = (data[i + 2] << 8) | data[i + 3]
+        i += 2 + seg_len
+    raise ValueError("no SOF marker found")
 TOPICS = SPEC["topics"]
 
 
@@ -408,11 +429,11 @@ class TestPhotoBackground(unittest.TestCase):
         app = (ROOT / "server" / "app.py").read_text(encoding="utf-8")
         self.assertIn('"bg-valley.jpg"', app)
         self.assertIn('"bg-hills.jpg"', app)
-        # Both are high res: at least 2400px wide.
-        from PIL import Image
+        # Both are high res: at least 2400px wide (stdlib JPEG
+        # reader; the CI runner has no Pillow).
         for name in ("bg-valley.jpg", "bg-hills.jpg"):
-            with Image.open(ROOT / "website" / name) as im:
-                self.assertGreaterEqual(im.width, 2400)
+            data = (ROOT / "website" / name).read_bytes()
+            self.assertGreaterEqual(_jpeg_width(data), 2400)
         # The hero is transparent so the photo shows through, and the
         # dot-grid texture hides while a photo is showing.
         self.assertIn('background: transparent;', html)
