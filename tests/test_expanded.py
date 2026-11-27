@@ -255,7 +255,10 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
 
     def test_last_message_sits_just_above_the_composer(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        area = re.search(r"\.hero-chat-area \{[^}]*\}", html).group(0)
+        # Anchored to the line start: the Round 12 theme override
+        # (body.theme-round12 .hero-chat-area) sits earlier in the
+        # file and must not be the rule matched here.
+        area = re.search(r"^\.hero-chat-area \{[^}]*\}", html, re.M).group(0)
         self.assertIn("padding: 78px 24px 16px", area)
 
     def test_composer_sits_at_the_bottom_of_the_page(self):
@@ -263,7 +266,9 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
         # When chatting the hero is 100svh with no bottom padding, so
         # the composer (the last flex child) sits at the viewport
         # bottom instead of a third up the screen.
-        chatting = re.search(r"\.hero\.chatting \{[^}]*\}", html).group(0)
+        # Anchored to the line start, as above: the theme override
+        # (body.theme-round12 .hero.chatting) is earlier in the file.
+        chatting = re.search(r"^\.hero\.chatting \{[^}]*\}", html, re.M).group(0)
         self.assertIn("height: 100svh", chatting)
         self.assertNotIn("padding-bottom: 33vh", chatting)
 
@@ -293,11 +298,14 @@ class TestComposerRevertAndBubbleGreens(unittest.TestCase):
         self.assertIn("--glass-user-border: rgba(61,212,192,.30);", html)
         # Bot bubble: a dark green again, clean, not the mucky one.
         self.assertIn("--glass-bot: rgba(10,40,20,.92);", html)
-        # The mucky green, the emerald, and the coral are all gone.
-        self.assertNotIn("rgba(15,24,19,.88)", html)
+        # The mucky green and the coral are gone from the default
+        # design (the :root variables); they live only under the
+        # Round 12 theme selector now. The emerald is gone entirely.
+        root = re.search(r":root \{[^}]*\}", html).group(0)
+        self.assertNotIn("rgba(15,24,19,.88)", root)
+        self.assertNotIn("rgba(207,74,40,.24)", root)
+        self.assertNotIn("rgba(207,74,40,.42)", root)
         self.assertNotIn("rgba(27,84,52,.92)", html)
-        self.assertNotIn("rgba(207,74,40,.24)", html)
-        self.assertNotIn("rgba(207,74,40,.42)", html)
 
 
 class TestSavingsReceipt(unittest.TestCase):
@@ -453,6 +461,57 @@ class TestPhotoBackground(unittest.TestCase):
         self.assertNotIn('autoplay', html)
         self.assertNotIn('bg-arrow', html)
         self.assertNotIn('bg-thumb', html)
+
+
+class TestRound12Theme(unittest.TestCase):
+    """Round 21 (2026-11-26): the Round 12 look is a visual-only
+    theme, toggled by a header button, persisted in localStorage.
+
+    A body class (body.theme-round12) scopes every Round 12
+    override: coral user bubble, mucky green bot bubble, dot-grid
+    hero, composer lifted a third of the screen, bordered input,
+    rectangular buttons. The current design is the default (no
+    class). Row order stays current in both themes; only the
+    visuals swap. The photo layer is hidden in the theme, and the
+    photo button with it.
+    """
+
+    def test_round12_theme(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The toggle button is in the header, next to the photo button.
+        self.assertIn('id="theme-btn"', html)
+        self.assertIn('id="bg-btn"', html)
+        # The theme is a body class, scoped under it; data-theme is
+        # already used for dark mode and is not reused.
+        self.assertIn('body.theme-round12', html)
+        self.assertIn("classList.toggle('theme-round12'", html)
+        # The four bubble variables under the theme selector.
+        self.assertIn('--glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));', html)
+        self.assertIn('--glass-user-border: rgba(207,74,40,.42);', html)
+        self.assertIn('--glass-bot: rgba(15,24,19,.88);', html)
+        self.assertIn('--glass-bot-border: rgba(255,255,255,.1);', html)
+        # The dot-grid hero is restored and the photo layer hidden.
+        self.assertIn('body.theme-round12 .hero { background: var(--hero-mesh), var(--bg); }', html)
+        self.assertIn('body.theme-round12 .hero::before { display: block; }', html)
+        self.assertIn('body.theme-round12 #bg-canvas,', html)
+        self.assertIn('body.theme-round12 #bg-btn { display: none; }', html)
+        # The composer is lifted a third of the screen, and the chat
+        # area keeps the wider bottom gap.
+        self.assertIn('body.theme-round12 .hero.chatting { padding-bottom: 33vh; }', html)
+        self.assertIn('body.theme-round12 .hero-chat-area { padding: 78px 24px 12vh; }', html)
+        # The bordered input and rectangular buttons.
+        self.assertIn('body.theme-round12 .ir input {', html)
+        self.assertIn('body.theme-round12 .btn-s {', html)
+        self.assertIn('body.theme-round12 .btn-attach,', html)
+        self.assertIn('body.theme-round12 .brevity-btn { border: none;', html)
+        # The JS wires the toggle and persists the choice.
+        self.assertIn('function themeInit()', html)
+        self.assertIn('function themeApply(name)', html)
+        self.assertIn("'arboris-theme'", html)
+        self.assertIn('themeInit();', html)
+        # The un-themed composer rule is unchanged (still at the
+        # bottom, no padding); the theme override is scoped.
+        self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
 
 
 if __name__ == "__main__":

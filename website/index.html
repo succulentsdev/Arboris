@@ -276,6 +276,43 @@ body.bg-photo .hero::before { display: none }
 }
 .hero > * { position: relative; z-index: 1 }
 
+/* ── Round 12 theme (visual-only) ──
+   The Round 12 look (commit 7b14d5d): coral user bubble, mucky green
+   bot bubble, dot-grid hero, composer lifted a third of the screen,
+   bordered input, rectangular buttons. Toggled by the header theme
+   button; persisted in localStorage (arboris-theme). The current
+   design is the default (no class). Row order stays current in both
+   themes; only the visuals swap. */
+body.theme-round12 {
+  --glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));
+  --glass-user-border: rgba(207,74,40,.42);
+  --glass-bot: rgba(15,24,19,.88);
+  --glass-bot-border: rgba(255,255,255,.1);
+}
+body.theme-round12 .hero { background: var(--hero-mesh), var(--bg); }
+body.theme-round12 .hero::before { display: block; }
+body.theme-round12 #bg-canvas,
+body.theme-round12 #bg-overlay,
+body.theme-round12 #bg-btn { display: none; }
+body.theme-round12 .hero.chatting { padding-bottom: 33vh; }
+body.theme-round12 .hero-chat-area { padding: 78px 24px 12vh; }
+body.theme-round12 .ir input {
+  min-height: 70px; padding: 18px 22px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--bg);
+}
+body.theme-round12 .btn-s {
+  min-height: 70px; min-width: 0; width: auto; height: auto;
+  padding: 15px 35px; border-radius: 12px;
+  font-size: 20px; font-weight: 600; white-space: nowrap;
+}
+body.theme-round12 .btn-attach,
+body.theme-round12 .btn-mic {
+  min-height: 70px; min-width: 58px; padding: 0 16px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--surface2);
+}
+body.theme-round12 .brevity-bar { gap: 3px; }
+body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16px; }
+
 .hero-landing {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; flex: 1; width: 100%; padding: 96px 24px 12px;
@@ -1226,6 +1263,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   </div>
   <div class="hd-r">
     <button class="icon-btn" id="bg-btn" type="button" aria-label="Change background" title="Change background (next photo)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.08-3.08a2 2 0 00-2.83 0L6 21"/></svg></span></button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch to Round 12 theme" title="Theme: Current (click for Round 12)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18V3z" fill="currentColor" stroke="none"/></svg></span></button>
     <div style="position:relative">
       <button class="icon-btn" id="settings-btn" type="button" aria-label="Backend settings" aria-haspopup="true" aria-expanded="false" title="Backend settings"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span></button>
       <div class="settings-pop" id="settings-pop">
@@ -1864,6 +1902,32 @@ function bgFallbackSet(i) {
   document.body.classList.add('bg-photo');
 }
 
+/* Visual theme: Round 12 vs current. A body class scopes the Round 12
+   overrides; the choice persists in localStorage (arboris-theme). */
+var THEME_KEY = 'arboris-theme';
+function themeApply(name) {
+  var round12 = name === 'round12';
+  document.body.classList.toggle('theme-round12', round12);
+  var btn = document.getElementById('theme-btn');
+  if (btn) {
+    btn.setAttribute('aria-label', round12 ? 'Switch to current theme' : 'Switch to Round 12 theme');
+    btn.title = round12 ? 'Theme: Round 12 (click for Current)' : 'Theme: Current (click for Round 12)';
+  }
+  try { localStorage.setItem(THEME_KEY, round12 ? 'round12' : 'current'); } catch (e) {}
+}
+function themeInit() {
+  var btn = document.getElementById('theme-btn');
+  var saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) { saved = null; }
+  themeApply(saved === 'round12' ? 'round12' : 'current');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var isRound12 = document.body.classList.contains('theme-round12');
+      themeApply(isRound12 ? 'current' : 'round12');
+    });
+  }
+}
+
 function bgInit() {
   var canvas = document.getElementById('bg-canvas');
   var btn = document.getElementById('bg-btn');
@@ -2013,6 +2077,9 @@ document.documentElement.setAttribute('data-theme','dark');
 
 /* Photo background: the hero's rotating nature shots. */
 bgInit();
+
+/* Visual theme: Round 12 vs current (body class + localStorage). */
+themeInit();
 
 /* State: live turns only. Old demo keys are deleted on load; live keys
    migrate from the old greensearch-* names once, never overwriting new keys.
