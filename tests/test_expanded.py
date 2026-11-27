@@ -377,13 +377,16 @@ class TestPhotoBackground(unittest.TestCase):
     """Round 19 (2026-11-26): the hero background is Grant's two
     photos, served from the repo.
 
-    A vanilla port of the MorphGallery fbm-noise dissolve, as a fixed
-    canvas behind the hero. The 12 stock shots are gone (Grant: low
-    rez and shitty); the gallery is now just his two photos, a
-    mountain lake and a forest creek, served by the Arboris server
-    itself (same origin, so no CORS needed for the WebGL textures).
-    One header button cycles to the next photo. No autoplay, no
-    arrows, no thumbnails.
+    Round 20 (2026-11-26): Grant's lake and creek came out low res
+    on his build (1600px and 684px wide), so they are gone. The
+    gallery is now two high-res valley photos (Pexels, free, both
+    3200px wide): a terraced green valley that frames the chat in
+    the middle (mountains left and right, calm valley floor centre)
+    and a bright green hillside. A vanilla port of the MorphGallery
+    fbm-noise dissolve, as a fixed canvas behind the hero, served by
+    the Arboris server itself (same origin, so no CORS needed for
+    the WebGL textures). One header button cycles to the next photo.
+    No autoplay, no arrows, no thumbnails.
     """
 
     def test_photo_background(self):
@@ -391,17 +394,25 @@ class TestPhotoBackground(unittest.TestCase):
         self.assertIn('id="bg-canvas"', html)
         self.assertIn('id="bg-overlay"', html)
         self.assertIn('id="bg-btn"', html)
-        # Grant's two photos, local relative URLs, no stock shots.
-        self.assertIn("'bg-lake.jpg'", html)
-        self.assertIn("'bg-creek.jpg'", html)
+        # The two high-res valley photos, local relative URLs,
+        # no stock shots, no low-res Grant photos.
+        self.assertIn("'bg-valley.jpg'", html)
+        self.assertIn("'bg-hills.jpg'", html)
+        self.assertNotIn("'bg-lake.jpg'", html)
+        self.assertNotIn("'bg-creek.jpg'", html)
         self.assertNotIn('cdn.21st.dev/assets/mirror/', html)
         self.assertNotIn('images.unsplash.com/photo-', html)
         # The photos exist in the repo and the server serves them.
-        self.assertTrue((ROOT / "website" / "bg-lake.jpg").is_file())
-        self.assertTrue((ROOT / "website" / "bg-creek.jpg").is_file())
+        self.assertTrue((ROOT / "website" / "bg-valley.jpg").is_file())
+        self.assertTrue((ROOT / "website" / "bg-hills.jpg").is_file())
         app = (ROOT / "server" / "app.py").read_text(encoding="utf-8")
-        self.assertIn('"bg-lake.jpg"', app)
-        self.assertIn('"bg-creek.jpg"', app)
+        self.assertIn('"bg-valley.jpg"', app)
+        self.assertIn('"bg-hills.jpg"', app)
+        # Both are high res: at least 2400px wide.
+        from PIL import Image
+        for name in ("bg-valley.jpg", "bg-hills.jpg"):
+            with Image.open(ROOT / "website" / name) as im:
+                self.assertGreaterEqual(im.width, 2400)
         # The hero is transparent so the photo shows through, and the
         # dot-grid texture hides while a photo is showing.
         self.assertIn('background: transparent;', html)
