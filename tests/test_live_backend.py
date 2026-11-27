@@ -856,7 +856,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn('data-mode="sprout"', html)
         self.assertNotIn('data-mode="forest"', html)
         self.assertNotIn('\U0001f4ce Attach', html)
-        self.assertIn('min-height: 60svh', html)
+        self.assertIn('min-height: 80svh', html)  # round 22: landing composer in the bottom 40%
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)

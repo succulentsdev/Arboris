@@ -370,34 +370,42 @@ class TestSavingsReceipt(unittest.TestCase):
 
 
 class TestComposerScreenshotLayout(unittest.TestCase):
-    """Round 15 (2026-11-26): the composer copies the screenshot chatbox.
+    """Round 15 (2026-11-26), reworked round 22: the composer copies
+    the reference screenshot Grant shared.
 
-    Input on top of the card, borderless, the card is the box. Below
-    it, a controls row: the brevity modes as individual pills on the
-    left, Attach / Mic / circular Send with an up arrow on the right.
-    No Turbo dropdown: Arboris has no Turbo mode, so none is invented.
+    Pills on top of the card, a bordered input box in the middle, and
+    an action row on the bottom: Attach / Mic on the left, a
+    rectangular amber "Send" button on the right. No Turbo dropdown:
+    Arboris has no Turbo mode, so none is invented. Round 22 also
+    moves the landing composer into the bottom 40% of the screen
+    (hero min-height 80svh) for both themes.
     """
 
     def test_composer_copies_screenshot(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Input on top: the input comes before the brevity bar in the DOM.
-        self.assertLess(html.index('id="ci"'), html.index('id="brevity-bar"'))
-        # The controls row holds the brevity bar and the action buttons.
-        self.assertIn('class="composer-controls"', html)
-        self.assertIn('class="composer-actions"', html)
+        # Pills on top: the brevity bar comes before the input in the DOM.
+        self.assertLess(html.index('id="brevity-bar"'), html.index('id="ci"'))
+        # The three rows exist in order: controls, input, actions.
+        self.assertLess(html.index('class="composer-controls"'), html.index('class="ir"'))
+        self.assertLess(html.index('class="ir"'), html.index('class="composer-actions"'))
         self.assertIn('id="brevity-bar"', html)
         self.assertIn('id="attach-btn"', html)
         self.assertIn('id="mic-btn"', html)
-        # Send is a circular button with an up arrow, not a "Send" label.
+        # Send is a rectangular "Send" text button on the right, not a
+        # circular up arrow.
         self.assertIn('id="sb"', html)
-        self.assertIn('M12 19V5M5 12l7-7 7 7', html)
-        self.assertNotIn('>Send</button>', html)
+        self.assertIn('>Send</button>', html)
+        self.assertNotIn('M12 19V5M5 12l7-7 7 7', html)
+        self.assertIn('.composer-actions .btn-s { margin-left: auto; }', html)
+        # The input is a bordered box, not borderless/transparent.
+        self.assertIn('.ir input {\n  flex: 1; min-width: 0; min-height: 70px; padding: 18px 22px;\n  border: 1px solid var(--border); border-radius: 12px;', html)
+        # Attach / Mic stay circular icon buttons.
         self.assertIn('border-radius: 50%', html)
-        # The input is borderless and transparent: the card is the box.
-        self.assertIn('background: transparent;', html)
         # The brevity buttons are individual pills, not a segmented group.
         self.assertIn('.brevity-btn {\n  background: transparent; border: 1px solid var(--border);', html)
         self.assertNotIn('class="ip-bar"', html)
+        # The landing composer sits in the bottom 40% of the screen.
+        self.assertIn('min-height: 80svh;', html)
         # No Turbo dropdown was invented.
         self.assertNotIn('Turbo', html)
 
@@ -469,11 +477,13 @@ class TestRound12Theme(unittest.TestCase):
 
     A body class (body.theme-round12) scopes every Round 12
     override: coral user bubble, mucky green bot bubble, dot-grid
-    hero, composer lifted a third of the screen, bordered input,
-    rectangular buttons. The current design is the default (no
-    class). Row order stays current in both themes; only the
-    visuals swap. The photo layer is hidden in the theme, and the
-    photo button with it.
+    hero, composer lifted a third of the screen, rectangular
+    attach/mic buttons, borderless brevity pills. The current design
+    is the default (no class). The bordered input and rectangular
+    "Send" are the shared default since round 22, not theme-only,
+    so they have no theme override. Row order is the same in both
+    themes. The photo layer is hidden in the theme, and the photo
+    button with it.
     """
 
     def test_round12_theme(self):
@@ -499,11 +509,13 @@ class TestRound12Theme(unittest.TestCase):
         # area keeps the wider bottom gap.
         self.assertIn('body.theme-round12 .hero.chatting { padding-bottom: 33vh; }', html)
         self.assertIn('body.theme-round12 .hero-chat-area { padding: 78px 24px 12vh; }', html)
-        # The bordered input and rectangular buttons.
-        self.assertIn('body.theme-round12 .ir input {', html)
-        self.assertIn('body.theme-round12 .btn-s {', html)
+        # The rectangular attach/mic buttons and borderless pills.
+        # (The bordered input and rectangular Send are the shared
+        # default since round 22, so they have no theme override.)
         self.assertIn('body.theme-round12 .btn-attach,', html)
         self.assertIn('body.theme-round12 .brevity-btn { border: none;', html)
+        self.assertNotIn('body.theme-round12 .ir input {', html)
+        self.assertNotIn('body.theme-round12 .btn-s {', html)
         # The JS wires the toggle and persists the choice.
         self.assertIn('function themeInit()', html)
         self.assertIn('function themeApply(name)', html)

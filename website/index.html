@@ -256,8 +256,8 @@ body.bg-photo .hero::before { display: none }
 
 .hero {
   position: relative;
-  min-height: 60vh;
-  min-height: 60svh;
+  min-height: 80vh;
+  min-height: 80svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -279,10 +279,11 @@ body.bg-photo .hero::before { display: none }
 /* ── Round 12 theme (visual-only) ──
    The Round 12 look (commit 7b14d5d): coral user bubble, mucky green
    bot bubble, dot-grid hero, composer lifted a third of the screen,
-   bordered input, rectangular buttons. Toggled by the header theme
-   button; persisted in localStorage (arboris-theme). The current
-   design is the default (no class). Row order stays current in both
-   themes; only the visuals swap. */
+   rectangular attach/mic buttons, borderless brevity pills. Toggled
+   by the header theme button; persisted in localStorage
+   (arboris-theme). The current design is the default (no class).
+   The bordered input and rectangular "Send" are the shared default
+   since round 22, not theme-only. */
 body.theme-round12 {
   --glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));
   --glass-user-border: rgba(207,74,40,.42);
@@ -296,15 +297,6 @@ body.theme-round12 #bg-overlay,
 body.theme-round12 #bg-btn { display: none; }
 body.theme-round12 .hero.chatting { padding-bottom: 33vh; }
 body.theme-round12 .hero-chat-area { padding: 78px 24px 12vh; }
-body.theme-round12 .ir input {
-  min-height: 70px; padding: 18px 22px; border-radius: 12px;
-  border: 1px solid var(--border); background: var(--bg);
-}
-body.theme-round12 .btn-s {
-  min-height: 70px; min-width: 0; width: auto; height: auto;
-  padding: 15px 35px; border-radius: 12px;
-  font-size: 20px; font-weight: 600; white-space: nowrap;
-}
 body.theme-round12 .btn-attach,
 body.theme-round12 .btn-mic {
   min-height: 70px; min-width: 58px; padding: 0 16px; border-radius: 12px;
@@ -542,11 +534,12 @@ body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16
 }
 .composer-controls {
   display: flex; align-items: center; gap: 12px; min-height: 40px;
-  margin-top: 10px; flex-wrap: wrap;
+  margin-bottom: 10px; flex-wrap: wrap;
 }
 .composer-actions {
-  display: flex; align-items: center; gap: 4px; margin-left: auto;
+  display: flex; align-items: center; gap: 4px; margin-top: 10px;
 }
+.composer-actions .btn-s { margin-left: auto; }
 .brevity-bar {
   display: inline-flex; align-items: center; gap: 6px;
 }
@@ -571,8 +564,9 @@ body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16
 
 .ir { display: flex; gap: 8px; align-items: center }
 .ir input {
-  flex: 1; min-width: 0; min-height: 64px; padding: 16px 6px 6px; border: none;
-  background: transparent;
+  flex: 1; min-width: 0; min-height: 70px; padding: 18px 22px;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: var(--bg);
   color: var(--glass-input-ink); font-size: 21px; font-family: var(--font-body);
   outline: none;
 }
@@ -589,9 +583,10 @@ body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16
 .btn-attach:active { transform: scale(.96) }
 .attach-chip { font-size: 15px; color: var(--ink2); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 225px }
 .btn-s {
-  min-height: 44px; min-width: 44px; width: 44px; height: 44px; padding: 0;
-  border-radius: 50%; border: none;
+  min-height: 48px; padding: 12px 28px;
+  border-radius: 12px; border: none;
   background: var(--send-bg); color: var(--send-ink);
+  font-size: 17px; font-weight: 600; white-space: nowrap;
   cursor: pointer; transition: filter .2s, transform .1s;
   display: flex; align-items: center; justify-content: center;
 }
@@ -1303,11 +1298,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   <div class="sr-only" id="sr-live" aria-live="polite" aria-atomic="true"></div>
   <div class="hero-bottom">
     <div id="route-viz"></div>
-        <div class="composer-card">
-      <div class="ir">
-        <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
-        <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
-      </div>
+    <div class="composer-card">
       <div class="composer-controls">
         <div class="brevity-bar" id="brevity-bar" role="group" aria-label="Answer verbosity">
           <button class="brevity-btn active" type="button" data-mode="auto" aria-pressed="true" title="Auto-route verbosity from prompt complexity">Auto</button>
@@ -1319,11 +1310,14 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <div class="ip-count" id="ip-cnt"></div>
         <span class="attach-chip" id="attach-chip" hidden></span>
       </div>
-        <div class="composer-actions">
-                  <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about" aria-label="Attach a file"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
-                  <button class="btn-mic" id="mic-btn" type="button" title="Voice input" aria-label="Voice input"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
-                  <button class="btn-s" id="sb" type="button" aria-label="Send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-        </div>
+      <div class="ir">
+        <input id="ci" type="text" placeholder="Ask anything, try ‘Explain DNS simply’, ‘255 in hex’, or ‘100 km to miles’" autocomplete="off" aria-label="Your question">
+        <input id="attach-file" type="file" accept=".txt,.md,text/plain" hidden>
+      </div>
+      <div class="composer-actions">
+        <button class="btn-attach" id="attach-btn" type="button" title="Attach a .txt or .md file to ask about" aria-label="Attach a file"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg></button>
+        <button class="btn-mic" id="mic-btn" type="button" title="Voice input" aria-label="Voice input"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg></button>
+        <button class="btn-s" id="sb" type="button">Send</button>
       </div>
       <div class="shrink-bar" id="shrink-bar"><div class="shrink-bar-fill" id="shrink-bar-fill"></div></div>
     </div>
