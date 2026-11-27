@@ -272,6 +272,19 @@ body {
 }
 body.bg-photo .hero::before { display: none }
 
+/* ── Grain Gradient shader background (round 24) ── */
+#grain-canvas {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none; display: none;
+}
+body.theme-round12[data-palette="grain"] #grain-canvas { display: block; }
+#fold-canvas, #aether-canvas {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  z-index: 0; pointer-events: none; display: none;
+}
+body.theme-round12[data-palette="fold"] #fold-canvas { display: block; }
+body.theme-round12[data-palette="aether"] #aether-canvas { display: block; }
+
 .hero {
   position: relative;
   min-height: 70vh;
@@ -324,32 +337,12 @@ body.theme-round12 .brevity-bar { gap: 3px; }
 body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16px; }
 
 /* ── Round 12 palettes ──
-   Six colourways for the secondary (Round 12) style: 2 cute, 2 cool,
-   2 beautiful. Each overrides the bubble colours and the background
-   mesh (the "shader"). Peach Sorbet and Forest Canopy stay close to
-   the original coral/green; Glacier and Sunset Meadow push the mesh
-   gradient harder and change the colour entirely. The original
-   Round 12 colours are the default under body.theme-round12. */
-body.theme-round12[data-palette="peach"] {
-  --glass-user: linear-gradient(135deg, rgba(232,144,108,.30), rgba(232,144,108,.16));
-  --glass-user-border: rgba(232,144,108,.5);
-  --glass-bot: rgba(52,32,38,.9);
-  --glass-bot-border: rgba(232,144,108,.18);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(232,144,108,.18), transparent 65%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(224,122,95,.14), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(245,183,149,.10), transparent 65%);
-}
-body.theme-round12[data-palette="lavender"] {
-  --glass-user: linear-gradient(135deg, rgba(167,139,250,.30), rgba(167,139,250,.16));
-  --glass-user-border: rgba(167,139,250,.5);
-  --glass-bot: rgba(30,28,52,.9);
-  --glass-bot-border: rgba(167,139,250,.18);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(167,139,250,.18), transparent 65%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(129,140,248,.14), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(196,181,253,.10), transparent 65%);
-}
+   Colourways for the secondary (Round 12) style. Each overrides the
+   bubble colours and the background mesh (the "shader"). Grant kept
+   only Deep Sea (blue-green sea); the other round-23 palettes
+   (Peach Sorbet, Lavender Haze, Glacier, Forest Canopy, Sunset
+   Meadow) were removed. The original Round 12 colours are the
+   default under body.theme-round12. */
 body.theme-round12[data-palette="deepsea"] {
   --glass-user: linear-gradient(135deg, rgba(45,160,180,.32), rgba(45,160,180,.16));
   --glass-user-border: rgba(45,160,180,.55);
@@ -360,36 +353,31 @@ body.theme-round12[data-palette="deepsea"] {
     radial-gradient(ellipse 55% 45% at 82% 18%, rgba(14,116,144,.16), transparent 60%),
     radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,211,238,.10), transparent 65%);
 }
-body.theme-round12[data-palette="glacier"] {
-  --glass-user: linear-gradient(135deg, rgba(147,197,253,.34), rgba(147,197,253,.18));
-  --glass-user-border: rgba(147,197,253,.6);
-  --glass-bot: rgba(24,38,56,.92);
-  --glass-bot-border: rgba(147,197,253,.22);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(147,197,253,.30), transparent 60%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(96,165,250,.24), transparent 55%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(219,234,254,.16), transparent 60%);
+body.theme-round12[data-palette="grain"] {
+  --glass-user: linear-gradient(135deg, rgba(99,102,241,.32), rgba(99,102,241,.16));
+  --glass-user-border: rgba(99,102,241,.55);
+  --glass-bot: rgba(12,12,16,.92);
+  --glass-bot-border: rgba(255,255,255,.10);
 }
-body.theme-round12[data-palette="forest"] {
-  --glass-user: linear-gradient(135deg, rgba(52,180,110,.32), rgba(52,180,110,.16));
-  --glass-user-border: rgba(52,180,110,.55);
-  --glass-bot: rgba(10,32,20,.92);
-  --glass-bot-border: rgba(52,180,110,.20);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(52,180,110,.20), transparent 65%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(22,101,52,.16), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(74,222,128,.10), transparent 65%);
+/* The shader is the background: hide the mesh and the dot-grid. */
+body.theme-round12[data-palette="grain"] .hero { background: transparent; }
+body.theme-round12[data-palette="grain"] .hero::before { display: none; }
+body.theme-round12[data-palette="fold"] {
+  --glass-user: linear-gradient(135deg, rgba(59,130,246,.32), rgba(59,130,246,.16));
+  --glass-user-border: rgba(59,130,246,.55);
+  --glass-bot: rgba(8,15,30,.92);
+  --glass-bot-border: rgba(255,255,255,.10);
 }
-body.theme-round12[data-palette="sunset"] {
-  --glass-user: linear-gradient(135deg, rgba(224,164,60,.32), rgba(224,164,60,.16));
-  --glass-user-border: rgba(224,164,60,.55);
-  --glass-bot: rgba(42,18,34,.92);
-  --glass-bot-border: rgba(224,164,60,.20);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(224,164,60,.26), transparent 60%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(190,60,90,.22), transparent 55%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(120,40,120,.16), transparent 60%);
+body.theme-round12[data-palette="fold"] .hero { background: transparent; }
+body.theme-round12[data-palette="fold"] .hero::before { display: none; }
+body.theme-round12[data-palette="aether"] {
+  --glass-user: linear-gradient(135deg, rgba(45,212,191,.30), rgba(45,212,191,.15));
+  --glass-user-border: rgba(45,212,191,.55);
+  --glass-bot: rgba(10,18,24,.92);
+  --glass-bot-border: rgba(255,255,255,.10);
 }
+body.theme-round12[data-palette="aether"] .hero { background: transparent; }
+body.theme-round12[data-palette="aether"] .hero::before { display: none; }
 
 .hero-landing {
   display: flex; flex-direction: column; align-items: center;
@@ -1336,6 +1324,9 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 <body>
 <canvas id="bg-canvas" aria-hidden="true"></canvas>
 <div id="bg-overlay" aria-hidden="true"></div>
+<canvas id="grain-canvas" aria-hidden="true"></canvas>
+<canvas id="fold-canvas" aria-hidden="true"></canvas>
+<canvas id="aether-canvas" aria-hidden="true"></canvas>
 
 <header class="hd">
   <div class="hd-l">
@@ -1350,15 +1341,13 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <div class="tp-title">Theme</div>
         <button class="pal-opt" type="button" data-palette="current" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#3dd4c0 50%,#0a2814 50%)"></span>Current</button>
         <button class="pal-opt" type="button" data-palette="round12" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#cf4a28 50%,#0f1813 50%)"></span>Round 12</button>
-        <div class="pal-group">Cute</div>
-        <button class="pal-opt" type="button" data-palette="peach" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#e8906c 50%,#342026 50%)"></span>Peach Sorbet</button>
-        <button class="pal-opt" type="button" data-palette="lavender" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#a78bfa 50%,#1e1c34 50%)"></span>Lavender Haze</button>
         <div class="pal-group">Cool</div>
         <button class="pal-opt" type="button" data-palette="deepsea" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#2da0b4 50%,#081a28 50%)"></span>Deep Sea</button>
-        <button class="pal-opt" type="button" data-palette="glacier" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#93c5fd 50%,#182638 50%)"></span>Glacier</button>
-        <div class="pal-group">Beautiful</div>
-        <button class="pal-opt" type="button" data-palette="forest" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#34b46e 50%,#0a2014 50%)"></span>Forest Canopy</button>
-        <button class="pal-opt" type="button" data-palette="sunset" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#e0a43c 50%,#2a1222 50%)"></span>Sunset Meadow</button>
+        <div class="pal-group">Shaders</div>
+        <button class="pal-opt" type="button" data-palette="grain" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#db4b8f 50%,#3f3cbb 50%)"></span>Grain Gradient</button>
+        <button class="pal-opt" type="button" data-palette="fold" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#59a5f5 50%,#8b5cf6 50%)"></span>Glass Fold</button>
+        <div class="pal-group">Particles</div>
+        <button class="pal-opt" type="button" data-palette="aether" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#a5f3fc 50%,#5eead4 50%)"></span>Aether Flow</button>
       </div>
     </div>
     <div style="position:relative">
@@ -1998,13 +1987,646 @@ function bgFallbackSet(i) {
   document.body.classList.add('bg-photo');
 }
 
-/* Visual themes: Current (default) plus the Round 12 look and six
-   palettes for it (2 cute, 2 cool, 2 beautiful). The secondary style
-   is a body class (theme-round12) plus a data-palette attribute; the
-   choice persists in localStorage (arboris-theme). The theme button
-   opens a picker popover; picking applies it at once. */
+/* Grain Gradient shader background (round 24). A vanilla port of the
+   21st.dev ShaderBackground ("Grain Gradient", Paper Shaders,
+   Apache-2.0): one WebGL canvas filling the viewport, rendering an
+   animated grain gradient. The GLSL is verbatim; only the React
+   wrapper is rewritten. Runs only while the Grain theme is active;
+   reduced motion draws a single still frame. */
+var GRAIN_VERT = `attribute vec2 a_position;
+void main() {
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+var GRAIN_FRAG = `#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform vec3 u_colors[8];
+// Seven packed vectors + eight colour vectors = 15 fragment uniform vectors,
+// one below WebGL1's guaranteed minimum. Macros preserve the public u_* API.
+uniform vec4 u_scene;      // resolution.xy, time, colour count
+uniform vec4 u_shape;      // scale, intensity, paramA, warp
+uniform vec4 u_surface;    // detail, contrast, brightness, saturation
+uniform vec4 u_finish;     // hue, vignette, blur, grain
+uniform vec4 u_transform;  // seed, rotation, drift, OKLab toggle
+uniform vec4 u_space;      // offset.xy, pointer.xy
+uniform vec4 u_cursor;
+
+#define u_resolution u_scene.xy
+#define u_time u_scene.z
+#define u_colorCount u_scene.w
+#define u_scale u_shape.x
+#define u_intensity u_shape.y
+#define u_paramA u_shape.z
+#define u_warp u_shape.w
+#define u_detail u_surface.x
+#define u_contrast u_surface.y
+#define u_brightness u_surface.z
+#define u_saturation u_surface.w
+#define u_hue u_finish.x
+#define u_vignette u_finish.y
+#define u_blur u_finish.z
+#define u_grain u_finish.w
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define u_seed u_transform.x
+#else
+// Keep hash inputs inside mediump's guaranteed ±2^14 range.
+#define u_seed mod(u_transform.x, 31.0)
+#endif
+#define u_rotate u_transform.y
+#define u_drift u_transform.z
+#define u_oklab u_transform.w
+#define u_offset u_space.xy
+#define u_mouse u_space.zw
+#define u_cursorPresence u_cursor.x
+#define u_cursorEffect u_cursor.y
+#define u_cursorStrength u_cursor.z
+#define u_cursorRadius u_cursor.w
+
+float hash21(vec2 p) {
+#ifndef GL_FRAGMENT_PRECISION_HIGH
+  p = mod(p, 31.0);
+#endif
+  p = fract(p * vec2(234.34, 435.345));
+  p += dot(p, p + 34.23);
+  return fract(p.x * p.y);
+}
+
+// Even, un-structured white noise for film grain (Dave Hoskins hash12). The
+// multiply hash above is fine for value noise but shows a faint axis-aligned
+// mesh at integer fragment coords, which reads as a net over flat areas.
+float grainHash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+vec2 hash22(vec2 p) {
+#ifndef GL_FRAGMENT_PRECISION_HIGH
+  p = mod(p, 31.0);
+#endif
+  float n = sin(dot(p, vec2(41.0, 289.0)));
+  return fract(vec2(15731.743, 7892.321) * n);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
+    mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x),
+    u.y);
+}
+
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = p * 2.03 + vec2(17.0, 9.2);
+    a *= 0.5;
+  }
+  return v;
+}
+
+// --- OKLab colour mixing (perceptual), gated by u_oklab -----------------------
+vec3 srgbToLinear(vec3 c) {
+  return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)),
+    step(0.04045, c));
+}
+vec3 linearToSrgb(vec3 c) {
+  // max() guards the sRGB branch: out-of-gamut OKLab interpolations can send a
+  // channel negative, and pow(negative, …) is NaN which mix()/step() would
+  // then propagate. The linear branch clips such channels to 0 downstream.
+  return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055,
+    step(0.0031308, c));
+}
+vec3 linToOklab(vec3 c) {
+  float l = 0.4122214708 * c.r + 0.5363325363 * c.g + 0.0514459929 * c.b;
+  float m = 0.2119034982 * c.r + 0.6806995451 * c.g + 0.1073969566 * c.b;
+  float s = 0.0883024619 * c.r + 0.2817188376 * c.g + 0.6299787005 * c.b;
+  l = pow(max(l, 0.0), 1.0 / 3.0);
+  m = pow(max(m, 0.0), 1.0 / 3.0);
+  s = pow(max(s, 0.0), 1.0 / 3.0);
+  return vec3(
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s);
+}
+vec3 oklabToLin(vec3 c) {
+  float l = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
+  float m = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
+  float s = c.x - 0.0894841775 * c.y - 1.2914855480 * c.z;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  return vec3(
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s);
+}
+vec3 mixColour(vec3 a, vec3 b, float t) {
+  if (u_oklab > 0.5) {
+    vec3 la = linToOklab(srgbToLinear(a));
+    vec3 lb = linToOklab(srgbToLinear(b));
+    return clamp(linearToSrgb(oklabToLin(mix(la, lb, t))), 0.0, 1.0);
+  }
+  return mix(a, b, t);
+}
+
+// Mix through the recipe colours; x is clamped to 0..1. WebGL1 forbids
+// dynamic uniform indexing in fragment shaders, hence the constant loop.
+vec3 palette(float x) {
+  float n = max(u_colorCount - 1.0, 1.0);
+  float f = clamp(x, 0.0, 1.0) * n;
+  vec3 col = u_colors[0];
+  for (int i = 0; i < 7; i++) {
+    if (float(i) < n)
+      col = mixColour(col, u_colors[i + 1],
+        smoothstep(0.0, 1.0, clamp(f - float(i), 0.0, 1.0)));
+  }
+  return col;
+}
+
+vec3 hueRotate(vec3 col, float a) {
+  const mat3 toYIQ = mat3(0.299, 0.596, 0.211,
+                          0.587, -0.274, -0.523,
+                          0.114, -0.322, 0.312);
+  const mat3 toRGB = mat3(1.0, 1.0, 1.0,
+                          0.956, -0.272, -1.106,
+                          0.621, -0.647, 1.703);
+  vec3 yiq = toYIQ * col;
+  float ca = cos(a), sa = sin(a);
+  yiq = vec3(yiq.x, yiq.y * ca - yiq.z * sa, yiq.y * sa + yiq.z * ca);
+  return toRGB * yiq;
+}
+
+vec3 shade(vec2 uv, vec2 p, float t) {
+  vec2 q = p;
+  q.x += sin(q.y * 2.1 + t * 0.2) * (0.08 + u_intensity * 0.32);
+  q.y += cos(q.x * 2.7 - t * 0.17) * (0.06 + u_intensity * 0.26);
+  float wave = 0.5 + 0.5 * sin(q.x * 2.8 + q.y * 1.9 + fbm(q * 2.0) * 3.0);
+  float coarse = hash21(floor((uv + t * 0.002) * (90.0 + u_paramA * 260.0)) + u_seed);
+  float grain = (coarse - 0.5) * u_paramA * 0.42;
+  return palette(clamp(wave + grain, 0.0, 1.0));
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 screenUv = uv;
+  vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution.xy)
+    / min(u_resolution.x, u_resolution.y);
+  float cursorMask = 0.0;
+
+  // Cursor modes 1–3 are local distortions. Push shifts the same screen-space
+  // coordinates before field transforms, so Zoom/Rotate don't change its feel.
+  if (u_cursorPresence > 0.001) {
+    // u_mouse is normalized to -1..1 in canvas space. Convert it to the same
+    // aspect-corrected screen space as p so effects stay under the cursor.
+    vec2 cursor = (0.5 * u_mouse * u_resolution.xy)
+      / min(u_resolution.x, u_resolution.y);
+    vec2 cursorDelta = p - cursor;
+    if (u_cursorEffect < 0.5) {
+      p += cursor * u_cursorPresence * u_cursorStrength * 0.55;
+    } else {
+      float cursorDistance = length(cursorDelta);
+      vec2 cursorDirection = cursorDelta / max(cursorDistance, 0.0001);
+      cursorMask = u_cursorPresence
+        * (1.0 - smoothstep(0.0, u_cursorRadius, cursorDistance));
+      if (u_cursorEffect < 1.5) {
+        p -= cursorDirection * cursorMask * u_cursorStrength * 0.24;
+      } else if (u_cursorEffect < 2.5) {
+        float cursorAngle = cursorMask * u_cursorStrength * 2.2;
+        float cc = cos(cursorAngle), cs = sin(cursorAngle);
+        p = cursor + mat2(cc, -cs, cs, cc) * cursorDelta;
+      } else if (u_cursorEffect < 3.5) {
+        float ripple = sin(
+          cursorDistance / max(u_cursorRadius, 0.001) * 18.0 - u_time * 5.0);
+        p -= cursorDirection * ripple * cursorMask * u_cursorStrength * 0.07;
+      }
+    }
+  }
+
+  // Keep presets that read uv (rather than p) in the same warped space.
+  uv = p * min(u_resolution.x, u_resolution.y) / u_resolution.xy + 0.5;
+  p *= u_scale;
+  // Field transform: rotate, pan, pointer push, slow drift.
+  if (abs(u_rotate) > 0.0001) {
+    float cr = cos(u_rotate), sr = sin(u_rotate);
+    p = mat2(cr, -sr, sr, cr) * p;
+  }
+  p += u_offset;
+  if (u_drift > 0.0001)
+    p += u_drift * vec2(sin(u_time * 0.31), cos(u_time * 0.23));
+  // Organic domain warp.
+  if (u_warp > 0.0) {
+    p += u_warp * (vec2(
+      fbm(p * u_detail + u_seed),
+      fbm(p * u_detail + vec2(5.2, 1.3))) - 0.5);
+  }
+  // Shade, with an optional soft 5-tap blur.
+  vec3 col;
+  if (u_blur > 0.0) {
+    float e = u_blur;
+    float pe = e * u_scale;
+    vec2 uvE = vec2(e) * min(u_resolution.x, u_resolution.y) / u_resolution.xy;
+    col  = shade(uv, p, u_time) * 0.36;
+    col += shade(uv + vec2(uvE.x, 0.0), p + vec2(pe, 0.0), u_time) * 0.16;
+    col += shade(uv - vec2(uvE.x, 0.0), p - vec2(pe, 0.0), u_time) * 0.16;
+    col += shade(uv + vec2(0.0, uvE.y), p + vec2(0.0, pe), u_time) * 0.16;
+    col += shade(uv - vec2(0.0, uvE.y), p - vec2(0.0, pe), u_time) * 0.16;
+  } else {
+    col = shade(uv, p, u_time);
+  }
+  // Post: contrast, saturation, hue, brightness, vignette, grain.
+  if (abs(u_contrast - 1.0) > 0.0001)
+    col = (col - 0.5) * u_contrast + 0.5;
+  if (abs(u_saturation - 1.0) > 0.0001) {
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(vec3(luma), col, u_saturation);
+  }
+  if (abs(u_hue) > 0.0001)
+    col = hueRotate(col, u_hue);
+  if (abs(u_brightness) > 0.0001)
+    col += u_brightness;
+  if (u_vignette > 0.0001) {
+    float vd = length(screenUv - 0.5) * 1.41421356;
+    col *= 1.0 - u_vignette * smoothstep(0.35, 1.0, vd);
+  }
+  if (u_cursorPresence > 0.001 && u_cursorEffect > 3.5)
+    col += (vec3(0.18) + col * 0.12) * cursorMask * u_cursorStrength;
+  if (u_grain > 0.0001)
+    col += (grainHash(
+      gl_FragCoord.xy + vec2(u_seed * 17.0, u_seed * 31.0)) - 0.5) * u_grain;
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}
+`;
+var GRAIN_UNIFORMS = {
+  colors: [[0.8588235294117647,0.29411764705882354,0.5607843137254902],[0.24705882352941178,0.23529411764705882,0.7333333333333333],[0.0392156862745098,0.0392156862745098,0.0392156862745098],[1,0.8392156862745098,0.4196078431372549],[1,0.8392156862745098,0.4196078431372549],[1,0.8392156862745098,0.4196078431372549],[1,0.8392156862745098,0.4196078431372549],[1,0.8392156862745098,0.4196078431372549]],
+  colorCount: 4, scale: 2.500, intensity: 0.770, paramA: 0.000, warp: 0.432,
+  detail: 2.496, contrast: 1.329, brightness: -0.060, saturation: 1.060,
+  hue: 0.2967, vignette: 0.000, blur: 0.0044, grain: 0.266,
+  seed: 6905.0, rotate: 2.1468, offsetX: 0.000, offsetY: 0.000,
+  drift: 0.000, cursorEnabled: false, cursorEffect: 2.0,
+  cursorStrength: 0.330, cursorRadius: 0.215, oklab: 0.0, timeScale: 1.658
+};
+var grainGL = null;
+var grainRAF = 0;
+var grainStart0 = 0;
+function grainSetup() {
+  var canvas = document.getElementById('grain-canvas');
+  if (!canvas) return null;
+  var gl = canvas.getContext('webgl', { antialias: false });
+  if (!gl) return null;
+  var program;
+  try { program = bgLink(gl, GRAIN_VERT, GRAIN_FRAG); }
+  catch (e) { return null; }
+  gl.useProgram(program);
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  var uni = {
+    colors: gl.getUniformLocation(program, 'u_colors'),
+    scene: gl.getUniformLocation(program, 'u_scene'),
+    shape: gl.getUniformLocation(program, 'u_shape'),
+    surface: gl.getUniformLocation(program, 'u_surface'),
+    finish: gl.getUniformLocation(program, 'u_finish'),
+    transform: gl.getUniformLocation(program, 'u_transform'),
+    space: gl.getUniformLocation(program, 'u_space'),
+    cursor: gl.getUniformLocation(program, 'u_cursor')
+  };
+  var U = GRAIN_UNIFORMS;
+  gl.uniform3fv(uni.colors, new Float32Array(U.colors.flat()));
+  gl.uniform4f(uni.shape, U.scale, U.intensity, U.paramA, U.warp);
+  gl.uniform4f(uni.surface, U.detail, U.contrast, U.brightness, U.saturation);
+  gl.uniform4f(uni.finish, U.hue, U.vignette, U.blur, U.grain);
+  gl.uniform4f(uni.transform, U.seed, U.rotate, U.drift, U.oklab);
+  gl.uniform4f(uni.cursor, 0, U.cursorEffect, U.cursorStrength, U.cursorRadius);
+  return { gl: gl, uni: uni, canvas: canvas };
+}
+function grainResize(state) {
+  var canvas = state.canvas, gl = state.gl;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var rawW = Math.max(1, Math.round(canvas.clientWidth * dpr));
+  var rawH = Math.max(1, Math.round(canvas.clientHeight * dpr));
+  var scale = Math.min(1, Math.sqrt(2000000 / Math.max(1, rawW * rawH)));
+  var w = Math.max(1, Math.round(rawW * scale));
+  var h = Math.max(1, Math.round(rawH * scale));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+    gl.viewport(0, 0, w, h);
+  }
+}
+function grainRender(now) {
+  grainRAF = 0;
+  if (!grainGL || document.visibilityState !== 'visible') return;
+  var state = grainGL, gl = state.gl, U = GRAIN_UNIFORMS;
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  grainResize(state);
+  var w = state.canvas.width, h = state.canvas.height;
+  var t = reduced ? 0 : ((now - grainStart0) / 1000) * U.timeScale;
+  gl.uniform4f(state.uni.scene, w, h, t, U.colorCount);
+  gl.uniform4f(state.uni.space, U.offsetX, U.offsetY, 0, 0);
+  gl.uniform4f(state.uni.cursor, 0, U.cursorEffect, U.cursorStrength, U.cursorRadius);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if (!reduced) grainRAF = requestAnimationFrame(grainRender);
+}
+function grainStart() {
+  if (grainRAF) return;
+  if (!grainGL) grainGL = grainSetup();
+  if (!grainGL) return;
+  grainStart0 = performance.now();
+  grainRAF = requestAnimationFrame(grainRender);
+}
+function grainStop() {
+  if (grainRAF) { cancelAnimationFrame(grainRAF); grainRAF = 0; }
+}
+
+/* Glass Fold shader background (round 24). An original fragment
+   shader for Arboris, after the GradFlow "Glass fold" look Grant
+   shared: three long diagonal fold bands with bright crest lines,
+   curved by a domain warp, in several colours (sky blue, violet,
+   rose, teal), plus ethereal fbm mist that gathers near the folds.
+   Runs only while the Glass Fold theme is active; reduced motion
+   draws a single still frame. */
+var FOLD_VERT = `attribute vec2 a_position;
+void main() {
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+var FOLD_FRAG = `precision highp float;
+uniform vec2 u_resolution;
+uniform float u_time;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(234.34, 435.345));
+  p += dot(p, p + 34.23);
+  return fract(p.x * p.y);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
+             mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = p * 2.03 + vec2(17.0, 9.2);
+    a *= 0.5;
+  }
+  return v;
+}
+
+// One fold band. Returns (body, crest): body is a broad soft
+// translucent band, crest a sharp bright line where the glass edge
+// catches the light.
+vec2 foldBand(vec2 q, vec2 dir, float freq, float phase) {
+  float s = dot(q, dir) * freq + phase;
+  float r = 0.5 + 0.5 * sin(s);
+  float body = smoothstep(0.35, 0.70, r) - smoothstep(0.70, 0.95, r);
+  float crest = pow(max(1.0 - abs(r - 0.72) * 5.0, 0.0), 2.0);
+  return vec2(max(body, 0.0), crest);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+  float t = u_time * 0.05;
+
+  // Organic warp: the folds bend, sweep and breathe slowly.
+  vec2 warp = vec2(
+    fbm(p * 1.3 + vec2(t * 0.7, -t * 0.5)),
+    fbm(p * 1.3 + vec2(-t * 0.6, t * 0.8) + vec2(5.2, 1.3))
+  );
+  vec2 q = p + (warp - 0.5) * 0.6;
+
+  // Three fold layers, sweeping in different diagonal directions.
+  vec2 f1 = foldBand(q, normalize(vec2(0.85, -0.55)), 2.6, t * 1.2);
+  vec2 f2 = foldBand(q, normalize(vec2(0.55, 0.85)), 2.0, -t * 0.9 + 2.1);
+  vec2 f3 = foldBand(q, normalize(vec2(-0.75, 0.65)), 2.4, t * 0.7 + 4.3);
+
+  // Deep background: near-black blue with a soft central lift.
+  vec3 col = vec3(0.015, 0.025, 0.07);
+  col += vec3(0.03, 0.06, 0.14) * (1.0 - length(p) * 0.6);
+  col += vec3(0.05, 0.10, 0.22) * fbm(p * 1.1 + t * 0.3) * 0.5;
+
+  // Ribbon colours: several, flowing blue to teal to violet to rose.
+  vec3 c1 = vec3(0.35, 0.65, 0.95);
+  vec3 c2 = vec3(0.55, 0.40, 0.95);
+  vec3 c3 = vec3(0.95, 0.50, 0.65);
+  vec3 c4 = vec3(0.30, 0.85, 0.80);
+  col += c1 * f1.x * 0.55;
+  col += c2 * f2.x * 0.50;
+  col += c4 * f3.x * 0.35;
+  col += c3 * f3.x * 0.25;
+  // Bright crest lines: the glass edge catching light.
+  col += vec3(0.80, 0.92, 1.00) * f1.y * 1.1;
+  col += vec3(0.90, 0.85, 1.00) * f2.y * 0.9;
+  col += vec3(1.00, 0.85, 0.90) * f3.y * 0.8;
+
+  // Ethereal mist: soft drifting fog, denser near the ribbons.
+  float mistN = fbm(p * 1.6 + vec2(t * 1.1, -t * 0.7) + warp * 0.9);
+  float nearFold = clamp(f1.x + f2.x + f3.x, 0.0, 1.0);
+  float mistAmt = smoothstep(0.42, 0.85, mistN) * (0.18 + 0.50 * nearFold);
+  vec3 mistCol = mix(vec3(0.55, 0.68, 0.95), vec3(0.85, 0.78, 0.95), mistN);
+  col = mix(col, mistCol, mistAmt * 0.38);
+
+  // Vignette.
+  float vd = length(uv - 0.5) * 1.41421356;
+  col *= 1.0 - 0.30 * smoothstep(0.35, 1.0, vd);
+
+  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+}
+`;
+var foldGL = null;
+var foldRAF = 0;
+var foldStart0 = 0;
+function foldSetup() {
+  var canvas = document.getElementById('fold-canvas');
+  if (!canvas) return null;
+  var gl = canvas.getContext('webgl', { antialias: false });
+  if (!gl) return null;
+  var program;
+  try { program = bgLink(gl, FOLD_VERT, FOLD_FRAG); }
+  catch (e) { return null; }
+  gl.useProgram(program);
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  var uni = {
+    res: gl.getUniformLocation(program, 'u_resolution'),
+    time: gl.getUniformLocation(program, 'u_time')
+  };
+  return { gl: gl, uni: uni, canvas: canvas };
+}
+function foldResize(state) {
+  var canvas = state.canvas, gl = state.gl;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var rawW = Math.max(1, Math.round(canvas.clientWidth * dpr));
+  var rawH = Math.max(1, Math.round(canvas.clientHeight * dpr));
+  var scale = Math.min(1, Math.sqrt(2000000 / Math.max(1, rawW * rawH)));
+  var w = Math.max(1, Math.round(rawW * scale));
+  var h = Math.max(1, Math.round(rawH * scale));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w; canvas.height = h;
+    gl.viewport(0, 0, w, h);
+  }
+}
+function foldRender(now) {
+  foldRAF = 0;
+  if (!foldGL || document.visibilityState !== 'visible') return;
+  var state = foldGL, gl = state.gl;
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  foldResize(state);
+  var t = reduced ? 0 : (now - foldStart0) / 1000;
+  gl.uniform2f(state.uni.res, state.canvas.width, state.canvas.height);
+  gl.uniform1f(state.uni.time, t);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  if (!reduced) foldRAF = requestAnimationFrame(foldRender);
+}
+function foldStart() {
+  if (foldRAF) return;
+  if (!foldGL) foldGL = foldSetup();
+  if (!foldGL) return;
+  foldStart0 = performance.now();
+  foldRAF = requestAnimationFrame(foldRender);
+}
+function foldStop() {
+  if (foldRAF) { cancelAnimationFrame(foldRAF); foldRAF = 0; }
+}
+
+/* Aether Flow background (round 24). Built from scratch in vanilla
+   canvas 2D: the 21st.dev component source is behind a login, and
+   Grant said to skip anything needing a login. Flowing light
+   particles weave and connect, and the cursor makes gentle swirls
+   in the aether. Runs only while the Aether Flow theme is active;
+   reduced motion draws a single still frame. */
+var AETHER_COLORS = ['#a5f3fc', '#67e8f9', '#5eead4', '#c4b5fd', '#ffffff'];
+var aetherState = null;
+function aetherSetup() {
+  var canvas = document.getElementById('aether-canvas');
+  if (!canvas) return null;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  var state = { canvas: canvas, ctx: ctx, particles: [], raf: 0,
+    mouse: { x: -9999, y: -9999 }, wired: false };
+  window.addEventListener('pointermove', function (e) {
+    state.mouse.x = e.clientX; state.mouse.y = e.clientY;
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', function () {
+    state.mouse.x = -9999; state.mouse.y = -9999;
+  });
+  return state;
+}
+function aetherInitParticles(state, w, h) {
+  var count = Math.max(50, Math.min(130, Math.floor(w * h / 14000)));
+  state.particles = [];
+  for (var i = 0; i < count; i++) {
+    state.particles.push({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: 0, vy: 0,
+      r: 0.8 + Math.random() * 1.8,
+      c: AETHER_COLORS[i % AETHER_COLORS.length],
+      seed: Math.random() * 1000
+    });
+  }
+}
+function aetherRender(now) {
+  var state = aetherState;
+  if (!state) return;
+  state.raf = 0;
+  if (document.visibilityState !== 'visible') return;
+  var canvas = state.canvas, ctx = state.ctx;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = canvas.clientWidth, h = canvas.clientHeight;
+  var bw = Math.max(1, Math.round(w * dpr)), bh = Math.max(1, Math.round(h * dpr));
+  if (canvas.width !== bw || canvas.height !== bh || state.particles.length === 0) {
+    canvas.width = bw; canvas.height = bh;
+    aetherInitParticles(state, w, h);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  var t = now / 1000;
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var ps = state.particles;
+  var i, j, p, a, b, dx, dy, d2, d, alpha;
+  for (i = 0; i < ps.length; i++) {
+    p = ps[i];
+    if (!reduced) {
+      var ang = Math.sin(p.x * 0.0022 + t * 0.25 + p.seed) + Math.cos(p.y * 0.0026 - t * 0.2);
+      p.vx += Math.cos(ang) * 0.013;
+      p.vy += Math.sin(ang) * 0.013;
+      dx = p.x - state.mouse.x; dy = p.y - state.mouse.y;
+      d2 = dx * dx + dy * dy;
+      var R = 160;
+      if (d2 < R * R && d2 > 1) {
+        d = Math.sqrt(d2);
+        var swirl = (1 - d / R) * 0.9;
+        p.vx += (-dy / d) * swirl * 0.35;
+        p.vy += (dx / d) * swirl * 0.35;
+      }
+      p.vx *= 0.96; p.vy *= 0.96;
+      var spd = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      if (spd > 0.9) { p.vx *= 0.9 / spd; p.vy *= 0.9 / spd; }
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10;
+      if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10;
+    }
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = p.c;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 3.2, 0, 6.2832); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for (i = 0; i < ps.length; i++) {
+    for (j = i + 1; j < ps.length; j++) {
+      a = ps[i]; b = ps[j];
+      dx = a.x - b.x; dy = a.y - b.y;
+      d2 = dx * dx + dy * dy;
+      if (d2 < 130 * 130) {
+        alpha = (1 - Math.sqrt(d2) / 130) * 0.35;
+        ctx.strokeStyle = 'rgba(165, 243, 252, ' + alpha.toFixed(3) + ')';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  if (!reduced) state.raf = requestAnimationFrame(aetherRender);
+}
+function aetherStart() {
+  if (!aetherState) {
+    aetherState = aetherSetup();
+    if (!aetherState) return;
+  }
+  if (aetherState.raf) return;
+  aetherState.raf = requestAnimationFrame(aetherRender);
+}
+function aetherStop() {
+  if (aetherState && aetherState.raf) { cancelAnimationFrame(aetherState.raf); aetherState.raf = 0; }
+}
+
+/* Visual themes: Current (default) plus the Round 12 look and its
+   Deep Sea palette. The secondary style is a body class
+   (theme-round12) plus a data-palette attribute; the choice persists
+   in localStorage (arboris-theme). The theme button opens a picker
+   popover; picking applies it at once. */
 var THEME_KEY = 'arboris-theme';
-var THEME_NAMES = { current: 'Current', round12: 'Round 12', peach: 'Peach Sorbet', lavender: 'Lavender Haze', deepsea: 'Deep Sea', glacier: 'Glacier', forest: 'Forest Canopy', sunset: 'Sunset Meadow' };
+var THEME_NAMES = { current: 'Current', round12: 'Round 12', deepsea: 'Deep Sea', grain: 'Grain Gradient', fold: 'Glass Fold', aether: 'Aether Flow' };
 function themeApply(name) {
   if (!THEME_NAMES[name]) name = 'current';
   var isAlt = name !== 'current';
@@ -2020,6 +2642,9 @@ function themeApply(name) {
   for (var i = 0; i < opts.length; i++) {
     opts[i].classList.toggle('active', opts[i].getAttribute('data-palette') === name);
   }
+  if (name === 'grain') grainStart(); else grainStop();
+  if (name === 'fold') foldStart(); else foldStop();
+  if (name === 'aether') aetherStart(); else aetherStop();
   try { localStorage.setItem(THEME_KEY, name); } catch (e) {}
 }
 function themeInit() {

@@ -21,7 +21,8 @@ BUILTINS = {
     "Number", "Object", "parseFloat", "parseInt", "Promise", "RangeError",
     "RegExp", "Request", "ResizeObserver", "Response", "Set", "String",
     "Symbol", "TextDecoder", "TypeError", "Uint8Array", "URL",
-    "URLSearchParams", "alert", "clearInterval", "clearTimeout", "fetch",
+    "URLSearchParams", "alert", "cancelAnimationFrame", "clearInterval",
+    "clearTimeout", "fetch",
     "queueMicrotask", "requestAnimationFrame", "reject", "resolve",
     "setInterval", "setTimeout", "structuredClone", "XMLHttpRequest",
 }

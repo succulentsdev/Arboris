@@ -483,8 +483,11 @@ class TestRound12Theme(unittest.TestCase):
     "Send" are the shared default since round 22, not theme-only,
     so they have no theme override. Since round 23 the theme button
     opens a palette picker (not a toggle): Current, Round 12, and
-    six palettes in Cute / Cool / Beautiful groups. The photo layer
-    is hidden in the theme, and the photo button with it.
+    the secondary options. Since round 24 the picker holds Deep Sea
+    (the only colour palette left) plus three animated backgrounds:
+    Grain Gradient and Glass Fold (WebGL shaders) and Aether Flow
+    (a particle system). The photo layer is hidden in the theme,
+    and the photo button with it.
     """
 
     def test_round12_theme(self):
@@ -533,49 +536,138 @@ class TestRound12Theme(unittest.TestCase):
 
 
 class TestRound12Palettes(unittest.TestCase):
-    """Round 23 (2026-11-26): six palettes for the secondary
-    (Round 12) style, 2 cute / 2 cool / 2 beautiful.
-
-    Each palette is a body.theme-round12[data-palette="..."] rule
-    overriding the bubble colours and the background mesh (the
-    "shader"). Peach Sorbet and Forest Canopy stay close to the
-    original coral/green; Glacier and Sunset Meadow push the mesh
-    gradient harder and change the colour entirely. The original
-    Round 12 colours are the default under body.theme-round12.
+    """Round 24 (2026-11-27): Grant kept only Deep Sea and Round 12.
+    The round-23 palettes (Peach Sorbet, Lavender Haze, Glacier,
+    Forest Canopy, Sunset Meadow) are gone. The picker now holds the
+    colour palette (Deep Sea) plus three animated background themes:
+    Grain Gradient (a WebGL shader), Glass Fold (an original WebGL
+    shader), and Aether Flow (a canvas particle system).
     """
 
-    def test_six_palettes(self):
+    def test_deepsea_only_palette(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Two cute, two cool, two beautiful, each with a picker option
-        # and a CSS rule.
-        palettes = {
-            "peach": "Peach Sorbet", "lavender": "Lavender Haze",
-            "deepsea": "Deep Sea", "glacier": "Glacier",
-            "forest": "Forest Canopy", "sunset": "Sunset Meadow",
-        }
-        for slug, name in palettes.items():
-            self.assertIn('body.theme-round12[data-palette="%s"] {' % slug, html)
-            self.assertIn('data-palette="%s"' % slug, html)
-            self.assertIn('>%s</button>' % name, html)
-        # The picker groups them Cute / Cool / Beautiful.
-        self.assertIn('>Cute</div>', html)
-        self.assertIn('>Cool</div>', html)
-        self.assertIn('>Beautiful</div>', html)
-        # Each palette overrides the bubbles and the mesh.
-        for slug in palettes:
-            rule = html.split('body.theme-round12[data-palette="%s"] {' % slug)[1].split('}')[0]
-            self.assertIn('--glass-user:', rule)
-            self.assertIn('--glass-bot:', rule)
-            self.assertIn('--hero-mesh:', rule)
-        # Glacier and Sunset Meadow push the mesh harder (stronger
-        # alpha than the gentle .18/.14/.10 of the similar ones).
-        glacier = html.split('body.theme-round12[data-palette="glacier"] {')[1].split('}')[0]
-        self.assertIn('rgba(147,197,253,.30)', glacier)
-        sunset = html.split('body.theme-round12[data-palette="sunset"] {')[1].split('}')[0]
-        self.assertIn('rgba(224,164,60,.26)', sunset)
-        # The JS knows all eight theme names and persists the pick.
-        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12'", html)
+        # Deep Sea is the only colour palette left.
+        self.assertIn('body.theme-round12[data-palette="deepsea"] {', html)
+        self.assertIn('data-palette="deepsea"', html)
+        self.assertIn('>Deep Sea</button>', html)
+        deepsea = html.split('body.theme-round12[data-palette="deepsea"] {')[1].split('}')[0]
+        self.assertIn('--glass-user:', deepsea)
+        self.assertIn('--glass-bot:', deepsea)
+        self.assertIn('--hero-mesh:', deepsea)
+        # The removed palettes are gone: no rule, no picker option.
+        for slug in ("peach", "lavender", "glacier", "forest", "sunset"):
+            self.assertNotIn('body.theme-round12[data-palette="%s"] {' % slug, html)
+            self.assertNotIn('data-palette="%s"' % slug, html)
+        self.assertNotIn('>Cute</div>', html)
+        self.assertNotIn('>Beautiful</div>', html)
+        # The JS knows the six theme names and persists the pick.
+        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12', deepsea: 'Deep Sea', grain: 'Grain Gradient', fold: 'Glass Fold', aether: 'Aether Flow' }", html)
         self.assertIn("setAttribute('data-palette', name)", html)
+
+
+class TestGrainTheme(unittest.TestCase):
+    """Round 24 (2026-11-27): Grain Gradient, a vanilla port of the
+    21st.dev ShaderBackground (Paper Shaders grain-gradient,
+    Apache-2.0) that Grant pasted. The GLSL is verbatim; only the
+    React wrapper is rewritten. A dedicated fixed canvas renders it
+    only while the Grain theme is active."""
+
+    def test_grain_theme(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The canvas exists and is hidden unless the theme is active.
+        self.assertIn('id="grain-canvas"', html)
+        self.assertIn('body.theme-round12[data-palette="grain"] #grain-canvas { display: block; }', html)
+        # The fragment shader is present (verbatim Paper Shaders
+        # grain-gradient: the packed uniforms and the grain hash).
+        self.assertIn('var GRAIN_FRAG = `', html)
+        self.assertIn('uniform vec3 u_colors[8];', html)
+        self.assertIn('float grainHash(vec2 p)', html)
+        self.assertIn('u_grain', html)
+        # The vanilla port wires start/stop into the theme lifecycle.
+        self.assertIn('function grainStart()', html)
+        self.assertIn('function grainStop()', html)
+        self.assertIn("if (name === 'grain') grainStart(); else grainStop();", html)
+        # The Grain palette rule uses the shader's own indigo/near-black.
+        self.assertIn('body.theme-round12[data-palette="grain"] {', html)
+        grain = html.split('body.theme-round12[data-palette="grain"] {')[1].split('}')[0]
+        self.assertIn('--glass-user:', grain)
+        self.assertIn('--glass-bot:', grain)
+        # The shader is the background: mesh and dot-grid hidden.
+        self.assertIn('body.theme-round12[data-palette="grain"] .hero { background: transparent; }', html)
+        self.assertIn('body.theme-round12[data-palette="grain"] .hero::before { display: none; }', html)
+        # The picker has Grain Gradient under a Shaders group.
+        self.assertIn('>Shaders</div>', html)
+        self.assertIn('>Grain Gradient</button>', html)
+
+
+class TestFoldTheme(unittest.TestCase):
+    """Round 24 (2026-11-27): Glass Fold, an original WebGL shader
+    written for Arboris after the GradFlow image Grant shared. Three
+    long diagonal fold bands with bright crest lines, curved by a
+    domain warp, in several colours, plus ethereal fbm mist that
+    gathers near the folds. Not a copy of the image."""
+
+    def test_fold_theme(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The canvas exists and is hidden unless the theme is active.
+        self.assertIn('id="fold-canvas"', html)
+        self.assertIn('body.theme-round12[data-palette="fold"] #fold-canvas { display: block; }', html)
+        # The fragment shader is present: fold bands, several colours,
+        # and the mist.
+        self.assertIn('var FOLD_FRAG = `', html)
+        self.assertIn('vec2 foldBand(vec2 q, vec2 dir, float freq, float phase)', html)
+        self.assertIn('float mistN = fbm(', html)
+        self.assertIn('nearFold', html)
+        # Several colours in the ribbons, not just blue.
+        self.assertIn('vec3 c1 = vec3(0.35, 0.65, 0.95);', html)
+        self.assertIn('vec3 c2 = vec3(0.55, 0.40, 0.95);', html)
+        self.assertIn('vec3 c3 = vec3(0.95, 0.50, 0.65);', html)
+        self.assertIn('vec3 c4 = vec3(0.30, 0.85, 0.80);', html)
+        # The vanilla port wires start/stop into the theme lifecycle.
+        self.assertIn('function foldStart()', html)
+        self.assertIn('function foldStop()', html)
+        self.assertIn("if (name === 'fold') foldStart(); else foldStop();", html)
+        # The Fold palette rule uses deep blue bubbles; the shader is
+        # the background, so mesh and dot-grid are hidden.
+        self.assertIn('body.theme-round12[data-palette="fold"] {', html)
+        self.assertIn('body.theme-round12[data-palette="fold"] .hero { background: transparent; }', html)
+        self.assertIn('body.theme-round12[data-palette="fold"] .hero::before { display: none; }', html)
+        # The picker has Glass Fold under Shaders.
+        self.assertIn('>Glass Fold</button>', html)
+
+
+class TestAetherTheme(unittest.TestCase):
+    """Round 24 (2026-11-27): Aether Flow, built from scratch in
+    vanilla canvas 2D. The 21st.dev component source is behind a
+    login and Grant said to skip anything needing a login, so this
+    follows the component's description instead: flowing light
+    particles that weave and connect, with the cursor making gentle
+    swirls in the aether."""
+
+    def test_aether_theme(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The canvas exists and is hidden unless the theme is active.
+        self.assertIn('id="aether-canvas"', html)
+        self.assertIn('body.theme-round12[data-palette="aether"] #aether-canvas { display: block; }', html)
+        # The particle system: a colour set, a flow field, connecting
+        # lines, and a cursor swirl.
+        self.assertIn('var AETHER_COLORS = ', html)
+        self.assertIn('function aetherInitParticles(state, w, h)', html)
+        self.assertIn('function aetherRender(now)', html)
+        self.assertIn('swirl', html)
+        self.assertIn('130 * 130', html)
+        # The vanilla port wires start/stop into the theme lifecycle.
+        self.assertIn('function aetherStart()', html)
+        self.assertIn('function aetherStop()', html)
+        self.assertIn("if (name === 'aether') aetherStart(); else aetherStop();", html)
+        # The Aether palette rule uses teal bubbles; the particles are
+        # the background, so mesh and dot-grid are hidden.
+        self.assertIn('body.theme-round12[data-palette="aether"] {', html)
+        self.assertIn('body.theme-round12[data-palette="aether"] .hero { background: transparent; }', html)
+        self.assertIn('body.theme-round12[data-palette="aether"] .hero::before { display: none; }', html)
+        # The picker has Aether Flow under a Particles group.
+        self.assertIn('>Particles</div>', html)
+        self.assertIn('>Aether Flow</button>', html)
 
 
 if __name__ == "__main__":
