@@ -278,11 +278,10 @@ body.bg-photo .hero::before { display: none }
   z-index: 0; pointer-events: none; display: none;
 }
 body.theme-round12[data-palette="grain"] #grain-canvas { display: block; }
-#fold-canvas, #aether-canvas {
+#aether-canvas {
   position: fixed; inset: 0; width: 100vw; height: 100vh;
   z-index: 0; pointer-events: none; display: none;
 }
-body.theme-round12[data-palette="fold"] #fold-canvas { display: block; }
 body.theme-round12[data-palette="aether"] #aether-canvas { display: block; }
 
 .hero {
@@ -338,21 +337,11 @@ body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16
 
 /* ── Round 12 palettes ──
    Colourways for the secondary (Round 12) style. Each overrides the
-   bubble colours and the background mesh (the "shader"). Grant kept
-   only Deep Sea (blue-green sea); the other round-23 palettes
-   (Peach Sorbet, Lavender Haze, Glacier, Forest Canopy, Sunset
-   Meadow) were removed. The original Round 12 colours are the
-   default under body.theme-round12. */
-body.theme-round12[data-palette="deepsea"] {
-  --glass-user: linear-gradient(135deg, rgba(45,160,180,.32), rgba(45,160,180,.16));
-  --glass-user-border: rgba(45,160,180,.55);
-  --glass-bot: rgba(8,26,40,.92);
-  --glass-bot-border: rgba(45,160,180,.20);
-  --hero-mesh:
-    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(45,160,180,.20), transparent 65%),
-    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(14,116,144,.16), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,211,238,.10), transparent 65%);
-}
+   bubble colours and the background mesh (the "shader"). The colour
+   palettes are all gone now (Deep Sea was the last, removed in round
+   25); the remaining secondary themes are the animated backgrounds
+   below. The original Round 12 colours are the default under
+   body.theme-round12. */
 body.theme-round12[data-palette="grain"] {
   --glass-user: linear-gradient(135deg, rgba(99,102,241,.32), rgba(99,102,241,.16));
   --glass-user-border: rgba(99,102,241,.55);
@@ -362,14 +351,6 @@ body.theme-round12[data-palette="grain"] {
 /* The shader is the background: hide the mesh and the dot-grid. */
 body.theme-round12[data-palette="grain"] .hero { background: transparent; }
 body.theme-round12[data-palette="grain"] .hero::before { display: none; }
-body.theme-round12[data-palette="fold"] {
-  --glass-user: linear-gradient(135deg, rgba(59,130,246,.32), rgba(59,130,246,.16));
-  --glass-user-border: rgba(59,130,246,.55);
-  --glass-bot: rgba(8,15,30,.92);
-  --glass-bot-border: rgba(255,255,255,.10);
-}
-body.theme-round12[data-palette="fold"] .hero { background: transparent; }
-body.theme-round12[data-palette="fold"] .hero::before { display: none; }
 body.theme-round12[data-palette="aether"] {
   --glass-user: linear-gradient(135deg, rgba(45,212,191,.30), rgba(45,212,191,.15));
   --glass-user-border: rgba(45,212,191,.55);
@@ -1325,7 +1306,6 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 <canvas id="bg-canvas" aria-hidden="true"></canvas>
 <div id="bg-overlay" aria-hidden="true"></div>
 <canvas id="grain-canvas" aria-hidden="true"></canvas>
-<canvas id="fold-canvas" aria-hidden="true"></canvas>
 <canvas id="aether-canvas" aria-hidden="true"></canvas>
 
 <header class="hd">
@@ -1341,11 +1321,8 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
         <div class="tp-title">Theme</div>
         <button class="pal-opt" type="button" data-palette="current" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#3dd4c0 50%,#0a2814 50%)"></span>Current</button>
         <button class="pal-opt" type="button" data-palette="round12" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#cf4a28 50%,#0f1813 50%)"></span>Round 12</button>
-        <div class="pal-group">Cool</div>
-        <button class="pal-opt" type="button" data-palette="deepsea" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#2da0b4 50%,#081a28 50%)"></span>Deep Sea</button>
         <div class="pal-group">Shaders</div>
         <button class="pal-opt" type="button" data-palette="grain" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#db4b8f 50%,#3f3cbb 50%)"></span>Grain Gradient</button>
-        <button class="pal-opt" type="button" data-palette="fold" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#59a5f5 50%,#8b5cf6 50%)"></span>Glass Fold</button>
         <div class="pal-group">Particles</div>
         <button class="pal-opt" type="button" data-palette="aether" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#a5f3fc 50%,#5eead4 50%)"></span>Aether Flow</button>
       </div>
@@ -2347,166 +2324,6 @@ function grainStop() {
   if (grainRAF) { cancelAnimationFrame(grainRAF); grainRAF = 0; }
 }
 
-/* Glass Fold shader background (round 24). An original fragment
-   shader for Arboris, after the GradFlow "Glass fold" look Grant
-   shared: three long diagonal fold bands with bright crest lines,
-   curved by a domain warp, in several colours (sky blue, violet,
-   rose, teal), plus ethereal fbm mist that gathers near the folds.
-   Runs only while the Glass Fold theme is active; reduced motion
-   draws a single still frame. */
-var FOLD_VERT = `attribute vec2 a_position;
-void main() {
-  gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-var FOLD_FRAG = `precision highp float;
-uniform vec2 u_resolution;
-uniform float u_time;
-
-float hash21(vec2 p) {
-  p = fract(p * vec2(234.34, 435.345));
-  p += dot(p, p + 34.23);
-  return fract(p.x * p.y);
-}
-float noise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
-             mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x), u.y);
-}
-float fbm(vec2 p) {
-  float v = 0.0;
-  float a = 0.5;
-  for (int i = 0; i < 5; i++) {
-    v += a * noise(p);
-    p = p * 2.03 + vec2(17.0, 9.2);
-    a *= 0.5;
-  }
-  return v;
-}
-
-// One fold band. Returns (body, crest): body is a broad soft
-// translucent band, crest a sharp bright line where the glass edge
-// catches the light.
-vec2 foldBand(vec2 q, vec2 dir, float freq, float phase) {
-  float s = dot(q, dir) * freq + phase;
-  float r = 0.5 + 0.5 * sin(s);
-  float body = smoothstep(0.35, 0.70, r) - smoothstep(0.70, 0.95, r);
-  float crest = pow(max(1.0 - abs(r - 0.72) * 5.0, 0.0), 2.0);
-  return vec2(max(body, 0.0), crest);
-}
-
-void main() {
-  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-  vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-  float t = u_time * 0.05;
-
-  // Organic warp: the folds bend, sweep and breathe slowly.
-  vec2 warp = vec2(
-    fbm(p * 1.3 + vec2(t * 0.7, -t * 0.5)),
-    fbm(p * 1.3 + vec2(-t * 0.6, t * 0.8) + vec2(5.2, 1.3))
-  );
-  vec2 q = p + (warp - 0.5) * 0.6;
-
-  // Three fold layers, sweeping in different diagonal directions.
-  vec2 f1 = foldBand(q, normalize(vec2(0.85, -0.55)), 2.6, t * 1.2);
-  vec2 f2 = foldBand(q, normalize(vec2(0.55, 0.85)), 2.0, -t * 0.9 + 2.1);
-  vec2 f3 = foldBand(q, normalize(vec2(-0.75, 0.65)), 2.4, t * 0.7 + 4.3);
-
-  // Deep background: near-black blue with a soft central lift.
-  vec3 col = vec3(0.015, 0.025, 0.07);
-  col += vec3(0.03, 0.06, 0.14) * (1.0 - length(p) * 0.6);
-  col += vec3(0.05, 0.10, 0.22) * fbm(p * 1.1 + t * 0.3) * 0.5;
-
-  // Ribbon colours: several, flowing blue to teal to violet to rose.
-  vec3 c1 = vec3(0.35, 0.65, 0.95);
-  vec3 c2 = vec3(0.55, 0.40, 0.95);
-  vec3 c3 = vec3(0.95, 0.50, 0.65);
-  vec3 c4 = vec3(0.30, 0.85, 0.80);
-  col += c1 * f1.x * 0.55;
-  col += c2 * f2.x * 0.50;
-  col += c4 * f3.x * 0.35;
-  col += c3 * f3.x * 0.25;
-  // Bright crest lines: the glass edge catching light.
-  col += vec3(0.80, 0.92, 1.00) * f1.y * 1.1;
-  col += vec3(0.90, 0.85, 1.00) * f2.y * 0.9;
-  col += vec3(1.00, 0.85, 0.90) * f3.y * 0.8;
-
-  // Ethereal mist: soft drifting fog, denser near the ribbons.
-  float mistN = fbm(p * 1.6 + vec2(t * 1.1, -t * 0.7) + warp * 0.9);
-  float nearFold = clamp(f1.x + f2.x + f3.x, 0.0, 1.0);
-  float mistAmt = smoothstep(0.42, 0.85, mistN) * (0.18 + 0.50 * nearFold);
-  vec3 mistCol = mix(vec3(0.55, 0.68, 0.95), vec3(0.85, 0.78, 0.95), mistN);
-  col = mix(col, mistCol, mistAmt * 0.38);
-
-  // Vignette.
-  float vd = length(uv - 0.5) * 1.41421356;
-  col *= 1.0 - 0.30 * smoothstep(0.35, 1.0, vd);
-
-  gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
-}
-`;
-var foldGL = null;
-var foldRAF = 0;
-var foldStart0 = 0;
-function foldSetup() {
-  var canvas = document.getElementById('fold-canvas');
-  if (!canvas) return null;
-  var gl = canvas.getContext('webgl', { antialias: false });
-  if (!gl) return null;
-  var program;
-  try { program = bgLink(gl, FOLD_VERT, FOLD_FRAG); }
-  catch (e) { return null; }
-  gl.useProgram(program);
-  var buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  var loc = gl.getAttribLocation(program, 'a_position');
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  var uni = {
-    res: gl.getUniformLocation(program, 'u_resolution'),
-    time: gl.getUniformLocation(program, 'u_time')
-  };
-  return { gl: gl, uni: uni, canvas: canvas };
-}
-function foldResize(state) {
-  var canvas = state.canvas, gl = state.gl;
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var rawW = Math.max(1, Math.round(canvas.clientWidth * dpr));
-  var rawH = Math.max(1, Math.round(canvas.clientHeight * dpr));
-  var scale = Math.min(1, Math.sqrt(2000000 / Math.max(1, rawW * rawH)));
-  var w = Math.max(1, Math.round(rawW * scale));
-  var h = Math.max(1, Math.round(rawH * scale));
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width = w; canvas.height = h;
-    gl.viewport(0, 0, w, h);
-  }
-}
-function foldRender(now) {
-  foldRAF = 0;
-  if (!foldGL || document.visibilityState !== 'visible') return;
-  var state = foldGL, gl = state.gl;
-  var reduced = false;
-  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-  foldResize(state);
-  var t = reduced ? 0 : (now - foldStart0) / 1000;
-  gl.uniform2f(state.uni.res, state.canvas.width, state.canvas.height);
-  gl.uniform1f(state.uni.time, t);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
-  if (!reduced) foldRAF = requestAnimationFrame(foldRender);
-}
-function foldStart() {
-  if (foldRAF) return;
-  if (!foldGL) foldGL = foldSetup();
-  if (!foldGL) return;
-  foldStart0 = performance.now();
-  foldRAF = requestAnimationFrame(foldRender);
-}
-function foldStop() {
-  if (foldRAF) { cancelAnimationFrame(foldRAF); foldRAF = 0; }
-}
-
 /* Aether Flow background (round 24). Built from scratch in vanilla
    canvas 2D: the 21st.dev component source is behind a login, and
    Grant said to skip anything needing a login. Flowing light
@@ -2621,12 +2438,13 @@ function aetherStop() {
 }
 
 /* Visual themes: Current (default) plus the Round 12 look and its
-   Deep Sea palette. The secondary style is a body class
-   (theme-round12) plus a data-palette attribute; the choice persists
-   in localStorage (arboris-theme). The theme button opens a picker
-   popover; picking applies it at once. */
+   animated backgrounds (Grain Gradient, Aether Flow). The secondary
+   style is a body class (theme-round12) plus a data-palette
+   attribute; the choice persists in localStorage (arboris-theme).
+   The theme button opens a picker popover; picking applies it at
+   once. */
 var THEME_KEY = 'arboris-theme';
-var THEME_NAMES = { current: 'Current', round12: 'Round 12', deepsea: 'Deep Sea', grain: 'Grain Gradient', fold: 'Glass Fold', aether: 'Aether Flow' };
+var THEME_NAMES = { current: 'Current', round12: 'Round 12', grain: 'Grain Gradient', aether: 'Aether Flow' };
 function themeApply(name) {
   if (!THEME_NAMES[name]) name = 'current';
   var isAlt = name !== 'current';
@@ -2643,7 +2461,6 @@ function themeApply(name) {
     opts[i].classList.toggle('active', opts[i].getAttribute('data-palette') === name);
   }
   if (name === 'grain') grainStart(); else grainStop();
-  if (name === 'fold') foldStart(); else foldStop();
   if (name === 'aether') aetherStart(); else aetherStop();
   try { localStorage.setItem(THEME_KEY, name); } catch (e) {}
 }

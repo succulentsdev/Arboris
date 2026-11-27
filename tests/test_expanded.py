@@ -483,11 +483,11 @@ class TestRound12Theme(unittest.TestCase):
     "Send" are the shared default since round 22, not theme-only,
     so they have no theme override. Since round 23 the theme button
     opens a palette picker (not a toggle): Current, Round 12, and
-    the secondary options. Since round 24 the picker holds Deep Sea
-    (the only colour palette left) plus three animated backgrounds:
-    Grain Gradient and Glass Fold (WebGL shaders) and Aether Flow
-    (a particle system). The photo layer is hidden in the theme,
-    and the photo button with it.
+    the secondary options. Since round 24 the picker holds animated
+    backgrounds: Grain Gradient (a WebGL shader) and Aether Flow
+    (a particle system). The colour palettes are all gone (Deep Sea
+    was the last, removed in round 25, along with Glass Fold). The
+    photo layer is hidden in the theme, and the photo button with it.
     """
 
     def test_round12_theme(self):
@@ -536,32 +536,30 @@ class TestRound12Theme(unittest.TestCase):
 
 
 class TestRound12Palettes(unittest.TestCase):
-    """Round 24 (2026-11-27): Grant kept only Deep Sea and Round 12.
-    The round-23 palettes (Peach Sorbet, Lavender Haze, Glacier,
-    Forest Canopy, Sunset Meadow) are gone. The picker now holds the
-    colour palette (Deep Sea) plus three animated background themes:
-    Grain Gradient (a WebGL shader), Glass Fold (an original WebGL
-    shader), and Aether Flow (a canvas particle system).
+    """Round 25 (2026-11-27): Grant kept only Aether Flow and Grain
+    Gradient. Glass Fold and Deep Sea are gone, and with them the
+    last colour palette. The picker now holds Current, Round 12,
+    Grain Gradient, and Aether Flow.
     """
 
-    def test_deepsea_only_palette(self):
+    def test_no_colour_palettes(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Deep Sea is the only colour palette left.
-        self.assertIn('body.theme-round12[data-palette="deepsea"] {', html)
-        self.assertIn('data-palette="deepsea"', html)
-        self.assertIn('>Deep Sea</button>', html)
-        deepsea = html.split('body.theme-round12[data-palette="deepsea"] {')[1].split('}')[0]
-        self.assertIn('--glass-user:', deepsea)
-        self.assertIn('--glass-bot:', deepsea)
-        self.assertIn('--hero-mesh:', deepsea)
-        # The removed palettes are gone: no rule, no picker option.
-        for slug in ("peach", "lavender", "glacier", "forest", "sunset"):
+        # Deep Sea and Glass Fold are gone: no rule, no picker option.
+        for slug in ("peach", "lavender", "glacier", "forest", "sunset", "deepsea", "fold"):
             self.assertNotIn('body.theme-round12[data-palette="%s"] {' % slug, html)
             self.assertNotIn('data-palette="%s"' % slug, html)
+        self.assertNotIn('>Deep Sea</button>', html)
+        self.assertNotIn('>Glass Fold</button>', html)
         self.assertNotIn('>Cute</div>', html)
+        self.assertNotIn('>Cool</div>', html)
         self.assertNotIn('>Beautiful</div>', html)
-        # The JS knows the six theme names and persists the pick.
-        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12', deepsea: 'Deep Sea', grain: 'Grain Gradient', fold: 'Glass Fold', aether: 'Aether Flow' }", html)
+        # The canvases and shaders for the removed theme are gone too.
+        self.assertNotIn('id="fold-canvas"', html)
+        self.assertNotIn('var FOLD_FRAG', html)
+        self.assertNotIn('function foldStart()', html)
+        self.assertNotIn('function foldStop()', html)
+        # The JS knows the four theme names and persists the pick.
+        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12', grain: 'Grain Gradient', aether: 'Aether Flow' }", html)
         self.assertIn("setAttribute('data-palette', name)", html)
 
 
@@ -598,42 +596,6 @@ class TestGrainTheme(unittest.TestCase):
         # The picker has Grain Gradient under a Shaders group.
         self.assertIn('>Shaders</div>', html)
         self.assertIn('>Grain Gradient</button>', html)
-
-
-class TestFoldTheme(unittest.TestCase):
-    """Round 24 (2026-11-27): Glass Fold, an original WebGL shader
-    written for Arboris after the GradFlow image Grant shared. Three
-    long diagonal fold bands with bright crest lines, curved by a
-    domain warp, in several colours, plus ethereal fbm mist that
-    gathers near the folds. Not a copy of the image."""
-
-    def test_fold_theme(self):
-        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # The canvas exists and is hidden unless the theme is active.
-        self.assertIn('id="fold-canvas"', html)
-        self.assertIn('body.theme-round12[data-palette="fold"] #fold-canvas { display: block; }', html)
-        # The fragment shader is present: fold bands, several colours,
-        # and the mist.
-        self.assertIn('var FOLD_FRAG = `', html)
-        self.assertIn('vec2 foldBand(vec2 q, vec2 dir, float freq, float phase)', html)
-        self.assertIn('float mistN = fbm(', html)
-        self.assertIn('nearFold', html)
-        # Several colours in the ribbons, not just blue.
-        self.assertIn('vec3 c1 = vec3(0.35, 0.65, 0.95);', html)
-        self.assertIn('vec3 c2 = vec3(0.55, 0.40, 0.95);', html)
-        self.assertIn('vec3 c3 = vec3(0.95, 0.50, 0.65);', html)
-        self.assertIn('vec3 c4 = vec3(0.30, 0.85, 0.80);', html)
-        # The vanilla port wires start/stop into the theme lifecycle.
-        self.assertIn('function foldStart()', html)
-        self.assertIn('function foldStop()', html)
-        self.assertIn("if (name === 'fold') foldStart(); else foldStop();", html)
-        # The Fold palette rule uses deep blue bubbles; the shader is
-        # the background, so mesh and dot-grid are hidden.
-        self.assertIn('body.theme-round12[data-palette="fold"] {', html)
-        self.assertIn('body.theme-round12[data-palette="fold"] .hero { background: transparent; }', html)
-        self.assertIn('body.theme-round12[data-palette="fold"] .hero::before { display: none; }', html)
-        # The picker has Glass Fold under Shaders.
-        self.assertIn('>Glass Fold</button>', html)
 
 
 class TestAetherTheme(unittest.TestCase):
