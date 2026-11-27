@@ -225,7 +225,34 @@ html[data-hero-theme="ink"] {
   --composer-shadow: 0 30px 80px rgba(0,0,0,.6);
   --scrim: radial-gradient(ellipse 44% 36% at 50% 50%, rgba(9,9,11,.6), rgba(9,9,11,0) 70%);
 }
-/* 7. Grain Gradient (ported from the Round 24 theme) */
+/* 7. Phloem: dark, matte technical hardware. Warm graphite, one
+   amber accent (sap), monospace headline, squared controls. */
+html[data-hero-theme="phloem"] {
+  --bg: #0b0c0a;
+  --surface: #131411;
+  --surface-2: #1a1c18;
+  --border: rgba(236,232,220,.13);
+  --border-strong: rgba(236,232,220,.22);
+  --text: #eeece6;
+  --muted: #aaa79e;
+  --faint: #8a877e;
+  --accent: #ffb547;
+  --accent-fg: #231500;
+  --font-hero: 'SF Mono', ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --hero-style: normal;
+  --hero-weight: 500;
+  --hero-track: -0.06em;
+  --glass-alpha: 94%;
+  --blur: 6px;
+  --composer-radius: 6px;
+  --composer-highlight: rgba(255,255,255,.06);
+  --composer-shadow: 0 1px 0 rgba(0,0,0,.7), 0 26px 50px -14px rgba(0,0,0,.75);
+  /* No scrim: a dark radial gradient over the canvas would dim the
+     fibres inside an ellipse around the hero stack, the Topo circle
+     from Rounds 28 and 30. */
+  --scrim: none;
+}
+/* 8. Grain Gradient (ported from the Round 24 theme) */
 html[data-hero-theme="grain"] {
   --bg: #0a0a10;
   --surface: #0c0c12;
@@ -252,7 +279,7 @@ html[data-hero-theme="grain"] {
   --glass-bot: rgba(12,12,16,.92);
   --glass-bot-border: rgba(255,255,255,.10);
 }
-/* 8. Aether Flow (ported from the Round 24 theme) */
+/* 9. Aether Flow (ported from the Round 24 theme) */
 html[data-hero-theme="aether"] {
   --bg: #081014;
   --surface: #0b181f;
@@ -875,6 +902,16 @@ html[data-hero-theme="aurora"] .composer-card:focus-within {
   .brevity-btn { flex: 1; padding: 0 6px; font-size: 12.5px; }
   .prompt-chip { font-size: 13.5px; padding: 0 14px; }
 }
+/* Phloem: squared controls and monospace labels on the shared composer */
+html[data-hero-theme="phloem"] .hero-lede { font-family: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; }
+html[data-hero-theme="phloem"] .composer-card { background-image: linear-gradient(to bottom, rgba(255,255,255,.025), rgba(255,255,255,0) 40%); }
+html[data-hero-theme="phloem"] .brevity-bar,
+html[data-hero-theme="phloem"] .brevity-btn,
+html[data-hero-theme="phloem"] .prompt-chip { border-radius: 4px; }
+html[data-hero-theme="phloem"] .brevity-btn::before { border-radius: 2px; }
+html[data-hero-theme="phloem"] .btn-s { border-radius: 5px; }
+html[data-hero-theme="phloem"] .brevity-btn { font: 600 12px ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
+html[data-hero-theme="phloem"] .prompt-chip { font: 500 13px ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; }
 @media (prefers-reduced-motion: reduce) {
   #bg-canvas, #bg-stage, body { transition: none !important; }
 }
@@ -1597,6 +1634,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   <button type="button" class="td-opt active" data-hero-theme="topo" aria-pressed="true" aria-label="Topographic Pulse theme" title="Topographic Pulse"><span class="td-sw" style="--a:#4ade80;--b:#0a0f12" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="silk" aria-pressed="false" aria-label="Verdant Silk theme" title="Verdant Silk"><span class="td-sw" style="--a:#c8a96e;--b:#0f4c45" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="ink" aria-pressed="false" aria-label="Kinetic Ink theme" title="Kinetic Ink"><span class="td-sw" style="--a:#6cc4a1;--b:#d4a056" aria-hidden="true"></span></button>
+  <button type="button" class="td-opt" data-hero-theme="phloem" aria-pressed="false" aria-label="Phloem theme" title="Phloem"><span class="td-sw" style="--a:#ffb547;--b:#0b0c0a" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="aurora" aria-pressed="false" aria-label="Aurora Glass theme" title="Aurora Glass"><span class="td-sw" style="--a:#2dd4bf;--b:#4f46e5" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="canopy" aria-pressed="false" aria-label="Canopy Obsidian theme" title="Canopy Obsidian"><span class="td-sw" style="--a:#34d399;--b:#060b09" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="solaris" aria-pressed="false" aria-label="Solaris Alabaster theme" title="Solaris Alabaster"><span class="td-sw" style="--a:#1b5e43;--b:#f5f3ee" aria-hidden="true"></span></button>
@@ -2083,6 +2121,17 @@ var HERO_THEMES = [
         colors: ['#04070a', '#051a2e', '#0a3d5c', '#7dd3fc'] }
     ] },
   { id: 'ink',     name: 'Kinetic Ink',       kind: '2d', a: '#6cc4a1', b: '#d4a056' },
+  { id: 'phloem',  name: 'Phloem',            kind: 'gl', a: '#ffb547', b: '#0b0c0a',
+    palettes: [
+      { id: 'phloem', name: 'Phloem', a: '#ffb547', b: '#0b0c0a', tokens: {},
+        colors: ['#0b0c0a', '#a3a194', '#ffb547', '#ffcc75'] },
+      { id: 'copper', name: 'Copper', a: '#e07856', b: '#0d0b09',
+        tokens: { '--bg': '#0d0b09', '--surface': '#151210', '--surface-2': '#1d1813', '--accent': '#e07856', '--accent-fg': '#2a0f05' },
+        colors: ['#0d0b09', '#a89a8c', '#e07856', '#f2a65a'] },
+      { id: 'verdigris', name: 'Verdigris', a: '#2dd4bf', b: '#0a0d0c',
+        tokens: { '--bg': '#0a0d0c', '--surface': '#111613', '--surface-2': '#171d19', '--accent': '#2dd4bf', '--accent-fg': '#03201b' },
+        colors: ['#0a0d0c', '#8fa39a', '#2dd4bf', '#99f6e4'] }
+    ] },
   { id: 'aurora',  name: 'Aurora Glass',      kind: 'gl', a: '#2dd4bf', b: '#4f46e5',
     palettes: [
       { id: 'aurora', name: 'Aurora', a: '#2dd4bf', b: '#4f46e5', tokens: {},
@@ -2312,6 +2361,64 @@ var HV_AURORA = HV_HEAD + [
   '}'
 ].join('\n');
 
+/* Phloem: a stem seen along its grain. Fine vascular fibres run up
+   the screen and amber sap pulses climb them. The page answers typing
+   (more pulses, rising faster) but not the cursor.
+
+   Variation, so it never reads as a pattern: each fibre sits a little
+   off-centre in its lane; each fibre's sap eases faster and slower on
+   its own slow clock; each pulse draws its own tail length, brightness
+   and tint (honey to deep amber); and about one pulse in eight carries
+   a smaller bead just behind it.
+
+   Colours come from the palette via u_pal: [bg, fibre, sap, sap2].
+   No centre dimming: the lines are one even brightness across the
+   whole screen (the Topo circle lesson from Rounds 28 and 30).
+
+   u_type (0..1) rises while the person types; u_flow is a clock that
+   runs faster while they do. */
+var HV_PHLOEM = HV_HEAD + [
+  'uniform float u_type;',
+  'uniform float u_flow;',
+  'void main(){',
+  '  vec2 p=gl_FragCoord.xy/u_res.y;',
+  '  float wander=(fbm(vec2(p.y*0.9,3.0+u_time*0.012))-0.5)*0.24+(noise(vec2(p.y*3.2,7.0))-0.5)*0.03;',
+  '  float x=p.x+wander;',
+  '  float N=38.0;',
+  '  float i=floor(x*N);',
+  '  float h=hash(vec2(i,1.7));',
+  '  float h2=hash(vec2(i,9.1));',
+  '  float h3=hash(vec2(i,4.3));',
+  '  float f=fract(x*N)-0.5-(h3-0.5)*0.3;',
+  '  float pix=abs(f)/N*u_res.y;',
+  '  float w=0.45+h2*0.6;',
+  '  float line=1.0-smoothstep(w,w+1.0,pix);',
+  '  float present=step(0.22,h);',
+  '  float base=(0.045+0.085*h2)*present;',
+  '  float wob=0.2*noise(vec2(i*1.31,u_flow*0.05));',
+  '  float ph=(p.y-u_flow*(0.045+0.08*h))*(0.9+h2*0.8)+h*13.0+wob;',
+  '  float cyc=floor(ph);',
+  '  float s=fract(ph);',
+  '  float r1=hash(vec2(i,cyc));',
+  '  float r2=hash(vec2(cyc,i+5.7));',
+  '  float gate=step(0.55-0.3*u_type,r1);',
+  '  float head=pow(s,mix(16.0,40.0,r2))+mix(0.12,0.32,r2)*pow(s,7.0);',
+  '  float bead=clamp(1.0-abs(s-0.9)*12.0,0.0,1.0);',
+  '  float twin=step(0.875,fract(r1*5.13))*0.45*bead*bead;',
+  '  float amp=mix(0.7,1.15,fract(r1*7.31));',
+  '  float pulse=(head+twin)*amp*gate*present;',
+  '  vec3 bg=u_pal[0];',
+  '  vec3 fib=u_pal[1];',
+  '  vec3 sap=mix(u_pal[2],u_pal[3],fract(r2*3.7)*0.6);',
+  '  vec3 col=bg;',
+  '  col+=fib*line*base;',
+  '  col+=sap*pulse*(line*(0.5+0.4*u_type)+0.07*exp(-pix*0.18));',
+  '  vec2 uv=gl_FragCoord.xy/u_res-0.5;',
+  '  col*=1.0-0.38*smoothstep(0.38,0.98,length(uv*vec2(1.2,1.4)));',
+  '  gl_FragColor=vec4(col,1.0);',
+  '}'
+].join('\n');
+
 function hvTopoSource(deriv) {
   return (deriv ? '#extension GL_OES_standard_derivatives : enable\n#define HV_DERIV 1\n' : '') + HV_HEAD + HV_TOPO_BODY;
 }
@@ -2330,7 +2437,7 @@ function hvCompile(gl, type, src) {
 }
 function hvFragFor(id, deriv) {
   if (id === 'topo') return hvTopoSource(deriv);
-  return { silk: HV_SILK, solaris: HV_SOLARIS, aurora: HV_AURORA }[id];
+  return { silk: HV_SILK, solaris: HV_SOLARIS, aurora: HV_AURORA, phloem: HV_PHLOEM }[id];
 }
 function hvGlScene(canvas, env, id, res, pal) {
   var gl = null;
@@ -2355,7 +2462,7 @@ function hvGlScene(canvas, env, id, res, pal) {
     var loc = gl.getAttribLocation(prog, 'a_pos');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    ['res', 'time', 'mouse', 'mouseOn'].forEach(function (k) { u[k] = gl.getUniformLocation(prog, 'u_' + k); });
+    ['res', 'time', 'mouse', 'mouseOn', 'type', 'flow'].forEach(function (k) { u[k] = gl.getUniformLocation(prog, 'u_' + k); });
     u.pal = gl.getUniformLocation(prog, 'u_pal[0]');
     if (u.pal) gl.uniform3fv(u.pal, new window.Float32Array(hvPalFlat(pal)));
   } catch (e) {
@@ -2371,6 +2478,8 @@ function hvGlScene(canvas, env, id, res, pal) {
       gl.uniform1f(u.time, t);
       gl.uniform2f(u.mouse, env.pointer.sx, 1 - env.pointer.sy);
       gl.uniform1f(u.mouseOn, env.pointer.on);
+      if (u.type) gl.uniform1f(u.type, env.type);
+      if (u.flow) gl.uniform1f(u.flow, env.flow);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     },
     destroy: function () {
@@ -2446,6 +2555,7 @@ var HV_FALLBACKS = {
   solaris: { bg: '#f5f3ee', light: true, pools: ['rgba(255,252,242,0.55)', 'rgba(229,226,214,0.35)'] },
   topo:    { bg: '#0a0f12', pools: ['rgba(45,212,191,0.05)'], contours: true },
   aurora:  { bg: '#050a14', pools: ['rgba(26,158,107,0.28)', 'rgba(26,140,140,0.22)', 'rgba(71,61,184,0.22)'] },
+  phloem:  { bg: '#0b0c0a', pools: ['rgba(255,181,71,0.05)', 'rgba(120,118,108,0.06)'] },
   grain:   { bg: '#0a0a10', pools: ['rgba(99,102,241,0.25)', 'rgba(219,75,143,0.15)', 'rgba(63,60,187,0.2)'] },
   aether:  { bg: '#081014', pools: ['rgba(94,234,212,0.18)', 'rgba(165,243,252,0.12)', 'rgba(196,181,253,0.12)'] }
 };
@@ -3089,7 +3199,8 @@ var HeroBackground = (function () {
   var raf = 0, last = 0, t0 = 0, running = false, bound = false;
   var reduced = false, motionMq = null, quality = 1, slow = 0;
   var pointer = { x: 0, y: 0, sx: 0.5, sy: 0.5, tx: 0.5, ty: 0.5, on: 0, live: false };
-  var env = { pointer: pointer };
+  var lastKey = -1e9;
+  var env = { pointer: pointer, type: 0, flow: 0 };
 
   function onMove(e) {
     pointer.x = e.clientX; pointer.y = e.clientY;
@@ -3145,6 +3256,12 @@ var HeroBackground = (function () {
     pointer.sx += (pointer.tx - pointer.sx) * k;
     pointer.sy += (pointer.ty - pointer.sy) * k;
     pointer.on += ((pointer.live ? 1 : 0) - pointer.on) * Math.min(1, dt * 3);
+    /* Typing state (Phloem): rises fast on a keystroke, settles over ~1s.
+       flow is a clock that runs faster while typing, wrapped so shader
+       hashes stay well inside float precision. */
+    var typing = now - lastKey < 900 ? 1 : 0;
+    env.type += (typing - env.type) * Math.min(1, dt * (typing > env.type ? 6 : 1.4));
+    env.flow = (env.flow + dt * (1 + 1.8 * env.type)) % 600;
     scene.render((now - t0) / 1000, dt);
     if (scene.adaptive) {
       /* Drop render scale in 15% steps (floor 55%) after ~0.75s of
@@ -3155,7 +3272,7 @@ var HeroBackground = (function () {
   }
   function still() {
     if (!scene) return;
-    pointer.on = 0;
+    pointer.on = 0; env.type = 0; env.flow = 14;
     if (scene.still) scene.still(); else scene.render(14, 1 / 60);
   }
   function pause() {
@@ -3176,7 +3293,7 @@ var HeroBackground = (function () {
     else if (id === 'grain') s = hvGrainScene(cv, env, pal);
     else if (id === 'aether') s = hvAetherScene(cv, env);
     else {
-      var res = { silk: 0.5, solaris: 0.6, topo: 1, aurora: 0.5 }[id];
+      var res = { silk: 0.5, solaris: 0.6, topo: 1, aurora: 0.5, phloem: 0.75 }[id];
       s = hvGlScene(cv, env, id, res, pal);
     }
     return s;
@@ -3220,6 +3337,7 @@ var HeroBackground = (function () {
     bind();
     size();
     t0 = window.performance.now() - Math.random() * 20000;
+    env.flow = 20 + Math.random() * 200; env.type = 0;
     if (reduced) still(); else resume();
     window.requestAnimationFrame(function () { if (canvas) canvas.classList.add('on'); });
   }
@@ -3231,7 +3349,9 @@ var HeroBackground = (function () {
       if (motionMq.addEventListener) motionMq.addEventListener('change', onMotion);
     } catch (e) { reduced = false; }
   }
-  return { init: init, mount: mount, unmount: unmount, isReduced: function () { return reduced; } };
+  /* The composer calls this on each keystroke. */
+  function pulse() { lastKey = window.performance.now(); }
+  return { init: init, mount: mount, unmount: unmount, pulse: pulse, isReduced: function () { return reduced; } };
 })();
 
 /* ── Theme tokens + floating switcher ── */
@@ -3726,6 +3846,8 @@ function fitComposer(){
   inputEl.style.height=Math.min(inputEl.scrollHeight,220)+'px';
 }
 inputEl.addEventListener('input',fitComposer);
+/* Typing state for the background (Phloem reacts to it). */
+inputEl.addEventListener('input',function(){HeroBackground.pulse();});
 /* Prompt chips fill the composer (so the PromptShrink and zero-model
    previews show); sending stays a deliberate Enter or tap. */
 var promptChipsEl=document.getElementById('prompt-chips');

@@ -498,12 +498,14 @@ class TestHeroThemes(unittest.TestCase):
     at the bottom-left with a swatch per theme. The choice persists
     in localStorage under arboris-hero-theme and is applied before
     DOMContentLoaded so a saved light theme does not flash dark.
-    The eight themes are Canopy Obsidian, Verdant Silk, Solaris
-    Alabaster, Topographic Pulse, Aurora Glass, Kinetic Ink, Grain
-    Gradient, and Aether Flow. Round 27 adds three palettes each to
-    Canopy, Silk, Topo, Aurora, and Grain (a data-palette attribute
-    on html, token overrides, and scene colours), picked from a
-    slideout above the dock; Solaris, Ink, and Aether have none.
+    The nine themes are Canopy Obsidian, Verdant Silk, Solaris
+    Alabaster, Topographic Pulse, Phloem, Aurora Glass, Kinetic Ink,
+    Grain Gradient, and Aether Flow. Round 27 adds three palettes
+    each to Canopy, Silk, Topo, Aurora, and Grain (a data-palette
+    attribute on html, token overrides, and scene colours), picked
+    from a slideout above the dock; Solaris, Ink, and Aether have
+    none. Round 31 adds Phloem (4th in the dock) with three palettes
+    of its own.
     """
 
     def test_hero_themes(self):
@@ -517,32 +519,34 @@ class TestHeroThemes(unittest.TestCase):
         self.assertNotIn('id="theme-btn"', html)
         self.assertNotIn('id="theme-pop"', html)
         self.assertNotIn('class="pal-opt"', html)
-        # The eight themes are listed with their swatch colours.
+        # The nine themes are listed with their swatch colours.
         for slug, name in (
                 ('canopy', 'Canopy Obsidian'), ('silk', 'Verdant Silk'),
                 ('solaris', 'Solaris Alabaster'), ('topo', 'Topographic Pulse'),
-                ('aurora', 'Aurora Glass'), ('ink', 'Kinetic Ink'),
-                ('grain', 'Grain Gradient'), ('aether', 'Aether Flow')):
+                ('phloem', 'Phloem'), ('aurora', 'Aurora Glass'),
+                ('ink', 'Kinetic Ink'), ('grain', 'Grain Gradient'),
+                ('aether', 'Aether Flow')):
             self.assertIn("id: '%s'" % slug, html)
             self.assertIn("name: '%s'" % name, html)
             self.assertIn('data-hero-theme="%s"' % slug, html)
             # Canopy's tokens live in :root, not in its own
             # html[data-hero-theme] rule (it is the fallback). The
-            # other seven each have their own rule.
+            # other eight each have their own rule.
             # override :root under their own rule.
             if slug == 'canopy':
                 self.assertNotIn('html[data-hero-theme="canopy"] {', html)
             else:
                 self.assertIn('html[data-hero-theme="%s"] {' % slug, html)
         # The floating dock holds one swatch button per theme, in
-        # Round 30 order: Topo, Silk, Ink, Aurora, Canopy, Solaris,
-        # Grain, Aether.
+        # Round 31 order: Topo, Silk, Ink, Phloem, Aurora, Canopy,
+        # Solaris, Grain, Aether.
         self.assertIn('id="theme-dock"', html)
-        self.assertEqual(html.count('class="td-opt'), 8)
+        self.assertEqual(html.count('class="td-opt'), 9)
         dock = html.split('id="theme-dock"')[1].split('</div>')[0]
         order = re.findall(r'data-hero-theme="(\w+)"', dock)
-        self.assertEqual(order, ['topo', 'silk', 'ink', 'aurora',
-                                 'canopy', 'solaris', 'grain', 'aether'])
+        self.assertEqual(order, ['topo', 'silk', 'ink', 'phloem',
+                                 'aurora', 'canopy', 'solaris', 'grain',
+                                 'aether'])
         # The controller owns one canvas and one loop; switching a
         # theme tears the old scene down and mounts a fresh canvas.
         self.assertIn('var HeroBackground = (function () {', html)
@@ -553,8 +557,9 @@ class TestHeroThemes(unittest.TestCase):
         self.assertIn('heroThemeBoot();', html)
         # The default theme is Topographic Pulse (Round 30).
         self.assertIn("heroThemeApply(saved || 'topo', false);", html)
-        # Round 27: the palette system. Five themes list three
-        # palettes each; the other three list none.
+        # Round 27: the palette system. Six themes list three
+        # palettes each (Phloem joined in Round 31); the other three
+        # list none.
         self.assertIn("var HERO_PALETTE_KEY = 'arboris-hero-palettes';", html)
         self.assertIn('function heroPalettes(theme)', html)
         self.assertIn('function heroPaletteById(theme, id)', html)
@@ -564,7 +569,7 @@ class TestHeroThemes(unittest.TestCase):
         self.assertIn("root.setAttribute('data-palette', pal.id);", html)
         for slug, first in (('canopy', 'obsidian'), ('silk', 'verdant'),
                             ('topo', 'mono'), ('aurora', 'aurora'),
-                            ('grain', 'grain')):
+                            ('grain', 'grain'), ('phloem', 'phloem')):
             self.assertIn("id: '%s'" % first, html)
         for slug in ('solaris', 'ink', 'aether'):
             # No palettes: entry has no palettes field (checked by
@@ -588,8 +593,8 @@ class TestThemePalettes(unittest.TestCase):
     The old system (a body class, a data-palette attribute, Current
     / Round 12 / Deep Sea / Glass Fold) is gone with Claude's
     redesign and stays gone. The new palettes live in HERO_THEMES:
-    three each for Canopy, Silk, Topo, Aurora, and Grain. Each
-    palette carries its dock swatch colours, the CSS tokens it
+    three each for Canopy, Silk, Topo, Aurora, Grain, and Phloem.
+    Each palette carries its dock swatch colours, the CSS tokens it
     overrides, and the colours the scene paints with; the pick is
     stored per theme in localStorage and shown in a slideout above
     the dock. The removed themes (Deep Sea, Glass Fold, and the
@@ -613,18 +618,20 @@ class TestThemePalettes(unittest.TestCase):
         self.assertNotIn('var FOLD_FRAG', html)
         self.assertNotIn('function foldStart()', html)
         self.assertNotIn('function foldStop()', html)
-        # The new palette system: five themes, three palettes each.
-        self.assertEqual(html.count('palettes: ['), 5)
+        # The new palette system: six themes, three palettes each.
+        self.assertEqual(html.count('palettes: ['), 6)
         for name in ('Obsidian', 'Ember', 'Glacier', 'Verdant', 'Rose',
                      'Ocean', 'Pulse', 'Sunset', 'Mono', 'Aurora',
-                     'Borealis', 'Dusk', 'Grain', 'Nebula', 'Nova'):
+                     'Borealis', 'Dusk', 'Grain', 'Nebula', 'Nova',
+                     'Phloem', 'Copper', 'Verdigris'):
             self.assertIn("name: '%s'" % name, html)
-        # The eight themes are in HERO_THEMES and on the dock.
+        # The nine themes are in HERO_THEMES and on the dock.
         self.assertIn("var HERO_THEMES = [", html)
-        for slug in ("canopy", "silk", "solaris", "topo", "aurora", "ink", "grain", "aether"):
+        for slug in ("canopy", "silk", "solaris", "topo", "phloem",
+                     "aurora", "ink", "grain", "aether"):
             self.assertIn("id: '%s'" % slug, html)
             self.assertIn('data-hero-theme="%s"' % slug, html)
-        self.assertEqual(html.count('class="td-opt'), 8)
+        self.assertEqual(html.count('class="td-opt'), 9)
         # The pick is stored per theme and the slideout shows it.
         self.assertIn("var HERO_PALETTE_KEY = 'arboris-hero-palettes';", html)
         self.assertIn('function heroPaletteApply(themeId, paletteId)', html)
@@ -735,6 +742,73 @@ class TestGrainTheme(unittest.TestCase):
         # The dock has Grain Gradient (name in the title attribute).
         self.assertIn('data-hero-theme="grain"', html)
         self.assertIn('title="Grain Gradient"', html)
+
+
+class TestPhloemTheme(unittest.TestCase):
+    """Round 31 (2026-11-27): Phloem, a dark matte technical-hardware
+    theme from Grant's patch.
+
+    Warm graphite, one amber accent (sap), monospace headline,
+    squared controls. The background is a GLSL stem seen along its
+    grain: fine vascular fibres run up the screen and amber sap
+    pulses climb them. The page answers typing (more pulses, rising
+    faster) but not the cursor. It is 4th in the dock and in
+    HERO_THEMES, with three palettes (Phloem, Copper, Verdigris);
+    the shader reads its colours from u_pal[0..3] (bg, fibre, sap,
+    sap2), so the palettes recolour the scene. Two deliberate
+    departures from the patch: no centre dimming in the shader and
+    no scrim in the token rule, the two things that made the Topo
+    circle in Rounds 28 and 30.
+    """
+
+    def test_phloem_theme(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # The token rule: warm graphite, amber sap, monospace hero,
+        # squared composer, no scrim.
+        self.assertIn('html[data-hero-theme="phloem"] {', html)
+        phloem = html.split('html[data-hero-theme="phloem"] {')[1].split('}')[0]
+        self.assertIn('--bg: #0b0c0a;', phloem)
+        self.assertIn('--accent: #ffb547;', phloem)
+        self.assertIn('--accent-fg: #231500;', phloem)
+        self.assertIn('--glass-alpha: 94%;', phloem)
+        self.assertIn('--composer-radius: 6px;', phloem)
+        self.assertIn('--scrim: none;', phloem)
+        # The Phloem composer overrides: monospace lede and labels,
+        # squared controls.
+        self.assertIn('html[data-hero-theme="phloem"] .hero-lede {', html)
+        self.assertIn('html[data-hero-theme="phloem"] .btn-s { border-radius: 5px; }', html)
+        self.assertIn('text-transform: uppercase;', html)
+        # The shader: fibres + sap pulses, typing uniforms, palette
+        # colours, no cursor reactivity and no centre dimming.
+        self.assertIn('var HV_PHLOEM = HV_HEAD + [', html)
+        phloem_shader = html.split('var HV_PHLOEM = HV_HEAD + [')[1].split('].join')[0]
+        self.assertIn('uniform float u_type;', phloem_shader)
+        self.assertIn('uniform float u_flow;', phloem_shader)
+        self.assertIn('vec3 bg=u_pal[0];', phloem_shader)
+        self.assertIn('vec3 fib=u_pal[1];', phloem_shader)
+        self.assertIn('vec3 sap=mix(u_pal[2],u_pal[3],', phloem_shader)
+        self.assertNotIn('u_mouse', phloem_shader)
+        self.assertNotIn('calm', phloem_shader)
+        self.assertNotIn('heroDist', phloem_shader)
+        # The scene is routed like the other GL themes, at 0.75 res.
+        self.assertIn('phloem: HV_PHLOEM', html)
+        self.assertIn("var res = { silk: 0.5, solaris: 0.6, topo: 1, aurora: 0.5, phloem: 0.75 }[id];", html)
+        self.assertIn('phloem:  { bg: ', html)
+        # Typing wiring: the controller tracks keystrokes and the
+        # composer calls pulse() on each input.
+        self.assertIn('var lastKey = -1e9;', html)
+        self.assertIn('var env = { pointer: pointer, type: 0, flow: 0 };', html)
+        self.assertIn("if (u.type) gl.uniform1f(u.type, env.type);", html)
+        self.assertIn("if (u.flow) gl.uniform1f(u.flow, env.flow);", html)
+        self.assertIn('function pulse() { lastKey = window.performance.now(); }', html)
+        self.assertIn('pulse: pulse,', html)
+        self.assertIn("inputEl.addEventListener('input',function(){HeroBackground.pulse();});", html)
+        # Three palettes: the default's colours are the exact hex
+        # conversions of the patch's hardcoded shader constants.
+        self.assertIn("id: 'phloem'", html)
+        self.assertIn("id: 'copper'", html)
+        self.assertIn("id: 'verdigris'", html)
+        self.assertIn("colors: ['#0b0c0a', '#a3a194', '#ffb547', '#ffcc75']", html)
 
 
 class TestAetherTheme(unittest.TestCase):
