@@ -609,7 +609,7 @@ class TestThemePalettes(unittest.TestCase):
         self.assertEqual(html.count('palettes: ['), 5)
         for name in ('Obsidian', 'Ember', 'Glacier', 'Verdant', 'Rose',
                      'Ocean', 'Pulse', 'Sunset', 'Mono', 'Aurora',
-                     'Borealis', 'Dusk', 'Grain', 'Forest'):
+                     'Borealis', 'Dusk', 'Grain', 'Nebula', 'Nova'):
             self.assertIn("name: '%s'" % name, html)
         # The eight themes are in HERO_THEMES and on the dock.
         self.assertIn("var HERO_THEMES = [", html)
@@ -716,8 +716,8 @@ class TestGrainTheme(unittest.TestCase):
         self.assertIn("var gcols = (pal && pal.colors) ? hvGrainColors(pal.colors) : U.colors.flat();", html)
         self.assertIn("var ghue = (pal && pal.hue !== undefined) ? pal.hue : U.hue;", html)
         self.assertIn('function hvGrainColors(hex)', html)
-        self.assertIn("id: 'forest'", html)
-        self.assertIn("id: 'sunset'", html)
+        self.assertIn("id: 'nebula'", html)
+        self.assertIn("id: 'nova'", html)
         # The Grain token rule uses the shader's own indigo/near-black.
         self.assertIn('html[data-hero-theme="grain"] {', html)
         grain = html.split('html[data-hero-theme="grain"] {')[1].split('}')[0]
