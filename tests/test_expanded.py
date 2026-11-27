@@ -255,9 +255,8 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
 
     def test_last_message_sits_just_above_the_composer(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Anchored to the line start: the Round 12 theme override
-        # (body.theme-round12 .hero-chat-area) sits earlier in the
-        # file and must not be the rule matched here.
+        # Anchored to the line start so the first .hero-chat-area
+        # rule is the one matched.
         area = re.search(r"^\.hero-chat-area \{[^}]*\}", html, re.M).group(0)
         self.assertIn("padding: 78px 24px 16px", area)
 
@@ -487,9 +486,9 @@ class TestPhotoBackground(unittest.TestCase):
         self.assertNotIn('bg-thumb', html)
 
 
-class TestRound12Theme(unittest.TestCase):
-    """Hero v2 (2026-11-27): eight live themes on one token set, on a
-    floating dock.
+class TestHeroThemes(unittest.TestCase):
+    """Hero v2 (2026-11-27), Round 27: eight live themes on one token
+    set, on a floating dock, with palettes on five of them.
 
     Claude's redesign replaces the Round 21/23/24/25 theme system
     (a body class, a header picker popover, Current / Round 12 /
@@ -501,10 +500,13 @@ class TestRound12Theme(unittest.TestCase):
     DOMContentLoaded so a saved light theme does not flash dark.
     The eight themes are Canopy Obsidian, Verdant Silk, Solaris
     Alabaster, Topographic Pulse, Aurora Glass, Kinetic Ink, Grain
-    Gradient, and Aether Flow.
+    Gradient, and Aether Flow. Round 27 adds three palettes each to
+    Canopy, Silk, Topo, Aurora, and Grain (a data-palette attribute
+    on html, token overrides, and scene colours), picked from a
+    slideout above the dock; Solaris, Ink, and Aether have none.
     """
 
-    def test_round12_theme(self):
+    def test_hero_themes(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         # The theme is an html attribute, not a body class; data-theme
         # is still dark mode and is not reused.
@@ -543,25 +545,53 @@ class TestRound12Theme(unittest.TestCase):
         self.assertIn('heroThemeBoot();', html)
         # The default theme is Canopy Obsidian.
         self.assertIn("heroThemeApply(saved || 'canopy', false);", html)
+        # Round 27: the palette system. Five themes list three
+        # palettes each; the other three list none.
+        self.assertIn("var HERO_PALETTE_KEY = 'arboris-hero-palettes';", html)
+        self.assertIn('function heroPalettes(theme)', html)
+        self.assertIn('function heroPaletteById(theme, id)', html)
+        self.assertIn('function heroPalettesSaved()', html)
+        self.assertIn('function heroApplyPalette(theme, pal)', html)
+        self.assertIn('function heroPaletteApply(themeId, paletteId)', html)
+        self.assertIn("root.setAttribute('data-palette', pal.id);", html)
+        for slug, first in (('canopy', 'obsidian'), ('silk', 'verdant'),
+                            ('topo', 'pulse'), ('aurora', 'aurora'),
+                            ('grain', 'grain')):
+            self.assertIn("id: '%s'" % first, html)
+        for slug in ('solaris', 'ink', 'aether'):
+            # No palettes: entry has no palettes field (checked by
+            # the absence of a palettes array right after the entry).
+            entry = re.search(r"\{ id: '%s'[^}]*\}" % slug, html).group(0)
+            self.assertNotIn('palettes', entry)
+        # The slideout exists and is wired: it opens above the dock
+        # when the active theme has palettes.
+        self.assertIn('id="palette-dock"', html)
+        self.assertIn('id="palette-dock-opts"', html)
+        self.assertIn('function heroPalettesRender(theme, pal)', html)
+        self.assertIn("dock.classList.add('open');", html)
+        self.assertIn("class=\"pd-opt", html)
+        self.assertIn('heroPaletteApply(tid, pid);', html)
 
 
-class TestRound12Palettes(unittest.TestCase):
-    """Hero v2 (2026-11-27): there are no colour palettes any more.
+class TestThemePalettes(unittest.TestCase):
+    """Round 27 (2026-11-27): palettes are per-theme, on the hero v2
+    engine — not the old Round 23/24/25 colour-palette system.
 
-    The Round 23/24/25 palette system (a body class, a data-palette
-    attribute, Current / Round 12 / Deep Sea / Glass Fold) is gone
-    with Claude's redesign. The eight themes are Claude's six plus
-    Grain Gradient and Aether Flow, all on the hero v2 engine
-    (data-hero-theme, HERO_THEMES, the floating dock). The removed
-    themes (Deep Sea, Glass Fold, and the round-23 palettes) leave
-    no trace: no rule, no dock option, no shader.
+    The old system (a body class, a data-palette attribute, Current
+    / Round 12 / Deep Sea / Glass Fold) is gone with Claude's
+    redesign and stays gone. The new palettes live in HERO_THEMES:
+    three each for Canopy, Silk, Topo, Aurora, and Grain. Each
+    palette carries its dock swatch colours, the CSS tokens it
+    overrides, and the colours the scene paints with; the pick is
+    stored per theme in localStorage and shown in a slideout above
+    the dock. The removed themes (Deep Sea, Glass Fold, and the
+    round-23 palettes) leave no trace.
     """
 
     def test_no_colour_palettes(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         # The old palette system is gone entirely.
         self.assertNotIn('theme-round12', html)
-        self.assertNotIn('data-palette', html)
         self.assertNotIn('THEME_NAMES', html)
         self.assertNotIn('class="pal-opt"', html)
         for slug in ("peach", "lavender", "glacier", "forest", "sunset", "deepsea", "fold", "current", "round12"):
@@ -575,12 +605,77 @@ class TestRound12Palettes(unittest.TestCase):
         self.assertNotIn('var FOLD_FRAG', html)
         self.assertNotIn('function foldStart()', html)
         self.assertNotIn('function foldStop()', html)
+        # The new palette system: five themes, three palettes each.
+        self.assertEqual(html.count('palettes: ['), 5)
+        for name in ('Obsidian', 'Ember', 'Glacier', 'Verdant', 'Rose',
+                     'Ocean', 'Pulse', 'Sunset', 'Mono', 'Aurora',
+                     'Borealis', 'Dusk', 'Grain', 'Forest'):
+            self.assertIn("name: '%s'" % name, html)
         # The eight themes are in HERO_THEMES and on the dock.
         self.assertIn("var HERO_THEMES = [", html)
         for slug in ("canopy", "silk", "solaris", "topo", "aurora", "ink", "grain", "aether"):
             self.assertIn("id: '%s'" % slug, html)
             self.assertIn('data-hero-theme="%s"' % slug, html)
         self.assertEqual(html.count('class="td-opt'), 8)
+        # The pick is stored per theme and the slideout shows it.
+        self.assertIn("var HERO_PALETTE_KEY = 'arboris-hero-palettes';", html)
+        self.assertIn('function heroPaletteApply(themeId, paletteId)', html)
+        self.assertIn("window.localStorage.setItem(HERO_PALETTE_KEY, JSON.stringify(saved));", html)
+        self.assertIn('id="palette-dock"', html)
+        self.assertIn('.palette-dock {', html)
+        self.assertIn('.palette-dock.open {', html)
+
+
+class TestTopoNoReactivity(unittest.TestCase):
+    """Round 27 (2026-11-27): Topographic Pulse does not react to
+    the cursor any more. It is just a moving shader in the
+    background: the fbm contour field drifts with time, and the
+    lines run from slate into sage and teal. The cursor ripple
+    (the u_mouse uniform, the near falloff, the brightening) is
+    gone from the shader and from the 2D fallback.
+    """
+
+    def test_topo_has_no_cursor_reactivity(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        topo = html.split('var HV_TOPO_BODY = [')[1].split('].join')[0]
+        self.assertNotIn('u_mouse', topo)
+        self.assertNotIn('u_mouseOn', topo)
+        self.assertNotIn('near', topo)
+        self.assertNotIn('ripple', topo)
+        # The field still drifts with time and the contours are
+        # still drawn from the palette colours.
+        self.assertIn("float t=u_time;'", topo)
+        self.assertIn('fbm(p*1.25', topo)
+        self.assertIn('u_pal[0]', topo)
+        self.assertIn('u_pal[1]', topo)
+        self.assertIn('u_pal[2]', topo)
+        # The fallback has no cursor glow either.
+        self.assertNotIn('env.pointer.on > 0.01', html)
+        # The other reactive scenes are untouched: Ink still spawns
+        # on the pointer and Aether still swirls around it.
+        self.assertIn('env.pointer.sx', html)
+        self.assertIn('swirl', html)
+
+
+class TestAuroraGlass(unittest.TestCase):
+    """Round 27 (2026-11-27): Aurora Glass is more transparent and
+    less blurry. The composer card tint drops from 34% to 20% and
+    the backdrop blur from the 20px default to 8px, and the bubbles
+    go from opaque (user) / 90% (bot) to translucent surface tints
+    (about 55-64% opaque), so the curtains show through the glass.
+    """
+
+    def test_aurora_glass_is_clearer(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        aurora = html.split('html[data-hero-theme="aurora"] {')[1].split('}')[0]
+        self.assertIn('--glass-alpha: 20%;', aurora)
+        self.assertIn('--blur: 8px;', aurora)
+        self.assertIn('--glass-user: color-mix(in srgb, var(--accent) 20%, color-mix(in srgb, var(--surface) 55%, transparent));', aurora)
+        self.assertIn('--glass-bot: color-mix(in srgb, var(--surface) 55%, transparent);', aurora)
+        # The other themes keep their own glass settings.
+        canopy = html.split(':root {')[1].split('}')[0]
+        self.assertIn('--glass-alpha: 58%;', canopy)
+        self.assertIn('--blur: 20px;', canopy)
 
 
 class TestGrainTheme(unittest.TestCase):
@@ -605,9 +700,16 @@ class TestGrainTheme(unittest.TestCase):
         self.assertIn('u_grain', html)
         self.assertIn('var GRAIN_UNIFORMS = {', html)
         # The scene factory wires it into the hero v2 controller.
-        self.assertIn('function hvGrainScene(canvas, env)', html)
-        self.assertIn("else if (id === 'grain') s = hvGrainScene(cv, env);", html)
+        self.assertIn('function hvGrainScene(canvas, env, pal)', html)
+        self.assertIn("else if (id === 'grain') s = hvGrainScene(cv, env, pal);", html)
         self.assertIn("gl.uniform4f(uni.scene, canvas.width, canvas.height, t * U2.timeScale, U2.colorCount);", html)
+        # Round 27: the palette supplies the four colours (and may
+        # override the hue; the default keeps the preset's shift).
+        self.assertIn("var gcols = (pal && pal.colors) ? hvGrainColors(pal.colors) : U.colors.flat();", html)
+        self.assertIn("var ghue = (pal && pal.hue !== undefined) ? pal.hue : U.hue;", html)
+        self.assertIn('function hvGrainColors(hex)', html)
+        self.assertIn("id: 'forest'", html)
+        self.assertIn("id: 'sunset'", html)
         # The Grain token rule uses the shader's own indigo/near-black.
         self.assertIn('html[data-hero-theme="grain"] {', html)
         grain = html.split('html[data-hero-theme="grain"] {')[1].split('}')[0]

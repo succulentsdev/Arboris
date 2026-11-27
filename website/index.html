@@ -189,7 +189,11 @@ html[data-hero-theme="aurora"] {
   --hero-style: normal;
   --hero-weight: 300;
   --hero-track: -0.035em;
-  --glass-alpha: 34%;
+  --glass-alpha: 20%;
+  --blur: 8px;
+  --glass-user: color-mix(in srgb, var(--accent) 20%, color-mix(in srgb, var(--surface) 55%, transparent));
+  --glass-user-border: color-mix(in srgb, var(--accent) 38%, transparent);
+  --glass-bot: color-mix(in srgb, var(--surface) 55%, transparent);
   --composer-radius: 26px;
   --composer-highlight: rgba(210,228,255,.14);
   --composer-shadow: 0 20px 60px rgba(2,6,16,.55);
@@ -814,8 +818,43 @@ html[data-hero-theme="aurora"] .composer-card:focus-within {
   font: 600 12px var(--font-body); letter-spacing: .01em; color: var(--muted);
   white-space: nowrap; margin-left: 4px;
 }
+
+/* ── Palette slideout: opens above the theme dock when the active
+   theme has palettes, one button per palette. ── */
+.palette-dock {
+  position: fixed; left: 16px; bottom: 76px; z-index: 40;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 10px; border-radius: 99px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 var(--composer-highlight), 0 8px 24px rgba(0,0,0,.25);
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .22s, transform .22s;
+}
+.palette-dock.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.pd-name {
+  font: 600 11px var(--font-body); letter-spacing: .02em; color: var(--faint);
+  white-space: nowrap;
+}
+.pd-opts { display: flex; align-items: center; gap: 2px; }
+.pd-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px 0 4px; border: 0; border-radius: 99px;
+  background: transparent; cursor: pointer;
+  font: 600 12px var(--font-body); color: var(--muted);
+}
+.pd-opt:hover { color: var(--text); background: color-mix(in srgb, var(--text) 8%, transparent); }
+.pd-opt.active { color: var(--text); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.pd-sw {
+  width: 18px; height: 18px; border-radius: 50%; flex: none;
+  background: linear-gradient(135deg, var(--a) 0 50%, var(--b) 50% 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 22%, transparent);
+}
 @media (max-width: 1100px) {
   .theme-dock { bottom: auto; top: 70px; left: 50%; transform: translateX(-50%); padding: 2px; }
+  .palette-dock { bottom: auto; top: 126px; left: 50%; transform: translateX(-50%) translateY(8px); }
+  .palette-dock.open { transform: translateX(-50%) translateY(0); }
   .td-name { display: none; }
   .hero { padding-top: 132px; }
   .hero.chatting .hero-chat-area { padding-top: 124px; }
@@ -1561,6 +1600,11 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   <span class="td-name" id="theme-dock-name" aria-hidden="true">Canopy Obsidian</span>
 </div>
 
+<div class="palette-dock" id="palette-dock" role="group" aria-label="Theme palette">
+  <span class="pd-name" id="palette-dock-name" aria-hidden="true"></span>
+  <div class="pd-opts" id="palette-dock-opts"></div>
+</div>
+
 <div class="cf" id="cache-flash" aria-hidden="true">Cache hit: 0 new tokens</div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -1998,16 +2042,87 @@ if(typeof module!=='undefined'&&module.exports){
    DOM until heroThemeBoot() runs inside the document guard.
 ═══════════════════════════════════════════════ */
 var HERO_THEME_KEY = 'arboris-hero-theme';
+var HERO_PALETTE_KEY = 'arboris-hero-palettes';
+/* The palette active on the shared canvas right now (null for a
+   theme with no palettes). Read by HeroBackground.mount so a
+   remount (context loss, motion change) keeps the same palette. */
+var heroCurrentPalette = null;
+/* A palette carries its dock swatch colours (a/b), the CSS tokens
+   it overrides (empty for the default: the theme rule covers it),
+   and the colours the scene paints with, as hex. GL themes read
+   them as u_pal slots (silk 0-3, topo 0-2, aurora 0-4); Canopy
+   reads [sprite, sprite, background]; Grain reads the four
+   u_colors, with hue 0 keeping the named colours exact (the
+   default keeps the preset's 0.2967 hue shift). */
 var HERO_THEMES = [
-  { id: 'canopy',  name: 'Canopy Obsidian',   kind: '2d', a: '#34d399', b: '#060b09' },
-  { id: 'silk',    name: 'Verdant Silk',      kind: 'gl', a: '#c8a96e', b: '#0f4c45' },
+  { id: 'canopy',  name: 'Canopy Obsidian',   kind: '2d', a: '#34d399', b: '#060b09',
+    palettes: [
+      { id: 'obsidian', name: 'Obsidian', a: '#34d399', b: '#060b09', tokens: {},
+        colors: ['#34d399', '#9ccfa8', '#060b09'] },
+      { id: 'ember', name: 'Ember', a: '#f59e0b', b: '#0f0a06',
+        tokens: { '--bg': '#0f0a06', '--surface': '#171008', '--surface-2': '#201709', '--accent': '#f59e0b', '--accent-fg': '#1a0e02' },
+        colors: ['#f59e0b', '#fbbf24', '#0f0a06'] },
+      { id: 'glacier', name: 'Glacier', a: '#38bdf8', b: '#060a0f',
+        tokens: { '--bg': '#060a0f', '--surface': '#0a141b', '--surface-2': '#0f1d27', '--accent': '#38bdf8', '--accent-fg': '#082a3d' },
+        colors: ['#38bdf8', '#a5f3fc', '#060a0f'] }
+    ] },
+  { id: 'silk',    name: 'Verdant Silk',      kind: 'gl', a: '#c8a96e', b: '#0f4c45',
+    palettes: [
+      { id: 'verdant', name: 'Verdant', a: '#c8a96e', b: '#0f4c45', tokens: {},
+        colors: ['#050807', '#06201a', '#0f4c45', '#c8a96e'] },
+      { id: 'rose', name: 'Rose', a: '#e8a0b4', b: '#2e0a16',
+        tokens: { '--bg': '#0a0508', '--surface': '#160a10', '--surface-2': '#1f0e17', '--accent': '#e8a0b4', '--accent-fg': '#2a0a18', '--border': 'rgba(232,160,180,.16)', '--border-strong': 'rgba(232,160,180,.28)' },
+        colors: ['#08050a', '#2e0a16', '#5c1f45', '#e8a0b4'] },
+      { id: 'ocean', name: 'Ocean', a: '#7dd3fc', b: '#051a2e',
+        tokens: { '--bg': '#04070a', '--surface': '#081420', '--surface-2': '#0c1e2e', '--accent': '#7dd3fc', '--accent-fg': '#082a3d', '--border': 'rgba(125,211,252,.16)', '--border-strong': 'rgba(125,211,252,.28)' },
+        colors: ['#04070a', '#051a2e', '#0a3d5c', '#7dd3fc'] }
+    ] },
   { id: 'solaris', name: 'Solaris Alabaster', kind: 'gl', a: '#1b5e43', b: '#f5f3ee' },
-  { id: 'topo',    name: 'Topographic Pulse', kind: 'gl', a: '#4ade80', b: '#0a0f12' },
-  { id: 'aurora',  name: 'Aurora Glass',      kind: 'gl', a: '#2dd4bf', b: '#4f46e5' },
+  { id: 'topo',    name: 'Topographic Pulse', kind: 'gl', a: '#4ade80', b: '#0a0f12',
+    palettes: [
+      { id: 'pulse', name: 'Pulse', a: '#4ade80', b: '#0a0f12', tokens: {},
+        colors: ['#0a0f12', '#4ade80', '#2dd4bf'] },
+      { id: 'sunset', name: 'Sunset', a: '#f28c33', b: '#120b09',
+        tokens: { '--bg': '#120b09', '--surface': '#180f0a', '--surface-2': '#221509', '--accent': '#f28c33', '--accent-fg': '#1f0d02', '--border': 'rgba(242,140,51,.30)', '--border-strong': 'rgba(242,140,51,.44)' },
+        colors: ['#120b09', '#f28c33', '#e64d59'] },
+      { id: 'mono', name: 'Mono', a: '#e4e4e7', b: '#0e0e10',
+        tokens: { '--bg': '#0e0e10', '--surface': '#131316', '--surface-2': '#1a1a1e', '--accent': '#e4e4e7', '--accent-fg': '#101014', '--border': 'rgba(255,255,255,.14)', '--border-strong': 'rgba(255,255,255,.24)' },
+        colors: ['#0e0e10', '#bfbfc9', '#f2f2f5'] }
+    ] },
+  { id: 'aurora',  name: 'Aurora Glass',      kind: 'gl', a: '#2dd4bf', b: '#4f46e5',
+    palettes: [
+      { id: 'aurora', name: 'Aurora', a: '#2dd4bf', b: '#4f46e5', tokens: {},
+        colors: ['#050a14', '#090e1c', '#1a9e6b', '#1a8c8c', '#4740b8'] },
+      { id: 'borealis', name: 'Borealis', a: '#4ade80', b: '#07170f',
+        tokens: { '--bg': '#04100a', '--surface': '#07170f', '--surface-2': '#0b2118', '--accent': '#4ade80', '--accent-fg': '#04140a' },
+        colors: ['#04100a', '#07170f', '#1abf59', '#33d699', '#1a8cb8'] },
+      { id: 'dusk', name: 'Dusk', a: '#e879f9', b: '#140a1c',
+        tokens: { '--bg': '#0e0514', '--surface': '#140a1c', '--surface-2': '#1d1026', '--accent': '#e879f9', '--accent-fg': '#2a0a33', '--border': 'rgba(232,121,249,.16)', '--border-strong': 'rgba(232,121,249,.28)' },
+        colors: ['#0e0514', '#140a1c', '#a6408c', '#d97359', '#734db8'] }
+    ] },
   { id: 'ink',     name: 'Kinetic Ink',       kind: '2d', a: '#6cc4a1', b: '#d4a056' },
-  { id: 'grain',   name: 'Grain Gradient',    kind: 'gl', a: '#db4b8f', b: '#3f3cbb' },
+  { id: 'grain',   name: 'Grain Gradient',    kind: 'gl', a: '#db4b8f', b: '#3f3cbb',
+    palettes: [
+      { id: 'grain', name: 'Grain', a: '#db4b8f', b: '#3f3cbb', tokens: {},
+        colors: ['#db4b8f', '#3f3cbb', '#0a0a0a', '#ffd66b'] },
+      { id: 'forest', name: 'Forest', a: '#74c69d', b: '#2d6a4f',
+        tokens: { '--bg': '#0a0f0a', '--surface': '#0d130d', '--surface-2': '#121a12', '--accent': '#74c69d', '--accent-fg': '#0a1f14', '--glass-user': 'linear-gradient(135deg, rgba(116,198,157,.32), rgba(116,198,157,.16))', '--glass-user-border': 'rgba(116,198,157,.55)', '--glass-bot': 'rgba(13,19,13,.92)' },
+        colors: ['#2d6a4f', '#74c69d', '#0a0f0a', '#d8f3dc'], hue: 0 },
+      { id: 'sunset', name: 'Sunset', a: '#f4845f', b: '#e85d75',
+        tokens: { '--bg': '#0f0a08', '--surface': '#130d0a', '--surface-2': '#1a120c', '--accent': '#f4845f', '--accent-fg': '#2a0d05', '--glass-user': 'linear-gradient(135deg, rgba(244,132,95,.32), rgba(244,132,95,.16))', '--glass-user-border': 'rgba(244,132,95,.55)', '--glass-bot': 'rgba(19,13,10,.92)' },
+        colors: ['#f4845f', '#e85d75', '#0f0a08', '#ffcf56'], hue: 0 }
+    ] },
   { id: 'aether',  name: 'Aether Flow',       kind: '2d', a: '#5eead4', b: '#0a1218' }
 ];
+function heroPalettes(theme) { return (theme && theme.palettes) || []; }
+function heroPaletteById(theme, id) {
+  var list = heroPalettes(theme);
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  return list[0] || null;
+}
+function heroPalettesSaved() {
+  try { return JSON.parse(window.localStorage.getItem(HERO_PALETTE_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
 function heroThemeById(id) {
   for (var i = 0; i < HERO_THEMES.length; i++) if (HERO_THEMES[i].id === id) return HERO_THEMES[i];
   return HERO_THEMES[0];
@@ -2033,6 +2148,33 @@ function hvRgba(hex, alpha) {
   var n = parseInt(hex.slice(1), 16);
   return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
 }
+function hvRgb(hex) {
+  var n = parseInt(hex.slice(1), 16);
+  return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+}
+function hvHexRgb(hex) {
+  var n = parseInt(hex.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+/* Flatten a palette's hex colours into the 18 floats of u_pal[6],
+   padding with black. A null palette (a theme with no palettes)
+   yields all black, which no shader reads. */
+function hvPalFlat(pal) {
+  var out = [];
+  var cols = (pal && pal.colors) || [];
+  for (var i = 0; i < 6; i++) {
+    var c = cols[i] ? hvHexRgb(cols[i]) : [0, 0, 0];
+    out.push(c[0], c[1], c[2]);
+  }
+  return out;
+}
+/* Grain's u_colors is eight vec3s; a palette supplies four and the
+   fourth repeats, matching the preset (which repeats gold). */
+function hvGrainColors(hex) {
+  var rgb = hex.map(hvHexRgb);
+  while (rgb.length < 8) rgb.push(rgb[3]);
+  return rgb.flat();
+}
 
 /* ── GLSL: shared header, then one fragment shader per GL theme ── */
 var HV_VERT = 'attribute vec2 a_pos;void main(){gl_Position=vec4(a_pos,0.0,1.0);}';
@@ -2046,6 +2188,7 @@ var HV_HEAD = [
   'uniform float u_time;',
   'uniform vec2 u_mouse;',
   'uniform float u_mouseOn;',
+  'uniform vec3 u_pal[6];',
   'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
   'float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);',
   '  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),u.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),u.x),u.y);}',
@@ -2068,10 +2211,10 @@ var HV_SILK = HV_HEAD + [
   '  vec2 q=vec2(fbm(p+vec2(0.0,t)),fbm(p+vec2(5.2,1.3)-t*0.8));',
   '  vec2 r=vec2(fbm(p+3.0*q+vec2(1.7,9.2)+t*0.6),fbm(p+3.0*q+vec2(8.3,2.8)-t*0.5));',
   '  float f=fbm(p+2.6*r);',
-  '  vec3 obs=vec3(0.020,0.031,0.027);',
-  '  vec3 pine=vec3(0.024,0.125,0.102);',
-  '  vec3 teal=vec3(0.059,0.298,0.271);',
-  '  vec3 gold=vec3(0.784,0.663,0.431);',
+  '  vec3 obs=u_pal[0];',
+  '  vec3 pine=u_pal[1];',
+  '  vec3 teal=u_pal[2];',
+  '  vec3 gold=u_pal[3];',
   '  vec3 col=mix(obs,pine,smoothstep(0.18,0.62,f));',
   '  col=mix(col,teal,smoothstep(0.55,1.05,length(q))*0.8);',
   '  float sheen=smoothstep(0.58,0.78,f*r.y*1.7);',
@@ -2107,18 +2250,14 @@ var HV_SOLARIS = HV_HEAD + [
 ].join('\n');
 
 /* Topographic Pulse: an fbm elevation field drawn as crisp 1px
-   contour lines (every fifth an index line). Near the cursor the
-   field ripples outward and the lines brighten from slate into
-   sage and teal. */
+   contour lines (every fifth an index line), drifting slowly. The
+   lines run from slate into sage and teal. It does not react to
+   the cursor: just a moving shader in the background. */
 var HV_TOPO_BODY = [
   'void main(){',
   '  vec2 p=cpos();',
   '  float t=u_time;',
   '  float h=fbm(p*1.25+vec2(t*0.012,-t*0.009))+0.35*fbm(p*2.7-vec2(t*0.006,0.0));',
-  '  vec2 m=(u_mouse*u_res-0.5*u_res)/min(u_res.x,u_res.y);',
-  '  float md=length(p-m);',
-  '  float near=exp(-md*md*9.0)*u_mouseOn;',
-  '  h+=near*0.018*sin(md*46.0-t*2.4);',
   '  float lv=h*24.0;',
   '  float fl=abs(fract(lv-0.5)-0.5);',
   '#ifdef HV_DERIV',
@@ -2129,14 +2268,13 @@ var HV_TOPO_BODY = [
   '  float idx=floor(lv+0.5);',
   '  float major=1.0-step(0.5,mod(idx,5.0));',
   '  float line=1.0-smoothstep(0.0,px*(1.0+major*0.6),fl);',
-  '  vec3 bg=vec3(0.039,0.059,0.071);',
-  '  vec3 sage=vec3(0.290,0.871,0.502);',
-  '  vec3 teal=vec3(0.176,0.831,0.749);',
+  '  vec3 bg=u_pal[0];',
+  '  vec3 sage=u_pal[1];',
+  '  vec3 teal=u_pal[2];',
   '  vec3 lc=mix(sage,teal,smoothstep(-0.6,0.6,p.x+0.3*sin(p.y*2.0+t*0.05)));',
   '  float calm=mix(0.45,1.0,smoothstep(0.08,0.55,heroDist()));',
-  '  float glow=(0.16+0.08*major)*calm+0.85*near;',
+  '  float glow=(0.16+0.08*major)*calm;',
   '  vec3 col=bg+lc*line*glow;',
-  '  col+=lc*near*0.035;',
   '  gl_FragColor=vec4(col,1.0);',
   '}'
 ].join('\n');
@@ -2158,10 +2296,10 @@ var HV_AURORA = HV_HEAD + [
   '  vec2 uv=gl_FragCoord.xy/u_res;',
   '  float ar=u_res.x/u_res.y;',
   '  float t=u_time*0.045;',
-  '  vec3 col=mix(vec3(0.020,0.039,0.078),vec3(0.035,0.055,0.110),uv.y);',
-  '  vec3 a=curtain(uv,ar,0.0,t,vec3(0.10,0.62,0.42));',
-  '  a+=curtain(uv,ar,3.7,t*0.8,vec3(0.10,0.55,0.55));',
-  '  a+=curtain(uv,ar,7.9,t*1.1,vec3(0.28,0.24,0.72));',
+  '  vec3 col=mix(u_pal[0],u_pal[1],uv.y);',
+  '  vec3 a=curtain(uv,ar,0.0,t,u_pal[2]);',
+  '  a+=curtain(uv,ar,3.7,t*0.8,u_pal[3]);',
+  '  a+=curtain(uv,ar,7.9,t*1.1,u_pal[4]);',
   '  float calm=mix(0.5,1.0,smoothstep(0.08,0.6,heroDist()));',
   '  col+=a*0.62*calm;',
   '  gl_FragColor=vec4(col,1.0);',
@@ -2188,7 +2326,7 @@ function hvFragFor(id, deriv) {
   if (id === 'topo') return hvTopoSource(deriv);
   return { silk: HV_SILK, solaris: HV_SOLARIS, aurora: HV_AURORA }[id];
 }
-function hvGlScene(canvas, env, id, res) {
+function hvGlScene(canvas, env, id, res, pal) {
   var gl = null;
   try {
     gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'low-power' }) ||
@@ -2212,6 +2350,8 @@ function hvGlScene(canvas, env, id, res) {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     ['res', 'time', 'mouse', 'mouseOn'].forEach(function (k) { u[k] = gl.getUniformLocation(prog, 'u_' + k); });
+    u.pal = gl.getUniformLocation(prog, 'u_pal[0]');
+    if (u.pal) gl.uniform3fv(u.pal, new window.Float32Array(hvPalFlat(pal)));
   } catch (e) {
     if (window.console) window.console.warn('Arboris theme shader failed, using 2D fallback.', e);
     hvLoseGl(gl);
@@ -2291,12 +2431,6 @@ function hvFallbackScene(canvas, env, spec) {
       }
       ctx.globalCompositeOperation = 'source-over';
       if (sheet) ctx.drawImage(sheet, 0, 0);
-      if (spec.contours && env.pointer.on > 0.01) {
-        var mx = env.pointer.sx * w, my = env.pointer.sy * h, rr = Math.min(w, h) * 0.22;
-        var gg = ctx.createRadialGradient(mx, my, 0, mx, my, rr);
-        gg.addColorStop(0, 'rgba(45,212,191,' + (0.12 * env.pointer.on) + ')'); gg.addColorStop(1, 'rgba(45,212,191,0)');
-        ctx.fillStyle = gg; ctx.fillRect(0, 0, w, h);
-      }
     },
     destroy: function () { sheet = null; }
   };
@@ -2311,11 +2445,14 @@ var HV_FALLBACKS = {
 };
 
 /* ── Canopy Obsidian: depth-of-field particle canopy ── */
-function hvCanopyScene(canvas, env) {
+function hvCanopyScene(canvas, env, pal) {
   var ctx = canvas.getContext('2d');
   if (!ctx) return null;
   var nodes = [], sprites = [], W = 0, H = 0, dpr = 1;
   var FOCUS = 0.62;
+  /* Palette colours: [sprite, sprite, background]. */
+  var PAL = (pal && pal.colors) || ['#34d399', '#9ccfa8', '#060b09'];
+  var SPR_A = hvRgb(PAL[0]), SPR_B = hvRgb(PAL[1]), BG_HEX = PAL[2];
   function sprite(soft, rgb) {
     var s = window.document.createElement('canvas');
     s.width = s.height = 64;
@@ -2329,7 +2466,7 @@ function hvCanopyScene(canvas, env) {
     c.fillStyle = g; c.fillRect(0, 0, 64, 64);
     return s;
   }
-  for (var k = 0; k < 4; k++) sprites.push([sprite(k / 3, '52,211,153'), sprite(k / 3, '156,207,168')]);
+  for (var k = 0; k < 4; k++) sprites.push([sprite(k / 3, SPR_A), sprite(k / 3, SPR_B)]);
   function seed(w, h) {
     var count = Math.max(36, Math.min(110, Math.round(w * h / (15000 * dpr * dpr))));
     nodes = [];
@@ -2349,7 +2486,7 @@ function hvCanopyScene(canvas, env) {
       var px = env.pointer.sx * w, py = env.pointer.sy * h, on = env.pointer.on;
       var reach = 170 * dpr, link = 118 * dpr;
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#060b09'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = BG_HEX; ctx.fillRect(0, 0, w, h);
       var ox = (env.pointer.sx - 0.5) * -26 * dpr, oy = (env.pointer.sy - 0.5) * -18 * dpr;
       var i, n;
       for (i = 0; i < nodes.length; i++) {
@@ -2385,7 +2522,7 @@ function hvCanopyScene(canvas, env) {
       for (var q = 0; q < 4; q++) {
         var arr = paths[q];
         if (!arr.length) continue;
-        ctx.strokeStyle = 'rgba(110,231,183,' + [0.05, 0.1, 0.16, 0.26][q] + ')';
+        ctx.strokeStyle = 'rgba(' + SPR_A + ',' + [0.05, 0.1, 0.16, 0.26][q] + ')';
         ctx.beginPath();
         for (var m = 0; m < arr.length; m += 4) { ctx.moveTo(arr[m], arr[m + 1]); ctx.lineTo(arr[m + 2], arr[m + 3]); }
         ctx.stroke();
@@ -2793,7 +2930,7 @@ var GRAIN_UNIFORMS = {
    while the Grain theme is active. The shader has its own uniform
    API (u_colors, u_scene, u_shape, ...), so it gets its own scene
    factory instead of sharing hvGlScene. */
-function hvGrainScene(canvas, env) {
+function hvGrainScene(canvas, env, pal) {
   var gl = null;
   try {
     gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false, powerPreference: 'low-power' }) ||
@@ -2819,10 +2956,12 @@ function hvGrainScene(canvas, env) {
       uni[k] = gl.getUniformLocation(prog, 'u_' + k);
     });
     var U = GRAIN_UNIFORMS;
-    gl.uniform3fv(uni.colors, new window.Float32Array(U.colors.flat()));
+    var gcols = (pal && pal.colors) ? hvGrainColors(pal.colors) : U.colors.flat();
+    var ghue = (pal && pal.hue !== undefined) ? pal.hue : U.hue;
+    gl.uniform3fv(uni.colors, new window.Float32Array(gcols));
     gl.uniform4f(uni.shape, U.scale, U.intensity, U.paramA, U.warp);
     gl.uniform4f(uni.surface, U.detail, U.contrast, U.brightness, U.saturation);
-    gl.uniform4f(uni.finish, U.hue, U.vignette, U.blur, U.grain);
+    gl.uniform4f(uni.finish, ghue, U.vignette, U.blur, U.grain);
     gl.uniform4f(uni.transform, U.seed, U.rotate, U.drift, U.oklab);
     gl.uniform4f(uni.cursor, 0, U.cursorEffect, U.cursorStrength, U.cursorRadius);
   } catch (e) {
@@ -3025,13 +3164,14 @@ var HeroBackground = (function () {
 
   function makeScene(id, cv) {
     var s = null;
-    if (id === 'canopy') s = hvCanopyScene(cv, env);
+    var pal = heroCurrentPalette;
+    if (id === 'canopy') s = hvCanopyScene(cv, env, pal);
     else if (id === 'ink') s = hvInkScene(cv, env);
-    else if (id === 'grain') s = hvGrainScene(cv, env);
+    else if (id === 'grain') s = hvGrainScene(cv, env, pal);
     else if (id === 'aether') s = hvAetherScene(cv, env);
     else {
       var res = { silk: 0.5, solaris: 0.6, topo: 1, aurora: 0.5 }[id];
-      s = hvGlScene(cv, env, id, res);
+      s = hvGlScene(cv, env, id, res, pal);
     }
     return s;
   }
@@ -3099,6 +3239,57 @@ function heroGrainTile() {
     return c.toDataURL('image/png');
   } catch (e) { return ''; }
 }
+/* Palette token keys a palette may override. Clearing all of them
+   before setting the new palette's keeps a switch from leaving a
+   stale token behind (e.g. a --glass-user from Grain Forest). */
+var HERO_PALETTE_TOKENS = ['--bg', '--surface', '--surface-2', '--accent', '--accent-fg', '--border', '--border-strong', '--glass-user', '--glass-user-border', '--glass-bot', '--glass-bot-border'];
+/* Apply a palette without remounting: data-palette attribute, the
+   inline token overrides, the dock swatch, and the slideout. */
+function heroApplyPalette(theme, pal) {
+  heroCurrentPalette = pal;
+  var root = window.document.documentElement;
+  if (pal) root.setAttribute('data-palette', pal.id);
+  else root.removeAttribute('data-palette');
+  for (var i = 0; i < HERO_PALETTE_TOKENS.length; i++) root.style.removeProperty(HERO_PALETTE_TOKENS[i]);
+  if (pal && pal.tokens) for (var k in pal.tokens) root.style.setProperty(k, pal.tokens[k]);
+  var btn = window.document.querySelector('#theme-dock .td-opt[data-hero-theme="' + theme.id + '"] .td-sw');
+  if (btn && pal) { btn.style.setProperty('--a', pal.a); btn.style.setProperty('--b', pal.b); }
+  heroPalettesRender(theme, pal);
+}
+/* The slideout: one button per palette of the active theme, open
+   only while the theme has palettes. */
+function heroPalettesRender(theme, pal) {
+  var dock = window.document.getElementById('palette-dock');
+  if (!dock) return;
+  var list = heroPalettes(theme);
+  var opts = window.document.getElementById('palette-dock-opts');
+  var name = window.document.getElementById('palette-dock-name');
+  if (!list.length) { dock.classList.remove('open'); if (opts) opts.innerHTML = ''; return; }
+  if (name) name.textContent = theme.name + ' palette';
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var act = pal && p.id === pal.id;
+    html += '<button type="button" class="pd-opt' + (act ? ' active' : '') + '" data-palette="' + p.id + '" aria-pressed="' + (act ? 'true' : 'false') + '" title="' + p.name + '"><span class="pd-sw" style="--a:' + p.a + ';--b:' + p.b + '" aria-hidden="true"></span><span class="pd-txt">' + p.name + '</span></button>';
+  }
+  if (opts) opts.innerHTML = html;
+  dock.classList.add('open');
+}
+/* Pick a palette for a theme: apply it, persist it per theme, and
+   remount the scene with the new colours. */
+function heroPaletteApply(themeId, paletteId) {
+  var theme = heroThemeById(themeId);
+  var pal = heroPaletteById(theme, paletteId);
+  heroApplyPalette(theme, pal);
+  try {
+    var saved = heroPalettesSaved();
+    if (pal) saved[theme.id] = pal.id;
+    else delete saved[theme.id];
+    window.localStorage.setItem(HERO_PALETTE_KEY, JSON.stringify(saved));
+  } catch (e) {}
+  HeroBackground.mount(theme.id);
+  return pal ? pal.id : null;
+}
 function heroThemeApply(id, remount) {
   var t = heroThemeById(id);
   var root = window.document.documentElement;
@@ -3111,6 +3302,8 @@ function heroThemeApply(id, remount) {
   }
   var nm = window.document.getElementById('theme-dock-name');
   if (nm) nm.textContent = t.name;
+  /* The saved palette for this theme, else its default. */
+  heroApplyPalette(t, heroPaletteById(t, heroPalettesSaved()[t.id]));
   if (remount !== false) HeroBackground.mount(t.id);
   try { window.localStorage.setItem(HERO_THEME_KEY, t.id); } catch (e) {}
   return t.id;
@@ -3138,6 +3331,14 @@ function heroThemeBoot() {
     if (!btn) return;
     var id = btn.getAttribute('data-hero-theme');
     if (id && id !== window.document.documentElement.getAttribute('data-hero-theme')) heroThemeApply(id);
+  });
+  var pdock = window.document.getElementById('palette-dock');
+  if (pdock) pdock.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.pd-opt') : null;
+    if (!btn) return;
+    var pid = btn.getAttribute('data-palette');
+    var tid = window.document.documentElement.getAttribute('data-hero-theme');
+    if (pid && tid) heroPaletteApply(tid, pid);
   });
   dock.addEventListener('keydown', function (e) {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
