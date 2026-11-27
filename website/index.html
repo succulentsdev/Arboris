@@ -217,6 +217,24 @@ body {
 }
 .settings-pop .sp-check input { width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer }
 .settings-pop .sp-note { font-size: 11px; color: var(--ink3); line-height: 1.45 }
+
+/* ── Theme palette popover ── */
+.theme-pop {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 14px 14px 12px; min-width: 240px;
+  box-shadow: var(--shadow); z-index: 100;
+  opacity: 0; pointer-events: none; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s, transform .15s, visibility .15s;
+  color: var(--ink);
+}
+.theme-pop.open { opacity: 1; pointer-events: auto; visibility: visible; transform: translateY(0) }
+.theme-pop .tp-title { font-size: 12px; font-weight: 600; color: var(--ink2); margin-bottom: 8px; }
+.theme-pop .pal-group { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); margin: 12px 4px 4px; }
+.pal-opt { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: 1px solid transparent; border-radius: 10px; padding: 7px 9px; color: var(--ink); font: 500 14px var(--font-body); cursor: pointer; text-align: left; }
+.pal-opt:hover { background: var(--surface2); }
+.pal-opt.active { border-color: var(--mint-border); background: var(--mint-soft); }
+.pal-swatch { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,.2); }
 .profile-btn { background: transparent; border: 1px solid transparent; color: var(--ink2); border-radius: var(--rs); padding: 4px 10px 4px 4px; cursor: pointer; font-size: 14px; line-height: 1; min-height: 38px; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); transition: color .18s, background .18s, border-color .18s }
 .profile-btn:hover { color: var(--ink); background: var(--surface2); border-color: var(--border) }
 .profile-avatar { width: 28px; height: 28px; border-radius: 50%; background: #3f8a4e; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700 }
@@ -256,8 +274,8 @@ body.bg-photo .hero::before { display: none }
 
 .hero {
   position: relative;
-  min-height: 80vh;
-  min-height: 80svh;
+  min-height: 70vh;
+  min-height: 70svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -304,6 +322,74 @@ body.theme-round12 .btn-mic {
 }
 body.theme-round12 .brevity-bar { gap: 3px; }
 body.theme-round12 .brevity-btn { border: none; font-size: 15px; padding: 6px 16px; }
+
+/* ── Round 12 palettes ──
+   Six colourways for the secondary (Round 12) style: 2 cute, 2 cool,
+   2 beautiful. Each overrides the bubble colours and the background
+   mesh (the "shader"). Peach Sorbet and Forest Canopy stay close to
+   the original coral/green; Glacier and Sunset Meadow push the mesh
+   gradient harder and change the colour entirely. The original
+   Round 12 colours are the default under body.theme-round12. */
+body.theme-round12[data-palette="peach"] {
+  --glass-user: linear-gradient(135deg, rgba(232,144,108,.30), rgba(232,144,108,.16));
+  --glass-user-border: rgba(232,144,108,.5);
+  --glass-bot: rgba(52,32,38,.9);
+  --glass-bot-border: rgba(232,144,108,.18);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(232,144,108,.18), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(224,122,95,.14), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(245,183,149,.10), transparent 65%);
+}
+body.theme-round12[data-palette="lavender"] {
+  --glass-user: linear-gradient(135deg, rgba(167,139,250,.30), rgba(167,139,250,.16));
+  --glass-user-border: rgba(167,139,250,.5);
+  --glass-bot: rgba(30,28,52,.9);
+  --glass-bot-border: rgba(167,139,250,.18);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(167,139,250,.18), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(129,140,248,.14), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(196,181,253,.10), transparent 65%);
+}
+body.theme-round12[data-palette="deepsea"] {
+  --glass-user: linear-gradient(135deg, rgba(45,160,180,.32), rgba(45,160,180,.16));
+  --glass-user-border: rgba(45,160,180,.55);
+  --glass-bot: rgba(8,26,40,.92);
+  --glass-bot-border: rgba(45,160,180,.20);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(45,160,180,.20), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(14,116,144,.16), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(34,211,238,.10), transparent 65%);
+}
+body.theme-round12[data-palette="glacier"] {
+  --glass-user: linear-gradient(135deg, rgba(147,197,253,.34), rgba(147,197,253,.18));
+  --glass-user-border: rgba(147,197,253,.6);
+  --glass-bot: rgba(24,38,56,.92);
+  --glass-bot-border: rgba(147,197,253,.22);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(147,197,253,.30), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(96,165,250,.24), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(219,234,254,.16), transparent 60%);
+}
+body.theme-round12[data-palette="forest"] {
+  --glass-user: linear-gradient(135deg, rgba(52,180,110,.32), rgba(52,180,110,.16));
+  --glass-user-border: rgba(52,180,110,.55);
+  --glass-bot: rgba(10,32,20,.92);
+  --glass-bot-border: rgba(52,180,110,.20);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(52,180,110,.20), transparent 65%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(22,101,52,.16), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(74,222,128,.10), transparent 65%);
+}
+body.theme-round12[data-palette="sunset"] {
+  --glass-user: linear-gradient(135deg, rgba(224,164,60,.32), rgba(224,164,60,.16));
+  --glass-user-border: rgba(224,164,60,.55);
+  --glass-bot: rgba(42,18,34,.92);
+  --glass-bot-border: rgba(224,164,60,.20);
+  --hero-mesh:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(224,164,60,.26), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 82% 18%, rgba(190,60,90,.22), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 18% 30%, rgba(120,40,120,.16), transparent 60%);
+}
 
 .hero-landing {
   display: flex; flex-direction: column; align-items: center;
@@ -1258,7 +1344,23 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
   </div>
   <div class="hd-r">
     <button class="icon-btn" id="bg-btn" type="button" aria-label="Change background" title="Change background (next photo)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.08-3.08a2 2 0 00-2.83 0L6 21"/></svg></span></button>
-    <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch to Round 12 theme" title="Theme: Current (click for Round 12)"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18V3z" fill="currentColor" stroke="none"/></svg></span></button>
+    <div style="position:relative">
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Choose theme" aria-haspopup="true" aria-expanded="false" title="Theme: Current"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18V3z" fill="currentColor" stroke="none"/></svg></span></button>
+      <div class="theme-pop" id="theme-pop" role="menu" aria-label="Theme">
+        <div class="tp-title">Theme</div>
+        <button class="pal-opt" type="button" data-palette="current" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#3dd4c0 50%,#0a2814 50%)"></span>Current</button>
+        <button class="pal-opt" type="button" data-palette="round12" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#cf4a28 50%,#0f1813 50%)"></span>Round 12</button>
+        <div class="pal-group">Cute</div>
+        <button class="pal-opt" type="button" data-palette="peach" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#e8906c 50%,#342026 50%)"></span>Peach Sorbet</button>
+        <button class="pal-opt" type="button" data-palette="lavender" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#a78bfa 50%,#1e1c34 50%)"></span>Lavender Haze</button>
+        <div class="pal-group">Cool</div>
+        <button class="pal-opt" type="button" data-palette="deepsea" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#2da0b4 50%,#081a28 50%)"></span>Deep Sea</button>
+        <button class="pal-opt" type="button" data-palette="glacier" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#93c5fd 50%,#182638 50%)"></span>Glacier</button>
+        <div class="pal-group">Beautiful</div>
+        <button class="pal-opt" type="button" data-palette="forest" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#34b46e 50%,#0a2014 50%)"></span>Forest Canopy</button>
+        <button class="pal-opt" type="button" data-palette="sunset" role="menuitem"><span class="pal-swatch" style="background:linear-gradient(135deg,#e0a43c 50%,#2a1222 50%)"></span>Sunset Meadow</button>
+      </div>
+    </div>
     <div style="position:relative">
       <button class="icon-btn" id="settings-btn" type="button" aria-label="Backend settings" aria-haspopup="true" aria-expanded="false" title="Backend settings"><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span></button>
       <div class="settings-pop" id="settings-pop">
@@ -1896,30 +1998,55 @@ function bgFallbackSet(i) {
   document.body.classList.add('bg-photo');
 }
 
-/* Visual theme: Round 12 vs current. A body class scopes the Round 12
-   overrides; the choice persists in localStorage (arboris-theme). */
+/* Visual themes: Current (default) plus the Round 12 look and six
+   palettes for it (2 cute, 2 cool, 2 beautiful). The secondary style
+   is a body class (theme-round12) plus a data-palette attribute; the
+   choice persists in localStorage (arboris-theme). The theme button
+   opens a picker popover; picking applies it at once. */
 var THEME_KEY = 'arboris-theme';
+var THEME_NAMES = { current: 'Current', round12: 'Round 12', peach: 'Peach Sorbet', lavender: 'Lavender Haze', deepsea: 'Deep Sea', glacier: 'Glacier', forest: 'Forest Canopy', sunset: 'Sunset Meadow' };
 function themeApply(name) {
-  var round12 = name === 'round12';
-  document.body.classList.toggle('theme-round12', round12);
+  if (!THEME_NAMES[name]) name = 'current';
+  var isAlt = name !== 'current';
+  document.body.classList.toggle('theme-round12', isAlt);
+  if (isAlt) document.body.setAttribute('data-palette', name);
+  else document.body.removeAttribute('data-palette');
   var btn = document.getElementById('theme-btn');
   if (btn) {
-    btn.setAttribute('aria-label', round12 ? 'Switch to current theme' : 'Switch to Round 12 theme');
-    btn.title = round12 ? 'Theme: Round 12 (click for Current)' : 'Theme: Current (click for Round 12)';
+    btn.setAttribute('aria-label', 'Choose theme (current: ' + THEME_NAMES[name] + ')');
+    btn.title = 'Theme: ' + THEME_NAMES[name];
   }
-  try { localStorage.setItem(THEME_KEY, round12 ? 'round12' : 'current'); } catch (e) {}
+  var opts = document.querySelectorAll('#theme-pop .pal-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.toggle('active', opts[i].getAttribute('data-palette') === name);
+  }
+  try { localStorage.setItem(THEME_KEY, name); } catch (e) {}
 }
 function themeInit() {
   var btn = document.getElementById('theme-btn');
+  var pop = document.getElementById('theme-pop');
   var saved = null;
   try { saved = localStorage.getItem(THEME_KEY); } catch (e) { saved = null; }
-  themeApply(saved === 'round12' ? 'round12' : 'current');
-  if (btn) {
-    btn.addEventListener('click', function () {
-      var isRound12 = document.body.classList.contains('theme-round12');
-      themeApply(isRound12 ? 'current' : 'round12');
+  themeApply(saved || 'current');
+  if (!btn || !pop) return;
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    pop.classList.toggle('open');
+    btn.setAttribute('aria-expanded', pop.classList.contains('open'));
+  });
+  pop.addEventListener('click', function (e) { e.stopPropagation(); });
+  var opts = pop.querySelectorAll('.pal-opt');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].addEventListener('click', function () {
+      themeApply(this.getAttribute('data-palette'));
     });
   }
+  document.addEventListener('click', function (e) {
+    if (!pop.contains(e.target) && e.target !== btn) {
+      pop.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
 }
 
 function bgInit() {

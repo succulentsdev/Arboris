@@ -405,7 +405,7 @@ class TestComposerScreenshotLayout(unittest.TestCase):
         self.assertIn('.brevity-btn {\n  background: transparent; border: 1px solid var(--border);', html)
         self.assertNotIn('class="ip-bar"', html)
         # The landing composer sits in the bottom 40% of the screen.
-        self.assertIn('min-height: 80svh;', html)
+        self.assertIn('min-height: 70svh;', html)  # round 23: lifted off the bottom edge
         # No Turbo dropdown was invented.
         self.assertNotIn('Turbo', html)
 
@@ -481,9 +481,10 @@ class TestRound12Theme(unittest.TestCase):
     attach/mic buttons, borderless brevity pills. The current design
     is the default (no class). The bordered input and rectangular
     "Send" are the shared default since round 22, not theme-only,
-    so they have no theme override. Row order is the same in both
-    themes. The photo layer is hidden in the theme, and the photo
-    button with it.
+    so they have no theme override. Since round 23 the theme button
+    opens a palette picker (not a toggle): Current, Round 12, and
+    six palettes in Cute / Cool / Beautiful groups. The photo layer
+    is hidden in the theme, and the photo button with it.
     """
 
     def test_round12_theme(self):
@@ -521,9 +522,60 @@ class TestRound12Theme(unittest.TestCase):
         self.assertIn('function themeApply(name)', html)
         self.assertIn("'arboris-theme'", html)
         self.assertIn('themeInit();', html)
+        # Round 23: the theme button opens a palette picker popover.
+        self.assertIn('id="theme-pop"', html)
+        self.assertIn('class="pal-opt"', html)
+        self.assertIn("data-palette=\"current\"", html)
+        self.assertIn("data-palette=\"round12\"", html)
         # The un-themed composer rule is unchanged (still at the
         # bottom, no padding); the theme override is scoped.
         self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
+
+
+class TestRound12Palettes(unittest.TestCase):
+    """Round 23 (2026-11-26): six palettes for the secondary
+    (Round 12) style, 2 cute / 2 cool / 2 beautiful.
+
+    Each palette is a body.theme-round12[data-palette="..."] rule
+    overriding the bubble colours and the background mesh (the
+    "shader"). Peach Sorbet and Forest Canopy stay close to the
+    original coral/green; Glacier and Sunset Meadow push the mesh
+    gradient harder and change the colour entirely. The original
+    Round 12 colours are the default under body.theme-round12.
+    """
+
+    def test_six_palettes(self):
+        html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
+        # Two cute, two cool, two beautiful, each with a picker option
+        # and a CSS rule.
+        palettes = {
+            "peach": "Peach Sorbet", "lavender": "Lavender Haze",
+            "deepsea": "Deep Sea", "glacier": "Glacier",
+            "forest": "Forest Canopy", "sunset": "Sunset Meadow",
+        }
+        for slug, name in palettes.items():
+            self.assertIn('body.theme-round12[data-palette="%s"] {' % slug, html)
+            self.assertIn('data-palette="%s"' % slug, html)
+            self.assertIn('>%s</button>' % name, html)
+        # The picker groups them Cute / Cool / Beautiful.
+        self.assertIn('>Cute</div>', html)
+        self.assertIn('>Cool</div>', html)
+        self.assertIn('>Beautiful</div>', html)
+        # Each palette overrides the bubbles and the mesh.
+        for slug in palettes:
+            rule = html.split('body.theme-round12[data-palette="%s"] {' % slug)[1].split('}')[0]
+            self.assertIn('--glass-user:', rule)
+            self.assertIn('--glass-bot:', rule)
+            self.assertIn('--hero-mesh:', rule)
+        # Glacier and Sunset Meadow push the mesh harder (stronger
+        # alpha than the gentle .18/.14/.10 of the similar ones).
+        glacier = html.split('body.theme-round12[data-palette="glacier"] {')[1].split('}')[0]
+        self.assertIn('rgba(147,197,253,.30)', glacier)
+        sunset = html.split('body.theme-round12[data-palette="sunset"] {')[1].split('}')[0]
+        self.assertIn('rgba(224,164,60,.26)', sunset)
+        # The JS knows all eight theme names and persists the pick.
+        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12'", html)
+        self.assertIn("setAttribute('data-palette', name)", html)
 
 
 if __name__ == "__main__":
