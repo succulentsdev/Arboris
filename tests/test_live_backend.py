@@ -856,7 +856,7 @@ class EntryPointAndSiteTests(unittest.TestCase):
         self.assertNotIn('data-mode="sprout"', html)
         self.assertNotIn('data-mode="forest"', html)
         self.assertNotIn('\U0001f4ce Attach', html)
-        self.assertIn('min-height: 70svh', html)  # round 23: lifted off the bottom edge
+        self.assertIn('min-height: 100svh', html)  # hero v2: centred stack, full viewport
         self.assertNotIn('id="sim-qpd"', html)
         self.assertNotIn('id="sim-section"', html)
         self.assertIn('id="backend-status"', html)

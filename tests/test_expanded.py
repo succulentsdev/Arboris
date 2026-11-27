@@ -265,47 +265,52 @@ class TestReceiptScaleAndChatPosition(unittest.TestCase):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         # When chatting the hero is 100svh with no bottom padding, so
         # the composer (the last flex child) sits at the viewport
-        # bottom instead of a third up the screen.
-        # Anchored to the line start, as above: the theme override
-        # (body.theme-round12 .hero.chatting) is earlier in the file.
-        chatting = re.search(r"^\.hero\.chatting \{[^}]*\}", html, re.M).group(0)
+        # bottom instead of a third up the screen. Hero v2 splits
+        # .hero.chatting into two rules (layout, then height), so
+        # check the combined text of every .hero.chatting rule.
+        chatting = "\n".join(re.findall(r"^\.hero\.chatting \{[^}]*\}", html, re.M))
         self.assertIn("height: 100svh", chatting)
         self.assertNotIn("padding-bottom: 33vh", chatting)
 
 
 class TestComposerRevertAndBubbleGreens(unittest.TestCase):
-    """Round 18 (2026-11-26): the composer is back to its original
-    design, the user bubble keeps its teal, and the response bubble
-    is a dark green again.
+    """Hero v2 (2026-11-27): the composer is a unified glass card and
+    the bubbles follow the theme tokens.
 
-    The composer card is the solid dark surface again (round 17's
-    gray translucent frosted card is reverted), while it stays at the
-    bottom of the page. The user bubble is the deep teal-green from
-    round 17. The bot bubble is a dark green again, but a clean one,
-    not the mucky rgba(15,24,19,.88) Grant disliked.
+    Claude's redesign replaces the Round 18 solid dark composer with
+    one glass container: a blurred surface tinted by --glass-alpha, a
+    1px border, a top inner highlight, and soft elevation, around a
+    borderless transparent textarea. The user and bot bubbles are the
+    theme's --glass-user / --glass-bot, derived from --accent and
+    --surface in the default Canopy Obsidian theme (teal-green user,
+    dark green bot), so they follow whichever of the eight themes is
+    active. The mucky rgba(15,24,19,.88) Grant disliked is gone from
+    the default design entirely.
     """
 
     def test_composer_original_design_and_bubbles(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Composer: back to the original solid dark surface.
+        # Composer: one glass card, blurred, tinted by the theme.
         card = re.search(r"\.composer-card \{[^}]*\}", html).group(0)
-        self.assertIn("background: var(--surface);", card)
-        self.assertIn("border: none;", card)
-        self.assertNotIn("backdrop-filter", card)
-        self.assertNotIn("rgba(44,47,49,.72)", card)
-        # User bubble: the teal from round 17 is kept.
-        self.assertIn("--glass-user: rgba(9,45,38,.92);", html)
-        self.assertIn("--glass-user-border: rgba(61,212,192,.30);", html)
-        # Bot bubble: a dark green again, clean, not the mucky one.
-        self.assertIn("--glass-bot: rgba(10,40,20,.92);", html)
+        self.assertIn("background: color-mix(in srgb, var(--surface) var(--glass-alpha), transparent);", card)
+        self.assertIn("backdrop-filter: blur(var(--blur)) saturate(140%);", card)
+        self.assertIn("border: 1px solid var(--border);", card)
+        self.assertIn("border-radius: var(--composer-radius);", card)
+        self.assertIn("box-shadow: inset 0 1px 0 var(--composer-highlight), var(--composer-shadow);", card)
+        # The input is a borderless transparent textarea inside it.
+        self.assertIn(".ir textarea {", html)
+        self.assertIn("border: 0; outline: 0; background: transparent;", html)
+        # Bubbles follow the theme tokens (Canopy default: accent
+        # tint for the user, surface for the bot).
+        self.assertIn("--glass-user: color-mix(in srgb, var(--accent) 16%, var(--surface));", html)
+        self.assertIn("--glass-bot: color-mix(in srgb, var(--surface) 90%, transparent);", html)
         # The mucky green and the coral are gone from the default
-        # design (the :root variables); they live only under the
-        # Round 12 theme selector now. The emerald is gone entirely.
-        root = re.search(r":root \{[^}]*\}", html).group(0)
-        self.assertNotIn("rgba(15,24,19,.88)", root)
-        self.assertNotIn("rgba(207,74,40,.24)", root)
-        self.assertNotIn("rgba(207,74,40,.42)", root)
+        # design entirely; there is no Round 12 theme any more.
+        self.assertNotIn("rgba(15,24,19,.88)", html)
+        self.assertNotIn("rgba(207,74,40,.24)", html)
+        self.assertNotIn("rgba(207,74,40,.42)", html)
         self.assertNotIn("rgba(27,84,52,.92)", html)
+        self.assertNotIn("theme-round12", html)
 
 
 class TestSavingsReceipt(unittest.TestCase):
@@ -329,7 +334,7 @@ class TestSavingsReceipt(unittest.TestCase):
         # One horizontal bar: gray track, teal fill at the reply's share.
         self.assertIn(".sv-track", html)
         self.assertIn(".sv-fill", html)
-        self.assertIn("linear-gradient(90deg, #3dd4c0, #22a896)", html)
+        self.assertIn("linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--bg)))", html)
         # The old vertical bars are gone, and the strip is not moved
         # above the bubble any more (no insertBefore in revealAnswer).
         self.assertNotIn("sv-bars", html)
@@ -370,76 +375,100 @@ class TestSavingsReceipt(unittest.TestCase):
 
 
 class TestComposerScreenshotLayout(unittest.TestCase):
-    """Round 15 (2026-11-26), reworked round 22: the composer copies
-    the reference screenshot Grant shared.
+    """Hero v2 (2026-11-27): the composer is one unified glass card.
 
-    Pills on top of the card, a bordered input box in the middle, and
-    an action row on the bottom: Attach / Mic on the left, a
-    rectangular amber "Send" button on the right. No Turbo dropdown:
-    Arboris has no Turbo mode, so none is invented. Round 22 also
-    moves the landing composer into the bottom 40% of the screen
-    (hero min-height 80svh) for both themes.
+    Claude's redesign replaces the Round 15/22 screenshot layout
+    (pills on top, bordered input in the middle, action row with a
+    rectangular amber "Send" on the right) with a single glass
+    container: a borderless transparent textarea on top, a meta line
+    (PromptShrink preview + word count) under it, and a toolbar at
+    the bottom with Attach / Mic on the left, a segmented verbosity
+    pill in the middle, and a round accent send button on the right.
+    The hero is a centred stack (headline, lede, composer, prompt
+    chips), full viewport height. No Turbo dropdown: Arboris has no
+    Turbo mode, so none is invented.
     """
 
     def test_composer_copies_screenshot(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Pills on top: the brevity bar comes before the input in the DOM.
-        self.assertLess(html.index('id="brevity-bar"'), html.index('id="ci"'))
-        # The three rows exist in order: controls, input, actions.
-        self.assertLess(html.index('class="composer-controls"'), html.index('class="ir"'))
-        self.assertLess(html.index('class="ir"'), html.index('class="composer-actions"'))
+        # One glass card: textarea, meta line, toolbar, in that order.
+        self.assertLess(html.index('class="ir"'), html.index('class="composer-meta"'))
+        self.assertLess(html.index('class="composer-meta"'), html.index('class="composer-toolbar"'))
         self.assertIn('id="brevity-bar"', html)
         self.assertIn('id="attach-btn"', html)
         self.assertIn('id="mic-btn"', html)
-        # Send is a rectangular "Send" text button on the right, not a
-        # circular up arrow.
+        # The input is a borderless transparent textarea that grows.
+        self.assertIn('<textarea id="ci"', html)
+        self.assertIn('.ir textarea {', html)
+        self.assertIn('border: 0; outline: 0; background: transparent;', html)
+        self.assertIn('function fitComposer()', html)
+        # Send is a round accent button with an up arrow, on the right
+        # of the toolbar (margin-left: auto).
         self.assertIn('id="sb"', html)
-        self.assertIn('>Send</button>', html)
-        self.assertNotIn('M12 19V5M5 12l7-7 7 7', html)
-        self.assertIn('.composer-actions .btn-s { margin-left: auto; }', html)
-        # The input is a bordered box, not borderless/transparent.
-        self.assertIn('.ir input {\n  flex: 1; min-width: 0; min-height: 70px; padding: 18px 22px;\n  border: 1px solid var(--border); border-radius: 12px;', html)
+        self.assertIn('.composer-toolbar .btn-s { margin-left: auto; }', html)
+        self.assertIn('M12 19V5M5.5 11.5L12 5l6.5 6.5', html)
+        self.assertNotIn('>Send</button>', html)
         # Attach / Mic stay circular icon buttons.
         self.assertIn('border-radius: 50%', html)
-        # The brevity buttons are individual pills, not a segmented group.
-        self.assertIn('.brevity-btn {\n  background: transparent; border: 1px solid var(--border);', html)
+        # The brevity buttons are a segmented pill group, not
+        # individual bordered pills.
+        self.assertIn('.brevity-bar {', html)
+        self.assertIn('border-radius: 99px; border: 1px solid var(--border);', html)
+        self.assertIn('.brevity-btn.active { color: var(--accent-fg) }', html)
         self.assertNotIn('class="ip-bar"', html)
-        # The landing composer sits in the bottom 40% of the screen.
-        self.assertIn('min-height: 70svh;', html)  # round 23: lifted off the bottom edge
+        # The hero is a centred stack, full viewport height.
+        self.assertIn('min-height: 100svh', html)
+        self.assertIn('justify-content: center', html)
+        # Prompt chips sit under the composer on landing.
+        self.assertIn('id="prompt-chips"', html)
+        self.assertIn('class="prompt-chip"', html)
         # No Turbo dropdown was invented.
         self.assertNotIn('Turbo', html)
 
 
 class TestPhotoBackground(unittest.TestCase):
-    """Round 19 (2026-11-26): the hero background is Grant's two
-    photos, served from the repo.
+    """Hero v2 (2026-11-27): the hero background is a live canvas
+    theme, not photos.
 
-    Round 20 (2026-11-26): Grant's lake and creek came out low res
-    on his build (1600px and 684px wide), so they are gone. The
-    gallery is now two high-res valley photos (Pexels, free, both
-    3200px wide): a terraced green valley that frames the chat in
-    the middle (mountains left and right, calm valley floor centre)
-    and a bright green hillside. A vanilla port of the MorphGallery
-    fbm-noise dissolve, as a fixed canvas behind the hero, served by
-    the Arboris server itself (same origin, so no CORS needed for
-    the WebGL textures). One header button cycles to the next photo.
-    No autoplay, no arrows, no thumbnails.
+    Claude's redesign replaces the Round 16/19/20 photo background
+    (Grant's photos, then the high-res valley photos, with the
+    MorphGallery fbm-noise dissolve and a header cycle button) with
+    one animated canvas per theme, driven by a single controller.
+    The background layers are #bg-stage (the canvas host), #bg-scrim
+    (a legibility gradient over the canvas), and #bg-grain (a fine
+    noise overlay). The canvas itself is created by JavaScript
+    (id="bg-canvas" set at mount time), not static HTML. The photos
+    are no longer referenced by the page; their files stay in the
+    repo and the server still serves them, harmlessly.
     """
 
     def test_photo_background(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        self.assertIn('id="bg-canvas"', html)
-        self.assertIn('id="bg-overlay"', html)
-        self.assertIn('id="bg-btn"', html)
-        # The two high-res valley photos, local relative URLs,
-        # no stock shots, no low-res Grant photos.
-        self.assertIn("'bg-valley.jpg'", html)
-        self.assertIn("'bg-hills.jpg'", html)
+        # The three background layers exist in the HTML.
+        self.assertIn('id="bg-stage"', html)
+        self.assertIn('id="bg-scrim"', html)
+        self.assertIn('id="bg-grain"', html)
+        # The canvas is created by the controller at mount time.
+        self.assertIn("canvas.id = 'bg-canvas';", html)
+        self.assertIn("function heroThemeBoot()", html)
+        self.assertIn("HeroBackground.mount(", html)
+        # The photos are gone from the page: no references, no cycle
+        # button, no morph dissolve.
+        self.assertNotIn("'bg-valley.jpg'", html)
+        self.assertNotIn("'bg-hills.jpg'", html)
         self.assertNotIn("'bg-lake.jpg'", html)
         self.assertNotIn("'bg-creek.jpg'", html)
+        self.assertNotIn('id="bg-btn"', html)
+        self.assertNotIn('id="bg-overlay"', html)
+        self.assertNotIn('var BG_VERT', html)
+        self.assertNotIn('var BG_FRAG', html)
+        self.assertNotIn('function bgInit()', html)
+        self.assertNotIn('function bgFallbackSet', html)
+        self.assertNotIn('function bgLoadImage', html)
         self.assertNotIn('cdn.21st.dev/assets/mirror/', html)
         self.assertNotIn('images.unsplash.com/photo-', html)
-        # The photos exist in the repo and the server serves them.
+        # The photo files still exist in the repo and the server still
+        # serves them (harmless; the page just does not use them).
         self.assertTrue((ROOT / "website" / "bg-valley.jpg").is_file())
         self.assertTrue((ROOT / "website" / "bg-hills.jpg").is_file())
         app = (ROOT / "server" / "app.py").read_text(encoding="utf-8")
@@ -450,186 +479,180 @@ class TestPhotoBackground(unittest.TestCase):
         for name in ("bg-valley.jpg", "bg-hills.jpg"):
             data = (ROOT / "website" / name).read_bytes()
             self.assertGreaterEqual(_jpeg_width(data), 2400)
-        # The hero is transparent so the photo shows through, and the
-        # dot-grid texture hides while a photo is showing.
+        # The hero is transparent so the canvas shows through.
         self.assertIn('background: transparent;', html)
-        self.assertIn('body.bg-photo .hero::before { display: none }', html)
-        # The dissolve shader is in the page, with the fbm noise.
-        self.assertIn('var BG_VERT', html)
-        self.assertIn('var BG_FRAG', html)
-        self.assertIn('fbm(', html)
-        self.assertIn('snoise(', html)
-        # The button cycles, and the init runs on load.
-        self.assertIn('bgInit();', html)
-        self.assertIn('function bgInit()', html)
-        self.assertIn('function bgFallbackSet', html)
-        self.assertIn('function bgLoadImage', html)
-        # No autoplay, no arrows, no thumbnails: it is a background
-        # changer, not a gallery page.
+        # No autoplay, no arrows, no thumbnails.
         self.assertNotIn('autoplay', html)
         self.assertNotIn('bg-arrow', html)
         self.assertNotIn('bg-thumb', html)
 
 
 class TestRound12Theme(unittest.TestCase):
-    """Round 21 (2026-11-26): the Round 12 look is a visual-only
-    theme, toggled by a header button, persisted in localStorage.
+    """Hero v2 (2026-11-27): eight live themes on one token set, on a
+    floating dock.
 
-    A body class (body.theme-round12) scopes every Round 12
-    override: coral user bubble, mucky green bot bubble, dot-grid
-    hero, composer lifted a third of the screen, rectangular
-    attach/mic buttons, borderless brevity pills. The current design
-    is the default (no class). The bordered input and rectangular
-    "Send" are the shared default since round 22, not theme-only,
-    so they have no theme override. Since round 23 the theme button
-    opens a palette picker (not a toggle): Current, Round 12, and
-    the secondary options. Since round 24 the picker holds animated
-    backgrounds: Grain Gradient (a WebGL shader) and Aether Flow
-    (a particle system). The colour palettes are all gone (Deep Sea
-    was the last, removed in round 25, along with Glass Fold). The
-    photo layer is hidden in the theme, and the photo button with it.
+    Claude's redesign replaces the Round 21/23/24/25 theme system
+    (a body class, a header picker popover, Current / Round 12 /
+    Grain / Aether) with a new one: an html data-hero-theme
+    attribute, a HERO_THEMES list, a HeroBackground controller that
+    owns one canvas and one animation loop, and a floating theme dock
+    at the bottom-left with a swatch per theme. The choice persists
+    in localStorage under arboris-hero-theme and is applied before
+    DOMContentLoaded so a saved light theme does not flash dark.
+    The eight themes are Canopy Obsidian, Verdant Silk, Solaris
+    Alabaster, Topographic Pulse, Aurora Glass, Kinetic Ink, Grain
+    Gradient, and Aether Flow.
     """
 
     def test_round12_theme(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # The toggle button is in the header, next to the photo button.
-        self.assertIn('id="theme-btn"', html)
-        self.assertIn('id="bg-btn"', html)
-        # The theme is a body class, scoped under it; data-theme is
-        # already used for dark mode and is not reused.
-        self.assertIn('body.theme-round12', html)
-        self.assertIn("classList.toggle('theme-round12'", html)
-        # The four bubble variables under the theme selector.
-        self.assertIn('--glass-user: linear-gradient(135deg, rgba(207,74,40,.24), rgba(207,74,40,.14));', html)
-        self.assertIn('--glass-user-border: rgba(207,74,40,.42);', html)
-        self.assertIn('--glass-bot: rgba(15,24,19,.88);', html)
-        self.assertIn('--glass-bot-border: rgba(255,255,255,.1);', html)
-        # The dot-grid hero is restored and the photo layer hidden.
-        self.assertIn('body.theme-round12 .hero { background: var(--hero-mesh), var(--bg); }', html)
-        self.assertIn('body.theme-round12 .hero::before { display: block; }', html)
-        self.assertIn('body.theme-round12 #bg-canvas,', html)
-        self.assertIn('body.theme-round12 #bg-btn { display: none; }', html)
-        # The composer is lifted a third of the screen, and the chat
-        # area keeps the wider bottom gap.
-        self.assertIn('body.theme-round12 .hero.chatting { padding-bottom: 33vh; }', html)
-        self.assertIn('body.theme-round12 .hero-chat-area { padding: 78px 24px 12vh; }', html)
-        # The rectangular attach/mic buttons and borderless pills.
-        # (The bordered input and rectangular Send are the shared
-        # default since round 22, so they have no theme override.)
-        self.assertIn('body.theme-round12 .btn-attach,', html)
-        self.assertIn('body.theme-round12 .brevity-btn { border: none;', html)
-        self.assertNotIn('body.theme-round12 .ir input {', html)
-        self.assertNotIn('body.theme-round12 .btn-s {', html)
-        # The JS wires the toggle and persists the choice.
-        self.assertIn('function themeInit()', html)
-        self.assertIn('function themeApply(name)', html)
-        self.assertIn("'arboris-theme'", html)
-        self.assertIn('themeInit();', html)
-        # Round 23: the theme button opens a palette picker popover.
-        self.assertIn('id="theme-pop"', html)
-        self.assertIn('class="pal-opt"', html)
-        self.assertIn("data-palette=\"current\"", html)
-        self.assertIn("data-palette=\"round12\"", html)
-        # The un-themed composer rule is unchanged (still at the
-        # bottom, no padding); the theme override is scoped.
-        self.assertIn('.hero.chatting { height: 100vh; height: 100svh; min-height: 0 }', html)
+        # The theme is an html attribute, not a body class; data-theme
+        # is still dark mode and is not reused.
+        self.assertIn('data-hero-theme="canopy"', html)
+        self.assertIn("root.setAttribute('data-hero-theme', t.id);", html)
+        self.assertNotIn('theme-round12', html)
+        self.assertNotIn('id="theme-btn"', html)
+        self.assertNotIn('id="theme-pop"', html)
+        self.assertNotIn('class="pal-opt"', html)
+        # The eight themes are listed with their swatch colours.
+        for slug, name in (
+                ('canopy', 'Canopy Obsidian'), ('silk', 'Verdant Silk'),
+                ('solaris', 'Solaris Alabaster'), ('topo', 'Topographic Pulse'),
+                ('aurora', 'Aurora Glass'), ('ink', 'Kinetic Ink'),
+                ('grain', 'Grain Gradient'), ('aether', 'Aether Flow')):
+            self.assertIn("id: '%s'" % slug, html)
+            self.assertIn("name: '%s'" % name, html)
+            self.assertIn('data-hero-theme="%s"' % slug, html)
+            # Canopy is the default: its tokens live in :root, not in
+            # its own html[data-hero-theme] rule. The other seven
+            # override :root under their own rule.
+            if slug == 'canopy':
+                self.assertNotIn('html[data-hero-theme="canopy"] {', html)
+            else:
+                self.assertIn('html[data-hero-theme="%s"] {' % slug, html)
+        # The floating dock holds one swatch button per theme.
+        self.assertIn('id="theme-dock"', html)
+        self.assertEqual(html.count('class="td-opt'), 8)
+        # The controller owns one canvas and one loop; switching a
+        # theme tears the old scene down and mounts a fresh canvas.
+        self.assertIn('var HeroBackground = (function () {', html)
+        self.assertIn('function makeScene(id, cv)', html)
+        self.assertIn('function heroThemeApply(id, remount)', html)
+        self.assertIn('function heroThemeBoot()', html)
+        self.assertIn("var HERO_THEME_KEY = 'arboris-hero-theme';", html)
+        self.assertIn('heroThemeBoot();', html)
+        # The default theme is Canopy Obsidian.
+        self.assertIn("heroThemeApply(saved || 'canopy', false);", html)
 
 
 class TestRound12Palettes(unittest.TestCase):
-    """Round 25 (2026-11-27): Grant kept only Aether Flow and Grain
-    Gradient. Glass Fold and Deep Sea are gone, and with them the
-    last colour palette. The picker now holds Current, Round 12,
-    Grain Gradient, and Aether Flow.
+    """Hero v2 (2026-11-27): there are no colour palettes any more.
+
+    The Round 23/24/25 palette system (a body class, a data-palette
+    attribute, Current / Round 12 / Deep Sea / Glass Fold) is gone
+    with Claude's redesign. The eight themes are Claude's six plus
+    Grain Gradient and Aether Flow, all on the hero v2 engine
+    (data-hero-theme, HERO_THEMES, the floating dock). The removed
+    themes (Deep Sea, Glass Fold, and the round-23 palettes) leave
+    no trace: no rule, no dock option, no shader.
     """
 
     def test_no_colour_palettes(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # Deep Sea and Glass Fold are gone: no rule, no picker option.
-        for slug in ("peach", "lavender", "glacier", "forest", "sunset", "deepsea", "fold"):
-            self.assertNotIn('body.theme-round12[data-palette="%s"] {' % slug, html)
-            self.assertNotIn('data-palette="%s"' % slug, html)
+        # The old palette system is gone entirely.
+        self.assertNotIn('theme-round12', html)
+        self.assertNotIn('data-palette', html)
+        self.assertNotIn('THEME_NAMES', html)
+        self.assertNotIn('class="pal-opt"', html)
+        for slug in ("peach", "lavender", "glacier", "forest", "sunset", "deepsea", "fold", "current", "round12"):
+            self.assertNotIn('data-hero-theme="%s"' % slug, html)
         self.assertNotIn('>Deep Sea</button>', html)
         self.assertNotIn('>Glass Fold</button>', html)
         self.assertNotIn('>Cute</div>', html)
         self.assertNotIn('>Cool</div>', html)
         self.assertNotIn('>Beautiful</div>', html)
-        # The canvases and shaders for the removed theme are gone too.
-        self.assertNotIn('id="fold-canvas"', html)
+        # The Glass Fold shader is gone too.
         self.assertNotIn('var FOLD_FRAG', html)
         self.assertNotIn('function foldStart()', html)
         self.assertNotIn('function foldStop()', html)
-        # The JS knows the four theme names and persists the pick.
-        self.assertIn("THEME_NAMES = { current: 'Current', round12: 'Round 12', grain: 'Grain Gradient', aether: 'Aether Flow' }", html)
-        self.assertIn("setAttribute('data-palette', name)", html)
+        # The eight themes are in HERO_THEMES and on the dock.
+        self.assertIn("var HERO_THEMES = [", html)
+        for slug in ("canopy", "silk", "solaris", "topo", "aurora", "ink", "grain", "aether"):
+            self.assertIn("id: '%s'" % slug, html)
+            self.assertIn('data-hero-theme="%s"' % slug, html)
+        self.assertEqual(html.count('class="td-opt'), 8)
 
 
 class TestGrainTheme(unittest.TestCase):
-    """Round 24 (2026-11-27): Grain Gradient, a vanilla port of the
-    21st.dev ShaderBackground (Paper Shaders grain-gradient,
-    Apache-2.0) that Grant pasted. The GLSL is verbatim; only the
-    React wrapper is rewritten. A dedicated fixed canvas renders it
-    only while the Grain theme is active."""
+    """Hero v2 (2026-11-27): Grain Gradient, ported into the hero v2
+    theme engine.
+
+    Still a vanilla port of the 21st.dev ShaderBackground (Paper
+    Shaders grain-gradient, Apache-2.0) that Grant pasted. The GLSL
+    is verbatim; only the React wrapper was rewritten. It now runs
+    as a scene on the shared hero canvas (hvGrainScene, routed by
+    makeScene), instead of its own fixed canvas with its own rAF
+    loop. Its token rule uses the shader's own indigo/near-black.
+    """
 
     def test_grain_theme(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # The canvas exists and is hidden unless the theme is active.
-        self.assertIn('id="grain-canvas"', html)
-        self.assertIn('body.theme-round12[data-palette="grain"] #grain-canvas { display: block; }', html)
         # The fragment shader is present (verbatim Paper Shaders
         # grain-gradient: the packed uniforms and the grain hash).
         self.assertIn('var GRAIN_FRAG = `', html)
         self.assertIn('uniform vec3 u_colors[8];', html)
         self.assertIn('float grainHash(vec2 p)', html)
         self.assertIn('u_grain', html)
-        # The vanilla port wires start/stop into the theme lifecycle.
-        self.assertIn('function grainStart()', html)
-        self.assertIn('function grainStop()', html)
-        self.assertIn("if (name === 'grain') grainStart(); else grainStop();", html)
-        # The Grain palette rule uses the shader's own indigo/near-black.
-        self.assertIn('body.theme-round12[data-palette="grain"] {', html)
-        grain = html.split('body.theme-round12[data-palette="grain"] {')[1].split('}')[0]
+        self.assertIn('var GRAIN_UNIFORMS = {', html)
+        # The scene factory wires it into the hero v2 controller.
+        self.assertIn('function hvGrainScene(canvas, env)', html)
+        self.assertIn("else if (id === 'grain') s = hvGrainScene(cv, env);", html)
+        self.assertIn("gl.uniform4f(uni.scene, canvas.width, canvas.height, t * U2.timeScale, U2.colorCount);", html)
+        # The Grain token rule uses the shader's own indigo/near-black.
+        self.assertIn('html[data-hero-theme="grain"] {', html)
+        grain = html.split('html[data-hero-theme="grain"] {')[1].split('}')[0]
         self.assertIn('--glass-user:', grain)
         self.assertIn('--glass-bot:', grain)
-        # The shader is the background: mesh and dot-grid hidden.
-        self.assertIn('body.theme-round12[data-palette="grain"] .hero { background: transparent; }', html)
-        self.assertIn('body.theme-round12[data-palette="grain"] .hero::before { display: none; }', html)
-        # The picker has Grain Gradient under a Shaders group.
-        self.assertIn('>Shaders</div>', html)
-        self.assertIn('>Grain Gradient</button>', html)
+        self.assertIn('--accent: #6366f1;', grain)
+        # The dock has Grain Gradient (name in the title attribute).
+        self.assertIn('data-hero-theme="grain"', html)
+        self.assertIn('title="Grain Gradient"', html)
 
 
 class TestAetherTheme(unittest.TestCase):
-    """Round 24 (2026-11-27): Aether Flow, built from scratch in
-    vanilla canvas 2D. The 21st.dev component source is behind a
-    login and Grant said to skip anything needing a login, so this
-    follows the component's description instead: flowing light
-    particles that weave and connect, with the cursor making gentle
-    swirls in the aether."""
+    """Hero v2 (2026-11-27): Aether Flow, ported into the hero v2
+    theme engine.
+
+    Still built from scratch in vanilla canvas 2D. The 21st.dev
+    component source is behind a login and Grant said to skip
+    anything needing a login, so this follows the component's
+    description instead: flowing light particles that weave and
+    connect, with the cursor making gentle swirls in the aether.
+    It now runs as a scene on the shared hero canvas
+    (hvAetherScene, routed by makeScene, pointer from env.pointer),
+    instead of its own fixed canvas with its own rAF loop.
+    """
 
     def test_aether_theme(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
-        # The canvas exists and is hidden unless the theme is active.
-        self.assertIn('id="aether-canvas"', html)
-        self.assertIn('body.theme-round12[data-palette="aether"] #aether-canvas { display: block; }', html)
         # The particle system: a colour set, a flow field, connecting
-        # lines, and a cursor swirl.
+        # lines, and a cursor swirl, now driven by the controller's
+        # pointer (env.pointer) instead of its own listener.
         self.assertIn('var AETHER_COLORS = ', html)
-        self.assertIn('function aetherInitParticles(state, w, h)', html)
-        self.assertIn('function aetherRender(now)', html)
+        self.assertIn('function hvAetherScene(canvas, env)', html)
+        self.assertIn("else if (id === 'aether') s = hvAetherScene(cv, env);", html)
+        self.assertIn('env.pointer.sx', html)
         self.assertIn('swirl', html)
         self.assertIn('130 * 130', html)
-        # The vanilla port wires start/stop into the theme lifecycle.
-        self.assertIn('function aetherStart()', html)
-        self.assertIn('function aetherStop()', html)
-        self.assertIn("if (name === 'aether') aetherStart(); else aetherStop();", html)
-        # The Aether palette rule uses teal bubbles; the particles are
-        # the background, so mesh and dot-grid are hidden.
-        self.assertIn('body.theme-round12[data-palette="aether"] {', html)
-        self.assertIn('body.theme-round12[data-palette="aether"] .hero { background: transparent; }', html)
-        self.assertIn('body.theme-round12[data-palette="aether"] .hero::before { display: none; }', html)
-        # The picker has Aether Flow under a Particles group.
-        self.assertIn('>Particles</div>', html)
-        self.assertIn('>Aether Flow</button>', html)
+        # The Aether token rule uses teal bubbles.
+        self.assertIn('html[data-hero-theme="aether"] {', html)
+        aether = html.split('html[data-hero-theme="aether"] {')[1].split('}')[0]
+        self.assertIn('--glass-user:', aether)
+        self.assertIn('--glass-bot:', aether)
+        self.assertIn('--accent: #2dd4bf;', aether)
+        # The dock has Aether Flow (name in the title attribute).
+        self.assertIn('data-hero-theme="aether"', html)
+        self.assertIn('title="Aether Flow"', html)
 
 
 if __name__ == "__main__":
