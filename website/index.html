@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-hero-theme="canopy">
+<html lang="en" data-theme="dark" data-hero-theme="topo">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,9 +30,11 @@
   --blue: #60a0e0;
   --purple: #b48ade;
 
-  /* ── Theme tokens. Every theme sets only these; Canopy Obsidian is
-     the default. Text pairs are AA (4.5:1+) against --bg and
-     --surface in every theme (checked by calculation). ── */
+  /* ── Theme tokens. Every theme sets only these; the values here
+     are Canopy Obsidian's (the fallback: Canopy has no own rule).
+     The default theme on load is Topographic Pulse Mono. Text
+     pairs are AA (4.5:1+) against --bg and --surface in every
+     theme (checked by calculation). ── */
   --bg: #060b09;
   --surface: #0c1411;
   --surface-2: #131e19;
@@ -171,7 +173,10 @@ html[data-hero-theme="topo"] {
   --composer-radius: 10px;
   --composer-highlight: rgba(255,255,255,.04);
   --composer-shadow: 0 10px 30px rgba(0,0,0,.4);
-  --scrim: radial-gradient(ellipse 44% 38% at 50% 50%, rgba(10,15,18,.8), rgba(10,15,18,0) 70%);
+  /* No scrim: the dark radial gradient dimmed the contour lines
+     inside an ellipse around the hero stack, which read as a
+     circular artifact even after the shader's own dimming went. */
+  --scrim: none;
 }
 /* 5. Aurora Glass */
 html[data-hero-theme="aurora"] {
@@ -1589,15 +1594,15 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px}
 </footer>
 
 <div class="theme-dock" id="theme-dock" role="group" aria-label="Background theme">
-  <button type="button" class="td-opt active" data-hero-theme="canopy" aria-pressed="true" aria-label="Canopy Obsidian theme" title="Canopy Obsidian"><span class="td-sw" style="--a:#34d399;--b:#060b09" aria-hidden="true"></span></button>
+  <button type="button" class="td-opt active" data-hero-theme="topo" aria-pressed="true" aria-label="Topographic Pulse theme" title="Topographic Pulse"><span class="td-sw" style="--a:#4ade80;--b:#0a0f12" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="silk" aria-pressed="false" aria-label="Verdant Silk theme" title="Verdant Silk"><span class="td-sw" style="--a:#c8a96e;--b:#0f4c45" aria-hidden="true"></span></button>
-  <button type="button" class="td-opt" data-hero-theme="solaris" aria-pressed="false" aria-label="Solaris Alabaster theme" title="Solaris Alabaster"><span class="td-sw" style="--a:#1b5e43;--b:#f5f3ee" aria-hidden="true"></span></button>
-  <button type="button" class="td-opt" data-hero-theme="topo" aria-pressed="false" aria-label="Topographic Pulse theme" title="Topographic Pulse"><span class="td-sw" style="--a:#4ade80;--b:#0a0f12" aria-hidden="true"></span></button>
-  <button type="button" class="td-opt" data-hero-theme="aurora" aria-pressed="false" aria-label="Aurora Glass theme" title="Aurora Glass"><span class="td-sw" style="--a:#2dd4bf;--b:#4f46e5" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="ink" aria-pressed="false" aria-label="Kinetic Ink theme" title="Kinetic Ink"><span class="td-sw" style="--a:#6cc4a1;--b:#d4a056" aria-hidden="true"></span></button>
+  <button type="button" class="td-opt" data-hero-theme="aurora" aria-pressed="false" aria-label="Aurora Glass theme" title="Aurora Glass"><span class="td-sw" style="--a:#2dd4bf;--b:#4f46e5" aria-hidden="true"></span></button>
+  <button type="button" class="td-opt" data-hero-theme="canopy" aria-pressed="false" aria-label="Canopy Obsidian theme" title="Canopy Obsidian"><span class="td-sw" style="--a:#34d399;--b:#060b09" aria-hidden="true"></span></button>
+  <button type="button" class="td-opt" data-hero-theme="solaris" aria-pressed="false" aria-label="Solaris Alabaster theme" title="Solaris Alabaster"><span class="td-sw" style="--a:#1b5e43;--b:#f5f3ee" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="grain" aria-pressed="false" aria-label="Grain Gradient theme" title="Grain Gradient"><span class="td-sw" style="--a:#db4b8f;--b:#3f3cbb" aria-hidden="true"></span></button>
   <button type="button" class="td-opt" data-hero-theme="aether" aria-pressed="false" aria-label="Aether Flow theme" title="Aether Flow"><span class="td-sw" style="--a:#5eead4;--b:#0a1218" aria-hidden="true"></span></button>
-  <span class="td-name" id="theme-dock-name" aria-hidden="true">Canopy Obsidian</span>
+  <span class="td-name" id="theme-dock-name" aria-hidden="true">Topographic Pulse</span>
 </div>
 
 <div class="palette-dock" id="palette-dock" role="group" aria-label="Theme palette">
@@ -2055,16 +2060,16 @@ var heroCurrentPalette = null;
    u_colors, with hue 0 keeping the named colours exact (the
    default keeps the preset's 0.2967 hue shift). */
 var HERO_THEMES = [
-  { id: 'canopy',  name: 'Canopy Obsidian',   kind: '2d', a: '#34d399', b: '#060b09',
+  { id: 'topo',    name: 'Topographic Pulse', kind: 'gl', a: '#4ade80', b: '#0a0f12',
     palettes: [
-      { id: 'obsidian', name: 'Obsidian', a: '#34d399', b: '#060b09', tokens: {},
-        colors: ['#34d399', '#9ccfa8', '#060b09'] },
-      { id: 'ember', name: 'Ember', a: '#f59e0b', b: '#0f0a06',
-        tokens: { '--bg': '#0f0a06', '--surface': '#171008', '--surface-2': '#201709', '--accent': '#f59e0b', '--accent-fg': '#1a0e02' },
-        colors: ['#f59e0b', '#fbbf24', '#0f0a06'] },
-      { id: 'glacier', name: 'Glacier', a: '#38bdf8', b: '#060a0f',
-        tokens: { '--bg': '#060a0f', '--surface': '#0a141b', '--surface-2': '#0f1d27', '--accent': '#38bdf8', '--accent-fg': '#082a3d' },
-        colors: ['#38bdf8', '#a5f3fc', '#060a0f'] }
+      { id: 'mono', name: 'Mono', a: '#e4e4e7', b: '#0e0e10',
+        tokens: { '--bg': '#0e0e10', '--surface': '#131316', '--surface-2': '#1a1a1e', '--accent': '#e4e4e7', '--accent-fg': '#101014', '--border': 'rgba(255,255,255,.14)', '--border-strong': 'rgba(255,255,255,.24)' },
+        colors: ['#0e0e10', '#bfbfc9', '#f2f2f5'] },
+      { id: 'pulse', name: 'Pulse', a: '#4ade80', b: '#0a0f12', tokens: {},
+        colors: ['#0a0f12', '#4ade80', '#2dd4bf'] },
+      { id: 'sunset', name: 'Sunset', a: '#f28c33', b: '#120b09',
+        tokens: { '--bg': '#120b09', '--surface': '#180f0a', '--surface-2': '#221509', '--accent': '#f28c33', '--accent-fg': '#1f0d02', '--border': 'rgba(242,140,51,.30)', '--border-strong': 'rgba(242,140,51,.44)' },
+        colors: ['#120b09', '#f28c33', '#e64d59'] }
     ] },
   { id: 'silk',    name: 'Verdant Silk',      kind: 'gl', a: '#c8a96e', b: '#0f4c45',
     palettes: [
@@ -2077,18 +2082,7 @@ var HERO_THEMES = [
         tokens: { '--bg': '#04070a', '--surface': '#081420', '--surface-2': '#0c1e2e', '--accent': '#7dd3fc', '--accent-fg': '#082a3d', '--border': 'rgba(125,211,252,.16)', '--border-strong': 'rgba(125,211,252,.28)' },
         colors: ['#04070a', '#051a2e', '#0a3d5c', '#7dd3fc'] }
     ] },
-  { id: 'solaris', name: 'Solaris Alabaster', kind: 'gl', a: '#1b5e43', b: '#f5f3ee' },
-  { id: 'topo',    name: 'Topographic Pulse', kind: 'gl', a: '#4ade80', b: '#0a0f12',
-    palettes: [
-      { id: 'pulse', name: 'Pulse', a: '#4ade80', b: '#0a0f12', tokens: {},
-        colors: ['#0a0f12', '#4ade80', '#2dd4bf'] },
-      { id: 'sunset', name: 'Sunset', a: '#f28c33', b: '#120b09',
-        tokens: { '--bg': '#120b09', '--surface': '#180f0a', '--surface-2': '#221509', '--accent': '#f28c33', '--accent-fg': '#1f0d02', '--border': 'rgba(242,140,51,.30)', '--border-strong': 'rgba(242,140,51,.44)' },
-        colors: ['#120b09', '#f28c33', '#e64d59'] },
-      { id: 'mono', name: 'Mono', a: '#e4e4e7', b: '#0e0e10',
-        tokens: { '--bg': '#0e0e10', '--surface': '#131316', '--surface-2': '#1a1a1e', '--accent': '#e4e4e7', '--accent-fg': '#101014', '--border': 'rgba(255,255,255,.14)', '--border-strong': 'rgba(255,255,255,.24)' },
-        colors: ['#0e0e10', '#bfbfc9', '#f2f2f5'] }
-    ] },
+  { id: 'ink',     name: 'Kinetic Ink',       kind: '2d', a: '#6cc4a1', b: '#d4a056' },
   { id: 'aurora',  name: 'Aurora Glass',      kind: 'gl', a: '#2dd4bf', b: '#4f46e5',
     palettes: [
       { id: 'aurora', name: 'Aurora', a: '#2dd4bf', b: '#4f46e5', tokens: {},
@@ -2100,7 +2094,18 @@ var HERO_THEMES = [
         tokens: { '--bg': '#0e0514', '--surface': '#140a1c', '--surface-2': '#1d1026', '--accent': '#e879f9', '--accent-fg': '#2a0a33', '--border': 'rgba(232,121,249,.16)', '--border-strong': 'rgba(232,121,249,.28)' },
         colors: ['#0e0514', '#140a1c', '#a6408c', '#d97359', '#734db8'] }
     ] },
-  { id: 'ink',     name: 'Kinetic Ink',       kind: '2d', a: '#6cc4a1', b: '#d4a056' },
+  { id: 'canopy',  name: 'Canopy Obsidian',   kind: '2d', a: '#34d399', b: '#060b09',
+    palettes: [
+      { id: 'obsidian', name: 'Obsidian', a: '#34d399', b: '#060b09', tokens: {},
+        colors: ['#34d399', '#9ccfa8', '#060b09'] },
+      { id: 'ember', name: 'Ember', a: '#f59e0b', b: '#0f0a06',
+        tokens: { '--bg': '#0f0a06', '--surface': '#171008', '--surface-2': '#201709', '--accent': '#f59e0b', '--accent-fg': '#1a0e02' },
+        colors: ['#f59e0b', '#fbbf24', '#0f0a06'] },
+      { id: 'glacier', name: 'Glacier', a: '#38bdf8', b: '#060a0f',
+        tokens: { '--bg': '#060a0f', '--surface': '#0a141b', '--surface-2': '#0f1d27', '--accent': '#38bdf8', '--accent-fg': '#082a3d' },
+        colors: ['#38bdf8', '#a5f3fc', '#060a0f'] }
+    ] },
+  { id: 'solaris', name: 'Solaris Alabaster', kind: 'gl', a: '#1b5e43', b: '#f5f3ee' },
   { id: 'grain',   name: 'Grain Gradient',    kind: 'gl', a: '#db4b8f', b: '#3f3cbb',
     palettes: [
       { id: 'grain', name: 'Grain', a: '#db4b8f', b: '#3f3cbb', tokens: {},
@@ -3322,9 +3327,9 @@ function heroThemeBoot() {
       grain.style.backgroundSize = px + 'px ' + px + 'px';
     }
   }
-  heroThemeApply(saved || 'canopy', false);
+  heroThemeApply(saved || 'topo', false);
   if (stage) HeroBackground.init(stage);
-  HeroBackground.mount(heroThemeById(saved || 'canopy').id);
+  HeroBackground.mount(heroThemeById(saved || 'topo').id);
   var dock = window.document.getElementById('theme-dock');
   if (!dock) return;
   dock.addEventListener('click', function (e) {

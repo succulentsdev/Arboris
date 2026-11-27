@@ -509,8 +509,9 @@ class TestHeroThemes(unittest.TestCase):
     def test_hero_themes(self):
         html = (ROOT / "website" / "index.html").read_text(encoding="utf-8")
         # The theme is an html attribute, not a body class; data-theme
-        # is still dark mode and is not reused.
-        self.assertIn('data-hero-theme="canopy"', html)
+        # is still dark mode and is not reused. Round 30: the page
+        # ships on Topographic Pulse.
+        self.assertIn('<html lang="en" data-theme="dark" data-hero-theme="topo">', html)
         self.assertIn("root.setAttribute('data-hero-theme', t.id);", html)
         self.assertNotIn('theme-round12', html)
         self.assertNotIn('id="theme-btn"', html)
@@ -525,16 +526,23 @@ class TestHeroThemes(unittest.TestCase):
             self.assertIn("id: '%s'" % slug, html)
             self.assertIn("name: '%s'" % name, html)
             self.assertIn('data-hero-theme="%s"' % slug, html)
-            # Canopy is the default: its tokens live in :root, not in
-            # its own html[data-hero-theme] rule. The other seven
+            # Canopy's tokens live in :root, not in its own
+            # html[data-hero-theme] rule (it is the fallback). The
+            # other seven each have their own rule.
             # override :root under their own rule.
             if slug == 'canopy':
                 self.assertNotIn('html[data-hero-theme="canopy"] {', html)
             else:
                 self.assertIn('html[data-hero-theme="%s"] {' % slug, html)
-        # The floating dock holds one swatch button per theme.
+        # The floating dock holds one swatch button per theme, in
+        # Round 30 order: Topo, Silk, Ink, Aurora, Canopy, Solaris,
+        # Grain, Aether.
         self.assertIn('id="theme-dock"', html)
         self.assertEqual(html.count('class="td-opt'), 8)
+        dock = html.split('id="theme-dock"')[1].split('</div>')[0]
+        order = re.findall(r'data-hero-theme="(\w+)"', dock)
+        self.assertEqual(order, ['topo', 'silk', 'ink', 'aurora',
+                                 'canopy', 'solaris', 'grain', 'aether'])
         # The controller owns one canvas and one loop; switching a
         # theme tears the old scene down and mounts a fresh canvas.
         self.assertIn('var HeroBackground = (function () {', html)
@@ -543,8 +551,8 @@ class TestHeroThemes(unittest.TestCase):
         self.assertIn('function heroThemeBoot()', html)
         self.assertIn("var HERO_THEME_KEY = 'arboris-hero-theme';", html)
         self.assertIn('heroThemeBoot();', html)
-        # The default theme is Canopy Obsidian.
-        self.assertIn("heroThemeApply(saved || 'canopy', false);", html)
+        # The default theme is Topographic Pulse (Round 30).
+        self.assertIn("heroThemeApply(saved || 'topo', false);", html)
         # Round 27: the palette system. Five themes list three
         # palettes each; the other three list none.
         self.assertIn("var HERO_PALETTE_KEY = 'arboris-hero-palettes';", html)
@@ -555,7 +563,7 @@ class TestHeroThemes(unittest.TestCase):
         self.assertIn('function heroPaletteApply(themeId, paletteId)', html)
         self.assertIn("root.setAttribute('data-palette', pal.id);", html)
         for slug, first in (('canopy', 'obsidian'), ('silk', 'verdant'),
-                            ('topo', 'pulse'), ('aurora', 'aurora'),
+                            ('topo', 'mono'), ('aurora', 'aurora'),
                             ('grain', 'grain')):
             self.assertIn("id: '%s'" % first, html)
         for slug in ('solaris', 'ink', 'aether'):
